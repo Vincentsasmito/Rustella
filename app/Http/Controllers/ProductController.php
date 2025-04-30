@@ -27,8 +27,16 @@ class ProductController extends Controller
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
             'price'       => 'required|numeric|min:0',
-            'image_url'   => 'nullable|url|max:255',
+            'photo'       => 'mimes:jpg,bmp,png,jpeg'
         ]);
+
+        //save photo, get url
+        if($file = $request->file('photo')){
+            $file_path = public_path('images'); 
+            $file_input = date('YmdHis') . '-' . $file->getClientOriginalName();
+            $file->move($file_path, $file_input);
+            $validInput['image_url'] = $file_input;
+        }
 
         Product::create($validInput);
 

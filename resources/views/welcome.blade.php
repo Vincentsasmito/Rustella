@@ -42,6 +42,7 @@
         <a href="{{ route('suggestions.index') }}" class="btn">Test Suggestion Features</a>
         <a href="{{ route('discounts.index') }}" class="btn">Test Discount Features</a>
         <a href="{{ route('products.index') }}" class="btn">Test Product Features</a>
+        <a href="{{ route('login')}}" class="btn">Test Login</a>
     </div>
 </body>
 </html>

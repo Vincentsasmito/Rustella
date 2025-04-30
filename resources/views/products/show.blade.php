@@ -18,7 +18,7 @@
 
     <div class="mb-3">
         <strong>Image:</strong> 
-        <a href="{{ $product->image_url }}" target="_blank">View Image</a>
+        <img src="{{asset('images/' . @$product->image_url)}}" style="width: 200px; height: 200px;"/>
     </div>
 
     <a href="{{ route('products.index') }}" class="btn btn-secondary">Back to List</a>

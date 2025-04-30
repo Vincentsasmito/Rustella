@@ -6,14 +6,16 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\OrderProductController;
 use App\Http\Controllers\Auth\AdminLoginController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
+Auth::routes();
 
 // Primary CRUD resources
-Route::resource('orders', OrderController::class);
+
 Route::resource('suggestions', SuggestionController::class);
 Route::resource('discounts', DiscountController::class);
 Route::resource('products', ProductController::class);
@@ -33,19 +35,19 @@ Route::prefix('orders/{order}')->group(function () {
          ->name('orders.products.destroy');
 });
 
-// ── Public (no auth) ────────────────────────────────────────────────────────
+// // ── Public (no auth) ────────────────────────────────────────────────────────
 
-// Show the admin login form
-Route::get('/login', [AdminLoginController::class, 'showLoginForm'])
-     ->name('admin.login');
+// // Show the admin login form
+// Route::get('/login', [AdminLoginController::class, 'showLoginForm'])
+//      ->name('admin.login');
 
-// Handle the login POST
-Route::post('/login', [AdminLoginController::class, 'login'])
-     ->name('admin.login.submit');
+// // Handle the login POST
+// Route::post('/login', [AdminLoginController::class, 'login'])
+//      ->name('admin.login.submit');
 
-// Handle logout (must be POST for safety)
-Route::post('/logout', [AdminLoginController::class, 'logout'])
-     ->name('admin.logout');
+// // Handle logout (must be POST for safety)
+// Route::post('/logout', [AdminLoginController::class, 'logout'])
+//      ->name('admin.logout');
 
 
 // ── Protected (requires auth) ──────────────────────────────────────────────
@@ -53,7 +55,5 @@ Route::post('/logout', [AdminLoginController::class, 'logout'])
 Route::middleware('auth')->group(function () {
 
      // Dashboard
-     Route::get('/dashboard', function () {
-         return view('admin.dashboard');
-     })->name('admin.dashboard');
+     Route::resource('orders', OrderController::class);
 });
