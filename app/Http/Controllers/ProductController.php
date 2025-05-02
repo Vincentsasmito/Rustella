@@ -13,6 +13,13 @@ class ProductController extends Controller
         $products = Product::all();
         return view('products.index', compact('products'));
     }
+    //Get Catalogue
+    public function customerCatalogue()
+    {
+        $products = Product::all();
+        return view('customerviews.catalogue', compact('products'));
+    }
+
 
     //Show Add Product Form
     public function create()
@@ -31,8 +38,8 @@ class ProductController extends Controller
         ]);
 
         //save photo, get url
-        if($file = $request->file('photo')){
-            $file_path = public_path('images'); 
+        if ($file = $request->file('photo')) {
+            $file_path = public_path('images');
             $file_input = date('YmdHis') . '-' . $file->getClientOriginalName();
             $file->move($file_path, $file_input);
             $validInput['image_url'] = $file_input;
@@ -41,7 +48,7 @@ class ProductController extends Controller
         Product::create($validInput);
 
         return redirect()->route('products.index')
-                         ->with('success', 'Product created successfully.');
+            ->with('success', 'Product created successfully.');
     }
 
     //Show Product
@@ -69,7 +76,7 @@ class ProductController extends Controller
         $product->update($validated);
 
         return redirect()->route('products.index')
-                         ->with('success', 'Product updated successfully.');
+            ->with('success', 'Product updated successfully.');
     }
 
     //Delete Product
@@ -78,7 +85,6 @@ class ProductController extends Controller
         $product->delete();
 
         return redirect()->route('products.index')
-                         ->with('success', 'Product deleted successfully.');
+            ->with('success', 'Product deleted successfully.');
     }
 }
-
