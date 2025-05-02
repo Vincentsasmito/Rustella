@@ -5,7 +5,7 @@ use App\Http\Controllers\SuggestionController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\OrderProductController;
-use App\Http\Controllers\Auth\AdminLoginController;
+use App\Http\Controllers\CartController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -17,6 +17,12 @@ Route::get('homepage', function () {
 })->name('homepage'); // Assign route name if needed for generating links
 
 Route::get('catalogue', [ProductController::class, 'customerCatalogue'])->name('products.catalogue');
+
+Route::get('/cart',               [CartController::class, 'index'])->name('cart.index');
+Route::post('/cart/{product}',    [CartController::class, 'add'])->name('cart.add');      // you already have this
+Route::patch('/cart/{product}',   [CartController::class, 'update'])->name('cart.update');
+Route::delete('/cart/{product}',  [CartController::class, 'remove'])->name('cart.remove');
+
 Auth::routes();
 
 // Primary CRUD resources

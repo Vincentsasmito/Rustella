@@ -36,7 +36,7 @@ class OrderController extends Controller
             'recipient_name'      => 'required|string',
             'recipient_phone'     => 'required|string',
             'recipient_address'   => 'required|string',
-            'recipient_city'           => 'required|string',
+            'recipient_city'      => 'required|string',
             'delivery_time'       => 'required|date',
             'delivery_details'    => 'nullable|string',
             'progress'            => 'required|string',
