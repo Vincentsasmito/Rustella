@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Order;
 use App\Models\OrderProduct;
+use App\Models\Discount;
 use Illuminate\Support\Facades\Auth;
 
 class CartController extends Controller
@@ -26,9 +27,10 @@ class CartController extends Controller
                 ];
             }
         }
+        $discounts = Discount::all();
         
 
-        return view('customerviews.cart', ['cart' => $detailedCart]);
+        return view('customerviews.cart', ['cart' => $detailedCart, 'discounts' => $discounts]);
     }
 
     // Add an item (qty = 1 by default)
@@ -38,6 +40,14 @@ class CartController extends Controller
         $cart[$product->id] = ($cart[$product->id] ?? 0) + 1;
 
         session(['cart' => $cart]);
+
+        // If AJAX, return a JSON.
+        if($request->ajax()){
+            return response()->json([
+                'product_id' => $product->id,
+                'quantity'   => $cart[$product->id],
+            ]);
+        }
         return back()->with('success', 'Added to cart');
     }
 
@@ -96,4 +106,5 @@ class CartController extends Controller
 
         return redirect()->route('orders.show', $order)->with('success', 'Order placed!');
     }
+
 }

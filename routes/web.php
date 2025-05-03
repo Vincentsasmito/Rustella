@@ -18,8 +18,8 @@ Route::get('homepage', function () {
 
 Route::get('catalogue', [ProductController::class, 'customerCatalogue'])->name('products.catalogue');
 
-Route::get('/cart',               [CartController::class, 'index'])->name('cart.index');
-Route::post('/cart/{product}',    [CartController::class, 'add'])->name('cart.add');      // you already have this
+Route::get('cart',               [CartController::class, 'index'])->name('cart.index');
+Route::post('/cart/{product}',    [CartController::class, 'add'])->name('cart.add');      
 Route::patch('/cart/{product}',   [CartController::class, 'update'])->name('cart.update');
 Route::delete('/cart/{product}',  [CartController::class, 'remove'])->name('cart.remove');
 

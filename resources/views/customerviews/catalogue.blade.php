@@ -4,7 +4,7 @@
     <div class="container-fluid px-5">
         <div class="row my-5">
             <div class="col-md-6 text-start">
-                <h1 class="display-4" style="color: #877D69; font-family:'TrajanPro', sans-serif">Catalogue</h1>
+                <h1 class="display-4" style="color: #877D69; font-family:'bookmanbold', sans-serif">Catalogue</h1>
             </div>
             <div class="col-md-6 text-end align-self-center">
                 <a href="{{ route('cart.index') }}" class="btn btn-outline-dark">
@@ -35,7 +35,7 @@
                             </h5>
 
                             <p class="card-text mb-3"
-                                style="font-family:'TrajanProsmall', sans-serif;
+                                style="font-family:'bookmanlight', sans-serif;
                                         color: #322D29; 
                                         font-size: 1rem; 
                                         text-align: left;
@@ -58,7 +58,8 @@
                             @endphp
 
                             @if ($quantityInCart > 0)
-                                <p class="text-center mb-3" style="font-weight: bold; color: #6F4F1F;">
+                                <p id="in-cart-{{ $product->id }}" class="text-center mb-3"
+                                    style="font-weight:bold;color:#6F4F1F;">
                                     In Cart: {{ $quantityInCart }}
                                 </p>
                             @endif
@@ -66,7 +67,8 @@
                             <form method="POST" action="{{ route('cart.add', $product) }}" class="mt-auto add-to-cart-form"
                                 data-product-id="{{ $product->id }}">
                                 @csrf
-                                <button type="submit" class="btn btn-primary w-100" style="background-color: #877D69; border-color: #877D69;">
+                                <button type="submit" class="btn btn-primary w-100"
+                                    style="background-color: #877D69; border-color: #877D69;">
                                     Add to Cart
                                 </button>
                             </form>
@@ -80,4 +82,49 @@
             @endforelse
         </div>
     </div>
+    @push('scripts')
+<script>
+  document.querySelectorAll('.add-to-cart-form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const productId = this.dataset.productId;
+      const url       = this.action;
+      const token     = document
+                          .querySelector('meta[name="csrf-token"]')
+                          .getAttribute('content');
+
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': token,
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json',
+        },
+        body: new FormData(this),
+      })
+      .then(res => res.json())
+      .then(data => {
+        // update (or create) the In Cart badge
+        let badge = document.querySelector(`#in-cart-${productId}`);
+        if (badge) {
+          badge.textContent = `In Cart: ${data.quantity}`;
+        } else {
+          badge = document.createElement('p');
+          badge.id = `in-cart-${productId}`;
+          badge.className = 'text-center mb-3';
+          badge.style.fontWeight = 'bold';
+          badge.style.color = '#6F4F1F';
+          badge.textContent = `In Cart: ${data.quantity}`;
+
+          // insert it just above the “Add to Cart” button
+          this.parentNode.insertBefore(badge, this);
+        }
+      })
+      .catch(err => console.error('Cart AJAX error:', err));
+    });
+  });
+</script>
+@endpush
+
 @endsection

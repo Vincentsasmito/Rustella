@@ -49,53 +49,83 @@
 <!-- Product Cards Section (4 cards) -->
 <div class="container-fluid py-4" style="padding-inline: 8%;">
     <div class="row row-cols-1 row-cols-md-4 g-5">
+
         <!-- Card 1 -->
         <div class="col">
-            <div class="card shadow-sm">
-                <img src="/WebsiteStockImage/RustellaLP1.png" class="card-img-top" alt="Placeholder image for Product 1">
+            <div class="card shadow-sm h-100 d-flex flex-column">
+                <div class="ratio ratio-1x1 overflow-hidden">
+                    <img src="/WebsiteStockImage/RustellaLP1.png"
+                         class="w-100 h-100 object-fit-cover"
+                         alt="Placeholder image for Product 1">
+                </div>
                 <div class="card-body d-flex flex-column">
                     <h5 class="card-title">Product 1</h5>
                     <p class="card-text">This is a description of the first product in the favorites collection.</p>
-                    <a href="#" class="btn mt-auto" style="background-color: #D1C7BD; border-color: #D1C7BD; color: #444;">View Details</a>
+                    <a href="#" class="btn mt-auto"
+                       style="background-color: #D1C7BD; border-color: #D1C7BD; color: #444;">
+                        View Details
+                    </a>
                 </div>
             </div>
         </div>
 
         <!-- Card 2 -->
         <div class="col">
-            <div class="card shadow-sm">
-                <img src="/WebsiteStockImage/RustellaLP1.png" class="card-img-top" alt="Placeholder image for Product 2">
+            <div class="card shadow-sm h-100 d-flex flex-column">
+                <div class="ratio ratio-1x1 overflow-hidden">
+                    <img src="/WebsiteStockImage/RustellaLP1.png"
+                         class="w-100 h-100 object-fit-cover"
+                         alt="Placeholder image for Product 2">
+                </div>
                 <div class="card-body d-flex flex-column">
                     <h5 class="card-title">Product 2</h5>
                     <p class="card-text">This is a description of the second product in the favorites collection.</p>
-                    <a href="#" class="btn mt-auto" style="background-color: #D1C7BD; border-color: #D1C7BD; color: #444;">View Details</a>
+                    <a href="#" class="btn mt-auto"
+                       style="background-color: #D1C7BD; border-color: #D1C7BD; color: #444;">
+                        View Details
+                    </a>
                 </div>
             </div>
         </div>
 
         <!-- Card 3 -->
         <div class="col">
-            <div class="card shadow-sm">
-                <img src="/WebsiteStockImage/RustellaLP1.png" class="card-img-top" alt="Placeholder image for Product 3">
+            <div class="card shadow-sm h-100 d-flex flex-column">
+                <div class="ratio ratio-1x1 overflow-hidden">
+                    <img src="/WebsiteStockImage/RustellaLP1.png"
+                         class="w-100 h-100 object-fit-cover"
+                         alt="Placeholder image for Product 3">
+                </div>
                 <div class="card-body d-flex flex-column">
                     <h5 class="card-title">Product 3</h5>
                     <p class="card-text">This is a description of the third product in the favorites collection.</p>
-                    <a href="#" class="btn mt-auto" style="background-color: #D1C7BD; border-color: #D1C7BD; color: #444;">View Details</a>
+                    <a href="#" class="btn mt-auto"
+                       style="background-color: #D1C7BD; border-color: #D1C7BD; color: #444;">
+                        View Details
+                    </a>
                 </div>
             </div>
         </div>
 
         <!-- Card 4 -->
         <div class="col">
-            <div class="card shadow-sm">
-                <img src="/WebsiteStockImage/RustellaLP1.png" class="card-img-top" alt="Placeholder image for Product 4">
+            <div class="card shadow-sm h-100 d-flex flex-column">
+                <div class="ratio ratio-1x1 overflow-hidden">
+                    <img src="/WebsiteStockImage/RustellaLP1.png"
+                         class="w-100 h-100 object-fit-cover"
+                         alt="Placeholder image for Product 4">
+                </div>
                 <div class="card-body d-flex flex-column">
                     <h5 class="card-title">Product 4</h5>
                     <p class="card-text">This is a description of the fourth product in the favorites collection.</p>
-                    <a href="#" class="btn mt-auto" style="background-color: #D1C7BD; border-color: #D1C7BD; color: #444;">View Details</a>
+                    <a href="#" class="btn mt-auto"
+                       style="background-color: #D1C7BD; border-color: #D1C7BD; color: #444;">
+                        View Details
+                    </a>
                 </div>
             </div>
         </div>
+
     </div>
 </div>
 @endsection
