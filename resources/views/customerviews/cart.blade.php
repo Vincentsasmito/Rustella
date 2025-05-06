@@ -2,133 +2,52 @@
 
 @section('content')
     <div class="container-fluid px-5 my-5">
-        <div class="row mb-4">
-            <div class="col-12 text-center">
-                <h1 class="display-4" style="color: #877D69; font-family:'TrajanPro', sans-serif">
-                    Your Cart & Order Details
-                </h1>
-                <hr class="custom-hr">
-            </div>
-        </div>
+        {{-- … header … --}}
 
         @if ($cart && count($cart))
-            <div class="card shadow-sm p-4">
-                {{-- 1) Cart Table --}}
-                <div class="table-responsive mb-5"
-                    style="overflow: hidden; border-radius: 15px; box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);">
-                    <table class="table table-striped table-hover table-borderless align-middle mb-0"
-                        style="background-color: #fff;">
-                        <thead style="background-color: #D1C7BD; color: #322D29; border-bottom: 2px solid #322D29;">
-                            <tr>
-                                <th>Product</th>
-                                <th>Price</th>
-                                <th style="width: 140px;">Quantity</th>
-                                <th>Subtotal</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @php $total = 0; @endphp
-                            @foreach ($cart as $item)
-                                @php
-                                    $price = $item['product']->price;
-                                    $quantity = $item['quantity'];
-                                    $subtotal = $price * $quantity;
-                                    $total += $subtotal;
-                                @endphp
-                                <tr style="transition: background-color 0.2s;">
-                                    <td>{{ $item['product']->name }}</td>
-                                    <td>IDR {{ number_format($price, 0) }}</td>
-                                    <td>
-                                        <form method="POST" action="{{ route('cart.update', $item['product']) }}"
-                                            class="d-flex">
-                                            @csrf @method('PATCH')
+            {{-- ✅ START FORM: Add opening form tag --}}
+            <form method="POST" action="{{ route('orders.store') }}">
+                @csrf
+
+                <div class="card shadow-sm p-4">
+                    {{-- 1) Cart Table --}}
+                    <div class="table-responsive mb-5" style="…">
+                        <table class="table …">
+                            <thead>…</thead>
+                            <tbody>
+                                @foreach ($cart as $item)
+                                    @php
+                                        $price = $item['product']->price;
+                                        $quantity = $item['quantity'];
+                                    @endphp
+                                    <tr>
+                                        <td>{{ $item['product']->name }}</td>
+                                        <td>IDR {{ number_format($price, 0) }}</td>
+                                        <td>
                                             <input type="number" name="quantity" value="{{ $quantity }}" min="1"
-                                                class="form-control form-control-sm me-2" style="width: 70px;">
-                                            <button class="btn btn-outline-secondary btn-sm">↻</button>
-                                        </form>
-                                    </td>
-                                    <td>IDR {{ number_format($subtotal, 0) }}</td>
-                                    <td>
-                                        <form method="POST" action="{{ route('cart.remove', $item['product']) }}">
-                                            @csrf @method('DELETE')
-                                            <button class="btn btn-danger btn-sm">✕</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
+                                                data-price="{{ $price }}"
+                                                class="form-control form-control-sm quantity-input" style="width: 70px;">
+                                        </td>
+                                        <td class="row-subtotal">
+                                            IDR {{ number_format($price * $quantity, 0) }}
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-danger btn-sm remove-item">✕</button>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
 
-
-                {{-- 2) Order Details & Checkout Form --}}
-                <form method="POST" action="{{ route('orders.store') }}">
-                    @csrf
-
+                    {{-- 2) Discount & Summary --}}
                     <div class="row g-3 mb-4">
-                        {{-- Sender --}}
-                        <div class="col-md-6">
-                            <label class="form-label">Sender Email</label>
-                            <input type="email" name="sender_email" value="{{ old('sender_email') }}" class="form-control"
-                                required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Sender Phone</label>
-                            <input type="text" name="sender_phone" value="{{ old('sender_phone') }}" class="form-control"
-                                required>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Sender Note</label>
-                            <textarea name="sender_note" class="form-control">{{ old('sender_note') }}</textarea>
-                        </div>
-
-                        {{-- Recipient --}}
-                        <div class="col-md-6">
-                            <label class="form-label">Recipient Name</label>
-                            <input type="text" name="recipient_name" value="{{ old('recipient_name') }}"
-                                class="form-control" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Recipient Phone</label>
-                            <input type="text" name="recipient_phone" value="{{ old('recipient_phone') }}"
-                                class="form-control" required>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Recipient Address</label>
-                            <input type="text" name="recipient_address" value="{{ old('recipient_address') }}"
-                                class="form-control" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Recipient City</label>
-                            <input type="text" name="recipient_city" value="{{ old('recipient_city') }}"
-                                class="form-control" required>
-                        </div>
-
-                        {{-- Delivery --}}
-                        <div class="col-md-6">
-                            <label class="form-label">Delivery Time</label>
-                            <input type="datetime-local" name="delivery_time" value="{{ old('delivery_time') }}"
-                                class="form-control" required>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Delivery Details</label>
-                            <textarea name="delivery_details" class="form-control">{{ old('delivery_details') }}</textarea>
-                        </div>
-
-                        {{-- Progress & Discount --}}
-                        <div class="col-md-6">
-                            <label class="form-label">Progress</label>
-                            <input type="text" name="progress" value="{{ old('progress') }}" class="form-control"
-                                required>
-                        </div>
                         <div class="col-md-6">
                             <label class="form-label">Discount</label>
-                            <select name="discount_id" class="form-select">
+                            <select name="discount_id" class="form-select" id="discount-select">
                                 <option value="">No Discount</option>
                                 @foreach ($discounts as $d)
-                                    <option value="{{ $d->id }}"
-                                        {{ old('discount_id') == $d->id ? 'selected' : '' }}>
+                                    <option value="{{ $d->id }}">
                                         {{ $d->code }} ({{ $d->percent }}%)
                                     </option>
                                 @endforeach
@@ -136,90 +55,197 @@
                         </div>
                     </div>
 
-                    {{-- 3) Summary, Discount & Checkout --}}
                     <div class="row">
-                      <div class="col-md-6 offset-md-6 text-end">
-                          <div class="d-flex justify-content-between">
-                              <span>Subtotal:</span>
-                              <strong id="subtotal">IDR {{ number_format($total, 0) }}</strong>
-                          </div>
-                  
-                          {{-- always render, but hidden until JS shows it --}}
-                          <div
-                              id="discount-line"
-                              class="d-flex justify-content-between text-danger"
-                              style="display: none;"
-                          >
-                              <span id="discount-label"></span>
-                              <strong id="discount-amount"></strong>
-                          </div>
-                  
-                          <div class="d-flex justify-content-between mt-2">
-                              <span><strong>Total:</strong></span>
-                              <strong id="final-total">IDR {{ number_format($total, 0) }}</strong>
-                          </div>
-                  
-                          <button type="submit" class="btn btn-success mt-3 w-100">
-                              Proceed to Checkout
-                          </button>
-                      </div>
-                  </div>
-                  
+                        <div class="col-md-6 offset-md-6 text-end">
+                            <div class="d-flex justify-content-between">
+                                <span>Subtotal:</span>
+                                <strong id="subtotal">IDR 0</strong>
+                            </div>
 
-                </form>
-            </div>
+                            <div id="discount-line" class="d-flex justify-content-between text-danger"
+                                style="display: none;">
+                                <span id="discount-label"></span>
+                                <strong id="discount-amount"></strong>
+                            </div>
+
+                            <div class="d-flex justify-content-between mt-2">
+                                <span><strong>Total:</strong></span>
+                                <strong id="final-total">IDR 0</strong>
+                            </div>
+
+                            {{--  Make this a form submit button --}}
+                            <button type="submit" class="btn btn-success mt-3 w-100">
+                                Proceed to Checkout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label">Sender Email</label>
+                    <input type="email" name="sender_email"
+                      value="{{ old('sender_email', $order->sender_email ?? '') }}"
+                      class="form-control" required>
+                  </div>
+                
+                  <div class="col-md-6">
+                    <label class="form-label">Sender Phone</label>
+                    <input type="text" name="sender_phone"
+                      value="{{ old('sender_phone', $order->sender_phone ?? '') }}"
+                      class="form-control" required>
+                  </div>
+                
+                  <div class="col-12">
+                    <label class="form-label">Sender Note</label>
+                    <textarea name="sender_note" class="form-control">{{ old('sender_note', $order->sender_note ?? '') }}</textarea>
+                  </div>
+                
+                  <div class="col-md-6">
+                    <label class="form-label">Recipient Name</label>
+                    <input type="text" name="recipient_name"
+                      value="{{ old('recipient_name', $order->recipient_name ?? '') }}"
+                      class="form-control" required>
+                  </div>
+                
+                  <div class="col-md-6">
+                    <label class="form-label">Recipient Phone</label>
+                    <input type="text" name="recipient_phone"
+                      value="{{ old('recipient_phone', $order->recipient_phone ?? '') }}"
+                      class="form-control" required>
+                  </div>
+                
+                  <div class="col-12">
+                    <label class="form-label">Recipient Address</label>
+                    <input type="text" name="recipient_address"
+                      value="{{ old('recipient_address', $order->recipient_address ?? '') }}"
+                      class="form-control" required>
+                  </div>
+                
+                  <div class="col-md-6">
+                    <label class="form-label">Recipient City</label>
+                    <input type="text" name="recipient_city"
+                      value="{{ old('recipient_city', $order->recipient_city ?? '') }}"
+                      class="form-control" required>
+                  </div>
+                
+                  <div class="col-md-6">
+                    <label class="form-label">Delivery Time</label>
+                    <input type="datetime-local" name="delivery_time"
+                      value="{{ old('delivery_time', isset($order) ? \Carbon\Carbon::parse($order->delivery_time)->format('Y-m-d\TH:i') : '') }}"
+                      class="form-control" required>
+                  </div>
+                
+                  <div class="col-12">
+                    <label class="form-label">Delivery Details</label>
+                    <textarea name="delivery_details" class="form-control">{{ old('delivery_details', $order->delivery_details ?? '') }}</textarea>
+                  </div>
+                
+                  <div class="col-md-6">
+                    <label class="form-label">Progress</label>
+                    <input type="text" name="progress"
+                      value="{{ old('progress', $order->progress ?? '') }}"
+                      class="form-control" required>
+                  </div>
+            </form> {{--  END FORM --}}
         @else
-            <div class="text-center">
-                <p>Your cart is empty.</p>
-                <a href="{{ route('products.index') }}" class="btn btn-outline-primary">← Back to Catalogue</a>
-            </div>
+            {{-- empty cart --}}
         @endif
+
     </div>
 @endsection
+
 @php
-    // Build a simple PHP array of discount rules
     $discountsData = $discounts
-        ->mapWithKeys(fn($d) => [
-            $d->id => [
-                'percent'      => $d->percent,
-                'min_purchase' => $d->min_purchase,
-                'max_discount' => $d->max_discount,
+        ->mapWithKeys(
+            fn($d) => [
+                $d->id => [
+                    'percent' => $d->percent,
+                    'min_purchase' => $d->min_purchase,
+                    'max_value' => $d->max_value,
+                ],
             ],
-        ])
+        )
         ->toArray();
 @endphp
 
-@section('scripts')
-<script>
-    // JSON‑encode that PHP array for JS use
-    const discounts      = @json($discountsData);
-    const discountSelect = document.querySelector('select[name="discount_id"]');
-    const subtotalRaw    = {{ $total }};
-    const discountLine   = document.getElementById('discount-line');
-    const discountLabel  = document.getElementById('discount-label');
-    const discountAmountEl = document.getElementById('discount-amount');
-    const finalTotalEl   = document.getElementById('final-total');
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // grab elements
+            const discounts = @json($discountsData);
+            const discountSelect = document.getElementById('discount-select');
+            const subtotalEl = document.getElementById('subtotal');
+            const discountLine = document.getElementById('discount-line');
+            const discountLabel = document.getElementById('discount-label');
+            const discountAmountEl = document.getElementById('discount-amount');
+            const finalTotalEl = document.getElementById('final-total');
+            const qtyInputs = document.querySelectorAll('.quantity-input');
 
-    discountSelect.addEventListener('change', function() {
-        const d = discounts[this.value] || null;
-        let discountAmount = 0;
+            console.log('Discount system initializing…', {
+                discounts,
+                qtyInputs: qtyInputs.length
+            });
 
-        if (d && subtotalRaw >= d.min_purchase) {
-            const raw = subtotalRaw * (d.percent / 100);
-            discountAmount = Math.min(raw, d.max_discount);
-        }
+            function applyDiscount(subtotalRaw) {
+                const dId = discountSelect.value;
+                const d = discounts[dId] || null;
 
-        const finalTotal = subtotalRaw - discountAmount;
+                console.log('applyDiscount called', {
+                    subtotalRaw,
+                    selectedDiscount: d
+                });
 
-        if (discountAmount > 0) {
-            discountLine.style.display      = 'flex';
-            discountLabel.innerText         = `Discount (${d.percent}%)`;
-            discountAmountEl.innerText      = `- IDR ${discountAmount.toLocaleString()}`;
-        } else {
-            discountLine.style.display      = 'none';
-        }
+                let discountAmt = 0;
+                if (d && subtotalRaw >= d.min_purchase) {
+                    discountAmt = Math.min(subtotalRaw * (d.percent / 100), d.max_value);
+                }
 
-        finalTotalEl.innerText           = `IDR ${finalTotal.toLocaleString()}`;
-    });
-</script>
-@endsection
+                console.log(' -> discountAmt =', discountAmt);
+
+                if (discountAmt > 0) {
+                    discountLine.style.setProperty('display', 'flex', 'important');
+                    discountLabel.textContent = `Discount (${d.percent}%)`;
+                    discountAmountEl.textContent = `- IDR ${discountAmt.toLocaleString()}`;
+                } else {
+                    discountLine.style.setProperty('display', 'none', 'important');
+                }
+                console.log(
+                    'Discount details:',
+                    'percent=', d?.percent,
+                    'min_purchase=', d?.min_purchase,
+                    'max_value=', d?.max_value
+                );
+
+                return subtotalRaw - discountAmt;
+            }
+            //Show discount
+            function recalcTotals() {
+                let subtotalRaw = 0;
+
+                if (discountSelect.value == 0) {
+                    document.getElementById('discount-line').style.display = 'none';
+                }
+                qtyInputs.forEach(input => {
+                    const price = parseFloat(input.dataset.price) || 0;
+                    const qty = parseInt(input.value) || 0;
+                    const rowCell = input.closest('tr').querySelector('.row-subtotal');
+                    const rowTotal = price * qty;
+                    rowCell.textContent = `IDR ${rowTotal.toLocaleString()}`;
+                    subtotalRaw += rowTotal;
+                });
+
+                console.log('recalcTotals: subtotalRaw=', subtotalRaw);
+                subtotalEl.textContent = `IDR ${subtotalRaw.toLocaleString()}`;
+                const totalAfter = applyDiscount(subtotalRaw);
+                finalTotalEl.textContent = `IDR ${totalAfter.toLocaleString()}`;
+            }
+
+            // attach listeners
+            qtyInputs.forEach(i => i.addEventListener('change', recalcTotals));
+            discountSelect.addEventListener('change', recalcTotals);
+
+            // initial run
+            recalcTotals();
+        });
+    </script>
+@endpush

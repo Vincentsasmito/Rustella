@@ -5,28 +5,27 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class OrderProduct extends Model
+class FlowerProduct extends Model
 {
     // If your pivot table doesn't have timestamps
     public $timestamps = false;
 
     // Explicit table name (snake_case plural)
-    protected $table = 'order_products';
+    protected $table = 'flower_products';
 
     // Fillable fields for mass assignment
     protected $fillable = [
-        'order_id',
         'product_id',
+        'flower_id',
         'quantity',
-        'price',
     ];
 
     /**
      * Get the order that owns this order-product pivot.
      */
-    public function order(): BelongsTo
+    public function flower(): BelongsTo
     {
-        return $this->belongsTo(Order::class, 'order_id', 'id');
+        return $this->belongsTo(Flower::class, 'flower_id', 'id');
     }
 
     /**

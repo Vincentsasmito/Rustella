@@ -6,6 +6,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\OrderProductController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\FlowerController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -52,6 +53,7 @@ Route::middleware('auth')->group(function () {
         Route::get('{order}/edit', [OrderController::class, 'edit'])->name('edit');
         Route::match(['put', 'patch'], '{order}', [OrderController::class, 'update'])->name('update');
         Route::delete('{order}', [OrderController::class, 'destroy'])->name('destroy');
+        Route::post('/',         [OrderController::class, 'store'])->name('store');
     });
 
 
@@ -99,11 +101,13 @@ Route::prefix('orders')->name('orders.')->group(function () {
     // 2. Show "Create" form
     Route::get('create',     [OrderController::class, 'create'])->name('create');
     // 3. Save a new order
-    Route::post('/',         [OrderController::class, 'store'])->name('store');
+    
     // 4. Display a single order
     Route::get('{order}',    [OrderController::class, 'show'])->name('show');
 });
 
+//Flower Routes
+Route::resource('flowers', FlowerController::class);
 
 // ── Suggestion Routes ────────────────────────────────────────────────────────
 Route::prefix('suggestions')->name('suggestions.')->group(function () {

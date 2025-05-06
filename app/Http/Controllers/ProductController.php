@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Flower;
+use App\Models\FlowerProduct;
+use App\Models\Packaging;
 use App\Models\Product;
 use Illuminate\Http\Request;
 
@@ -24,7 +27,9 @@ class ProductController extends Controller
     //Show Add Product Form
     public function create()
     {
-        return view('products.create');
+        $flowers = Flower::all(); // for flower selection
+        $packagings = Packaging::all(); // get product types dynamically
+        return view('products.create', compact('flowers', 'packagings'));
     }
 
     //Store Product
@@ -34,7 +39,8 @@ class ProductController extends Controller
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
             'price'       => 'required|numeric|min:0',
-            'photo'       => 'mimes:jpg,bmp,png,jpeg'
+            'photo'       => 'mimes:jpg,bmp,png,jpeg',
+            'packaging_id'=> 'required|numeric',
         ]);
 
         //save photo, get url
@@ -45,7 +51,19 @@ class ProductController extends Controller
             $validInput['image_url'] = $file_input;
         }
 
-        Product::create($validInput);
+        $product = Product::create($validInput);
+        if ($request->has('flowers')) {
+            foreach ($request->flowers as $flowerId => $checked) {
+                if ($checked && isset($request->quantities[$flowerId])) {
+                    FlowerProduct::create([
+                        'product_id' => $product->id,
+                        'flower_id'  => $flowerId,
+                        'quantity'   => $request->quantities[$flowerId],
+                    ]);
+                }
+            }
+        }
+        
 
         return redirect()->route('products.index')
             ->with('success', 'Product created successfully.');
@@ -66,14 +84,22 @@ class ProductController extends Controller
     //Update Product
     public function update(Request $request, Product $product)
     {
-        $validated = $request->validate([
+        $validInput = $request->validate([
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
             'price'       => 'required|numeric|min:0',
-            'image_url'   => 'nullable|url|max:255',
+            'photo'       => 'mimes:jpg,bmp,png,jpeg',
+            'packaging_id'=> 'required|integer',
         ]);
+        //save photo, get url
+        if ($file = $request->file('photo')) {
+            $file_path = public_path('images');
+            $file_input = date('YmdHis') . '-' . $file->getClientOriginalName();
+            $file->move($file_path, $file_input);
+            $validInput['image_url'] = $file_input;
+        }
 
-        $product->update($validated);
+        $product->update($validInput);
 
         return redirect()->route('products.index')
             ->with('success', 'Product updated successfully.');

@@ -15,7 +15,7 @@
                 <th>Name</th>
                 <th>Description</th>
                 <th>Price</th>
-                <th>Image URL</th>
+                <th>Image</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -25,7 +25,8 @@
                 <td>{{ $product->name }}</td>
                 <td>{{ $product->description }}</td>
                 <td>${{ number_format($product->price, 2) }}</td>
-                <td><a href="{{ $product->image_url }}" target="_blank">View</a></td>
+                <td><img src="{{ asset('images/' . $product->image_url) }}" alt="{{ $product->name }}"
+                    style="width: 200px; height: 200px; object-fit: cover;"></td>
                 <td>
                     <a href="{{ route('products.show', $product->id) }}" class="btn btn-info btn-sm">View</a>
                     <a href="{{ route('products.edit', $product->id) }}" class="btn btn-warning btn-sm">Edit</a>

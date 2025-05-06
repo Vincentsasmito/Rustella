@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
@@ -18,12 +19,18 @@ class Product extends Model
         'name',
         'description',
         'price',
-        'image_url'
+        'image_url',
+        'packaging_id',
     ];
 
 
-    public function orderProducts(): HasMany
+    public function flowerProducts():HasMany
     {
-        return $this->hasMany(OrderProduct::class, 'product_id', 'id');
+        return $this->hasMany(FlowerProduct::class, 'product_id');
+    }
+
+    public function packaging():BelongsTo
+    {
+        return $this->belongsTo(Packaging::class, 'packaging_id', 'id');
     }
 }

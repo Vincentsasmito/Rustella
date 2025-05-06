@@ -14,6 +14,9 @@ return new class extends Migration
             $table->string('description', 300);
             $table->unsignedInteger('price');
             $table->text('image_url');
+            $table->foreignId('packaging_id')
+            ->constrained('packagings')
+            ->cascadeOnDelete();
         });
     }
 

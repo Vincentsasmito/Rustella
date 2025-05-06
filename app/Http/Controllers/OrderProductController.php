@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\OrderProduct;
+use App\Models\Product;
 use Illuminate\Http\Request;
 
 class OrderProductController extends Controller
@@ -21,17 +22,21 @@ class OrderProductController extends Controller
             'quantity'   => 'required|integer|min:1',
         ]);
 
-        $pivot = OrderProduct::firstOrNew([
+        $product = Product::findOrFail($data['product_id']);
+
+        $orderProduct = OrderProduct::firstOrNew([
             'order_id'   => $order->id,
             'product_id' => $data['product_id'],
         ]);
 
-        $pivot->quantity = ($pivot->exists ? $pivot->quantity : 0) + $data['quantity'];
-        $pivot->save();
+        $orderProduct->quantity = ($orderProduct->exists ? $orderProduct->quantity : 0) + $data['quantity'];
+        $orderProduct->price = $orderProduct->quantity * $product->price;
+        $orderProduct->save();
+        $order = Order::with('orderProducts.product.packaging')->find($orderProduct->order_id);
+        $order->recalculateCost();
 
         return back()->with('success', 'Product added to order.');
     }
-
     /**
      * Update the quantity of a specific line‐item.
      *

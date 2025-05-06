@@ -8,15 +8,15 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('order_products', function (Blueprint $table) {
+        Schema::create('flower_products', function (Blueprint $table) {
             $table->id();
             //constrained -> current FK is held
             //cascadeOnDelete -> When parent is deleted, delete all childs.
-            $table->foreignId('order_id')
-                  ->constrained('orders')
-                  ->cascadeOnDelete();
             $table->foreignId('product_id')
                   ->constrained('products')
+                  ->cascadeOnDelete();
+            $table->foreignId('flower_id')
+                  ->constrained('flowers')
                   ->cascadeOnDelete();
             $table->unsignedInteger('quantity');
         });
@@ -24,6 +24,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('order_products');
+        Schema::dropIfExists('flower_products');
     }
 };

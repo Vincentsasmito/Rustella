@@ -48,7 +48,7 @@
                             </p>
 
                             <p class="card-text text-center mb-3" style="font-weight: bold; color: #6F4F1F;">
-                                IDR {{ number_format($product->price, 0) }}
+                               @currency($product->price);
                             </p>
 
                             {{-- In-Cart Quantity --}}

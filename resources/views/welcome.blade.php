@@ -37,12 +37,17 @@
 <body>
     <h1>Welcome to Your Application</h1>
 
+    <form method="POST" action="{{ route('logout') }}">
+        @csrf
+        <button type="submit">Logout</button>
+    </form>
     <div class="btn-container">
         <a href="{{ route('orders.index') }}" class="btn">Test Order Features</a>
         <a href="{{ route('suggestions.index') }}" class="btn">Test Suggestion Features</a>
         <a href="{{ route('discounts.index') }}" class="btn">Test Discount Features</a>
         <a href="{{ route('products.index') }}" class="btn">Test Product Features</a>
         <a href="{{ route('login')}}" class="btn">Test Login</a>
+        <a href="{{ route('flowers.index')}}" class="btn">Test Flowers</a>
     </div>
 </body>
 </html>
