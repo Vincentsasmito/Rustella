@@ -78,7 +78,10 @@ class ProductController extends Controller
     //Show Edit Form
     public function edit(Product $product)
     {
-        return view('products.edit', compact('product'));
+        $flowers = Flower::all(); // for flower selection
+        $packagings = Packaging::all(); // get product types dynamically
+        $usedFlowers = FlowerProduct::where('product_id', $product->id)->pluck('quantity', 'flower_id')->toArray();
+        return view('products.edit', compact('product', 'flowers', 'packagings', 'usedFlowers'));
     }
 
     //Update Product
@@ -88,7 +91,7 @@ class ProductController extends Controller
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
             'price'       => 'required|numeric|min:0',
-            'photo'       => 'mimes:jpg,bmp,png,jpeg',
+            'photo'       => 'nullable|mimes:jpg,bmp,png,jpeg',
             'packaging_id'=> 'required|integer',
         ]);
         //save photo, get url
@@ -100,6 +103,20 @@ class ProductController extends Controller
         }
 
         $product->update($validInput);
+        //Delete existing FlowerProduct
+        FlowerProduct::where('product_id', $product->id)->delete();
+        //Remake FlowerProduct
+        if ($request->has('flowers')) {
+            foreach ($request->flowers as $flowerId => $checked) {
+                if ($checked && isset($request->quantities[$flowerId])) {
+                    FlowerProduct::create([
+                        'product_id' => $product->id,
+                        'flower_id'  => $flowerId,
+                        'quantity'   => $request->quantities[$flowerId],
+                    ]);
+                }
+            }
+        }
 
         return redirect()->route('products.index')
             ->with('success', 'Product updated successfully.');

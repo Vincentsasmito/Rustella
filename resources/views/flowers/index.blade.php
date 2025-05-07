@@ -5,6 +5,7 @@
         <h1>All Flowers</h1>
 
         <a href="{{ route('flowers.create') }}" class="btn btn-primary mb-3">Add New Flower</a>
+        <a href="{{ route('flowers.stock') }}" class="btn btn-primary mb-3">Manage Stocking</a>
 
         @if (session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>

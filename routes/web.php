@@ -50,6 +50,7 @@ Route::prefix('orders/{order}')->group(function () {
 Route::middleware('auth')->group(function () {
     // ── Order Routes ────────────────────────────────────────────────────────────
     Route::prefix('orders')->name('orders.')->group(function () {
+        Route::get('usertransactions', [OrderController::class, 'getTransactions'])->name('getTransactions');
         Route::get('{order}/edit', [OrderController::class, 'edit'])->name('edit');
         Route::match(['put', 'patch'], '{order}', [OrderController::class, 'update'])->name('update');
         Route::delete('{order}', [OrderController::class, 'destroy'])->name('destroy');
@@ -106,9 +107,15 @@ Route::prefix('orders')->name('orders.')->group(function () {
     Route::get('{order}',    [OrderController::class, 'show'])->name('show');
 });
 
+
+// Show the form to add stock and update price
+// Route to show the stock management page (no flower parameter needed)
+Route::get('/flowers/stock', [FlowerController::class, 'stock'])->name('flowers.stock');
 //Flower Routes
 Route::resource('flowers', FlowerController::class);
 
+// Route to handle the submission to update stock for a specific flower
+Route::post('/flowers/{flower}/stock', [FlowerController::class, 'stockupdate'])->name('flowers.stockupdate');
 // ── Suggestion Routes ────────────────────────────────────────────────────────
 Route::prefix('suggestions')->name('suggestions.')->group(function () {
     // 1. List all suggestions
