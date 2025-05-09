@@ -21,6 +21,7 @@ class Product extends Model
         'price',
         'image_url',
         'packaging_id',
+        'in_stock',
     ];
 
 
@@ -32,5 +33,10 @@ class Product extends Model
     public function packaging():BelongsTo
     {
         return $this->belongsTo(Packaging::class, 'packaging_id', 'id');
+    }
+
+    public function suggestion():HasMany
+    {
+        return $this->hasMany(Suggestion::class);
     }
 }

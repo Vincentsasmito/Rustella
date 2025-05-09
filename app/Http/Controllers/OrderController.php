@@ -84,6 +84,7 @@ class OrderController extends Controller
         // 1) Create the order with cost = 0 as a placeholder
         $validInput['user_id'] = Auth::id();
         $validInput['cost']    = 0;
+        $validInput['progress'] = "Pending Payment";
         $order = Order::create($validInput);
 
         // 2) Create OrderProduct entries

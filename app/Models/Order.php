@@ -9,8 +9,6 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Order extends Model
 {
-    public $timestamps = false;
-
     //Can be removed, as Laravel already guesses table names. Kept here for clarity.
     protected $table = 'orders';
 
@@ -83,5 +81,12 @@ class Order extends Model
 
         $this->cost = $cost;
         $this->save();
+    }
+    //PROD Admin Dashboard getSales
+    public function getTotalAmountAttribute()
+    {
+        // Assumes $this->orderProducts is already loaded (or will lazy-load)
+        return $this->orderProducts
+            ->sum(fn($item) => $item->quantity * $item->price);
     }
 }

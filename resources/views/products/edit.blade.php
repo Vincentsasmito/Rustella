@@ -76,6 +76,8 @@
             
 
             <!-- In Stock Toggle with Clear Labels -->
+            <!-- Hidden Default Value -->
+            <input type="hidden" name="in_stock" value="0">
             <div class="mb-3">
                 <label class="form-label d-block">Availability</label>
                 <div class="d-flex align-items-center">

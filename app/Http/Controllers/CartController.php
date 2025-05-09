@@ -39,6 +39,7 @@ class CartController extends Controller
         $cart = session()->get('cart', []);
         $cart[$product->id] = ($cart[$product->id] ?? 0) + 1;
 
+        //stores cart to session.
         session(['cart' => $cart]);
 
         // If AJAX, return a JSON.
@@ -75,36 +76,6 @@ class CartController extends Controller
         session(['cart' => $cart]);
 
         return back()->with('success', 'Item removed');
-    }
-
-    // Confirm the purchase
-    public function checkout(Request $request)
-    {
-        $cart = session()->get('cart', []);
-        if (empty($cart)) {
-            return redirect()->route('cart.index')->withErrors('Your cart is empty.');
-        }
-
-        $order = Order::create([
-            'user_id' => Auth::id(),
-            'status'  => 'pending',
-        ]);
-
-        foreach ($cart as $productId => $qty) {
-            $product = Product::find($productId);
-            if ($product) {
-                OrderProduct::create([
-                    'order_id'   => $order->id,
-                    'product_id' => $product->id,
-                    'quantity'   => $qty,
-                    'unit_price' => $product->price,
-                ]);
-            }
-        }
-
-        session()->forget('cart');
-
-        return redirect()->route('orders.show', $order)->with('success', 'Order placed!');
     }
 
 }

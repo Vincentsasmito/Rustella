@@ -10,6 +10,18 @@ return new class extends Migration
     {
         Schema::create('suggestions', function (Blueprint $table) {
             $table->id();
+              $table->foreignId('user_id')
+                  ->nullable()
+                  ->constrained()
+                  ->cascadeOnDelete();
+            $table->foreignId('product_id')
+                  ->nullable()
+                  ->constrained()
+                  ->cascadeOnDelete();
+            $table->unsignedTinyInteger('rating')
+                  ->nullable();
+            $table->enum('type', ['site','product'])
+                  ->default('site');
             $table->text('message');
             $table->timestamps();
         });

@@ -1,10 +1,14 @@
 <?php
 
+use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\DiscountController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\SuggestionController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\OrderProductController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\FlowerController;
 use Illuminate\Support\Facades\Auth;
@@ -13,18 +17,39 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::middleware('guest')->group(function () {
+    // Show the “enter your email” form
+    Route::get('forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])
+        ->name('password.request');
+
+    // Send the reset link email
+    Route::post('forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])
+        ->name('password.email');
+
+    // Show the “reset your password” form
+    Route::get('reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])
+        ->name('password.reset');
+
+    // Actually reset the password
+    Route::post('reset-password', [ResetPasswordController::class, 'reset'])
+        ->name('password.update');
+});
+
 Route::get('homepage', function () {
     return view('customerviews.homepage'); // Correct view path without the dot (`.`)
 })->name('homepage'); // Assign route name if needed for generating links
+//PROD
+Route::get('home', [HomeController::class, 'index'])->name('home');
 
 Route::get('catalogue', [ProductController::class, 'customerCatalogue'])->name('products.catalogue');
 
 Route::get('cart',               [CartController::class, 'index'])->name('cart.index');
-Route::post('/cart/{product}',    [CartController::class, 'add'])->name('cart.add');      
+Route::post('/cart/{product}',    [CartController::class, 'add'])->name('cart.add');
 Route::patch('/cart/{product}',   [CartController::class, 'update'])->name('cart.update');
 Route::delete('/cart/{product}',  [CartController::class, 'remove'])->name('cart.remove');
 
-Auth::routes();
+Auth::routes(['verify' => true]);
 
 // Primary CRUD resources
 
@@ -43,11 +68,14 @@ Route::prefix('orders/{order}')->group(function () {
         ->name('orders.products.destroy');
 });
 
-
+Route::middleware(['auth', 'verified', 'admin'])->group(function () {
+    Route::get('/admin', [AdminController::class, 'index'])
+        ->name('admin.index');
+});
 
 //Login Routes
 // ── Protected (requires auth) ──────────────────────────────────────────────
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     // ── Order Routes ────────────────────────────────────────────────────────────
     Route::prefix('orders')->name('orders.')->group(function () {
         Route::get('usertransactions', [OrderController::class, 'getTransactions'])->name('getTransactions');
@@ -102,7 +130,7 @@ Route::prefix('orders')->name('orders.')->group(function () {
     // 2. Show "Create" form
     Route::get('create',     [OrderController::class, 'create'])->name('create');
     // 3. Save a new order
-    
+
     // 4. Display a single order
     Route::get('{order}',    [OrderController::class, 'show'])->name('show');
 });
@@ -137,3 +165,7 @@ Route::get('/discounts', [DiscountController::class, 'index'])->name('discounts.
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 // 2. Display a single product
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
+
+Auth::routes();
+
+Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');

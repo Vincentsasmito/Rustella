@@ -41,6 +41,7 @@ class ProductController extends Controller
             'price'       => 'required|numeric|min:0',
             'photo'       => 'mimes:jpg,bmp,png,jpeg',
             'packaging_id'=> 'required|numeric',
+            'in_stock'    => 'required|boolean',
         ]);
 
         //save photo, get url
@@ -93,6 +94,7 @@ class ProductController extends Controller
             'price'       => 'required|numeric|min:0',
             'photo'       => 'nullable|mimes:jpg,bmp,png,jpeg',
             'packaging_id'=> 'required|integer',
+            'in_stock'    => 'required|boolean',
         ]);
         //save photo, get url
         if ($file = $request->file('photo')) {

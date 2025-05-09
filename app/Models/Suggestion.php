@@ -3,11 +3,22 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Suggestion extends Model
 {
     //declares table to be used
     protected $table = 'suggestions';
     //self-explanatory
-    protected $fillable = ['message'];
+    protected $fillable = ['message', 'user_id', 'product_id', 'rating'];
+
+    public function user(): BelongsTo
+    {
+        return ($this->belongsTo(User::class));
+    }
+    
+    public function product(): BelongsTo
+    {
+        return ($this->belongsTo(Product::class));
+    }
 }
