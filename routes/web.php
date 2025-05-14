@@ -1,171 +1,186 @@
 <?php
 
-use App\Http\Controllers\Auth\ForgotPasswordController;
-use App\Http\Controllers\DiscountController;
-use App\Http\Controllers\AdminController;
-use App\Http\Controllers\Auth\ResetPasswordController;
-use App\Http\Controllers\SuggestionController;
-use App\Http\Controllers\OrderController;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\OrderProductController;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\CartController;
-use App\Http\Controllers\FlowerController;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Mail;
 
-Route::get('/', function () {
-    return view('welcome');
-});
-
-Route::middleware('guest')->group(function () {
-    // Show the “enter your email” form
-    Route::get('forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])
-        ->name('password.request');
-
-    // Send the reset link email
-    Route::post('forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])
-        ->name('password.email');
-
-    // Show the “reset your password” form
-    Route::get('reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])
-        ->name('password.reset');
-
-    // Actually reset the password
-    Route::post('reset-password', [ResetPasswordController::class, 'reset'])
-        ->name('password.update');
-});
-
-Route::get('homepage', function () {
-    return view('customerviews.homepage'); // Correct view path without the dot (`.`)
-})->name('homepage'); // Assign route name if needed for generating links
-//PROD
-Route::get('home', [HomeController::class, 'index'])->name('home');
-
-Route::get('catalogue', [ProductController::class, 'customerCatalogue'])->name('products.catalogue');
-
-Route::get('cart',               [CartController::class, 'index'])->name('cart.index');
-Route::post('/cart/{product}',    [CartController::class, 'add'])->name('cart.add');
-Route::patch('/cart/{product}',   [CartController::class, 'update'])->name('cart.update');
-Route::delete('/cart/{product}',  [CartController::class, 'remove'])->name('cart.remove');
-
+// Controllers
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\FlowerController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\OrderProductController;
+use App\Http\Controllers\SuggestionController;
+use App\Http\Controllers\DiscountController;
+use App\Http\Controllers\PackagingController;
+// ────────────────────────────────────────────────────────────────
+// AUTHENTICATION & PASSWORD RESET
+// ────────────────────────────────────────────────────────────────
 Auth::routes(['verify' => true]);
 
-// Primary CRUD resources
+// ────────────────────────────────────────────────────────────────
+// PUBLIC ROUTES (no auth required)
+// ────────────────────────────────────────────────────────────────
+//HOME PAGE
+Route::get('home', [HomeController::class, 'index'])->name('home');
 
-// Nested “order item” routes (no standalone resource for OrderProduct)
-Route::prefix('orders/{order}')->group(function () {
-    // POST   /orders/{order}/products
-    Route::post('products', [OrderProductController::class, 'store'])
-        ->name('orders.products.store');
+Route::get('/', fn() => view('welcome'));
+Route::get('homepage', fn() => view('customerviews.homepage'))
+     ->name('homepage');
 
-    // PATCH  /orders/{order}/products/{orderProduct}
-    Route::patch('products/{orderProduct}', [OrderProductController::class, 'update'])
-        ->name('orders.products.update');
+Route::get('catalogue', [ProductController::class, 'customerCatalogue'])
+     ->name('products.catalogue');
 
-    // DELETE /orders/{order}/products/{orderProduct}
-    Route::delete('products/{orderProduct}', [OrderProductController::class, 'destroy'])
-        ->name('orders.products.destroy');
-});
+// Public flowers & products
+Route::resource('flowers', FlowerController::class)
+     ->only(['index', 'show']);
+Route::resource('products', ProductController::class)
+     ->only(['index', 'show']);
 
-Route::middleware(['auth', 'verified', 'admin'])->group(function () {
-    Route::get('/admin', [AdminController::class, 'index'])
-        ->name('admin.index');
-});
+// Orders & Cart (public)
+Route::resource('orders', OrderController::class)
+     ->only(['index', 'create', 'show', 'store', 'edit', 'destroy']);
 
-//Login Routes
-// ── Protected (requires auth) ──────────────────────────────────────────────
+Route::post('/cart/discount', [CartController::class, 'discountIfExist']);
+Route::get('cart',             [CartController::class, 'index'])->name('cart.index');
+Route::post('cart/{product}',  [CartController::class, 'add'])->name('cart.add');
+Route::patch('cart/{product}',  [CartController::class, 'update'])->name('cart.update');
+Route::delete('cart/{product}',  [CartController::class, 'remove'])->name('cart.remove');
+
+// ────────────────────────────────────────────────────────────────
+// AUTHENTICATED & VERIFIED USERS
+// ────────────────────────────────────────────────────────────────
+
 Route::middleware(['auth', 'verified'])->group(function () {
-    // ── Order Routes ────────────────────────────────────────────────────────────
-    Route::prefix('orders')->name('orders.')->group(function () {
-        Route::get('usertransactions', [OrderController::class, 'getTransactions'])->name('getTransactions');
-        Route::get('{order}/edit', [OrderController::class, 'edit'])->name('edit');
-        Route::match(['put', 'patch'], '{order}', [OrderController::class, 'update'])->name('update');
-        Route::delete('{order}', [OrderController::class, 'destroy'])->name('destroy');
-        Route::post('/',         [OrderController::class, 'store'])->name('store');
-    });
 
+     // Nested Order → OrderProduct
+     Route::prefix('orders/{order}')
+          ->name('orders.')
+          ->group(function () {
+               Route::post('products',                 [OrderProductController::class, 'store'])->name('products.store');
+               Route::patch('products/{orderProduct}', [OrderProductController::class, 'update'])->name('products.update');
+               Route::delete('products/{orderProduct}', [OrderProductController::class, 'destroy'])->name('products.destroy');
+          });
 
-    // ── Suggestion Routes ────────────────────────────────────────────────────────
-    Route::delete('suggestions/{suggestion}', [SuggestionController::class, 'destroy'])->name('suggestions.destroy');
+     // User transactions, suggestions, discounts, product management…
+     Route::get('orders/usertransactions', [OrderController::class, 'getTransactions'])
+          ->name('orders.getTransactions');
+     Route::resource('suggestions', SuggestionController::class)
+          ->only(['index', 'create', 'store', 'destroy']);
+     Route::prefix('discounts')->name('discounts.')->group(fn() => [
+          Route::get('create', [DiscountController::class, 'create'])->name('create'),
+          Route::get('index', [DiscountController::class, 'index'])->name('index'),
+          // …store, show, edit, update, destroy…
 
+     ]);
+     Route::prefix('products')->name('products.')->group(fn() => [
+          Route::get('create', [ProductController::class, 'create'])->name('create'),
+          // …store, edit, update, destroy…
+     ]);
 
-    // ── Discount Routes ────────────────────────────────────────────────────────
-    Route::prefix('discounts')->name('discounts.')->group(function () {
-        // 1. Show the “create” form
-        Route::get('create', [DiscountController::class, 'create'])->name('create');
-        // 2. Save a new discount
-        Route::post('/', [DiscountController::class, 'store'])->name('store');
-        // 3. Show a single discount’s details
-        Route::get('{discount}', [DiscountController::class, 'show'])->name('show');
-        // 4. Show the “edit” form for an existing discount
-        Route::get('{discount}/edit', [DiscountController::class, 'edit'])->name('edit');
-        // 5. Update an existing discount
-        Route::match(['put', 'patch'], '{discount}', [DiscountController::class, 'update'])->name('update');
-        // 6. Delete a discount
-        Route::delete('{discount}', [DiscountController::class, 'destroy'])->name('destroy');
-    });
-
-
-    // ── Product Routes ────────────────────────────────────────────────────────
-    Route::prefix('products')->name('products.')->group(function () {
-        // 2. Show the “create” form
-        Route::get('create', [ProductController::class, 'create'])->name('create');
-        // 3. Save a new product
-        Route::post('/', [ProductController::class, 'store'])->name('store');
-        // 5. Show the “edit” form
-        Route::get('{product}/edit', [ProductController::class, 'edit'])->name('edit');
-        // 6. Update an existing product
-        Route::match(['put', 'patch'], '{product}', [ProductController::class, 'update'])->name('update');
-        // 7. Delete a product
-        Route::delete('{product}', [ProductController::class, 'destroy'])->name('destroy');
-    });
+     // Flower stock (non-admin: just the “stock” form view + action)
+     Route::get('flowers/stock',           [FlowerController::class, 'stock'])->name('flowers.stock');
+     Route::post('flowers/{flower}/stock',  [FlowerController::class, 'stockupdate'])->name('flowers.stockupdate');
 });
 
-// ── Public (no auth) ────────────────────────────────────────────────────────
-// ── Order Routes ────────────────────────────────────────────────────────────
-Route::prefix('orders')->name('orders.')->group(function () {
-    // 1. List all orders
-    Route::get('/',          [OrderController::class, 'index'])->name('index');
-    // 2. Show "Create" form
-    Route::get('create',     [OrderController::class, 'create'])->name('create');
-    // 3. Save a new order
+// ────────────────────────────────────────────────────────────────
+// ADMIN-ONLY (auth + verified + admin middleware)
+// ────────────────────────────────────────────────────────────────
 
-    // 4. Display a single order
-    Route::get('{order}',    [OrderController::class, 'show'])->name('show');
-});
+Route::middleware(['auth', 'verified', 'admin'])
+     ->prefix('admin')
+     ->name('admin.')
+     ->group(function () {
+
+          Route::get('health', function () {
+               try {
+                    $dbOk    = DB::connection()->getPdo() !== null;
+                    $queueOk = Queue::size('default') !== null;
+                    $mailOk  = true; // or ping your mailer here
+
+                    $healthy = $dbOk && $queueOk && $mailOk;
+               } catch (\Exception $e) {
+                    $healthy = false;
+                    $dbOk    = $dbOk ?? false;
+                    $queueOk = $queueOk ?? false;
+                    $mailOk  = $mailOk ?? false;
+               }
+
+               return response()->json([
+                    'healthy'   => $healthy,
+                    'checks'    => [
+                         'database' => $dbOk,
+                         'queue'    => $queueOk,
+                         'mailer'   => $mailOk,
+                    ],
+                    'timestamp' => now()->toIso8601String(),
+               ]);
+          })->name('health');
+          // Dashboard
+          Route::get('/', [AdminController::class, 'index'])->name('index');
+          Route::patch(
+               'orders/{order}/status',
+               [AdminController::class, 'updateOrderStatus']
+          )->name('orders.updateStatus');
+
+          // ─── Admin Flowers Subpage ─────────────────────────────
+          // List & show the Flowers subpage inside the dashboard
+          Route::get('flowers',                 [AdminController::class, 'flowers'])
+               ->name('flowers.index');
+          // Create a new flower
+          Route::post('flowers',                 [AdminController::class, 'storeFlower'])
+               ->name('flowers.store');
+          // Update flower details
+          Route::put('flowers/{flower}',        [AdminController::class, 'updateFlower'])
+               ->name('flowers.update');
+          // Add stock to an existing flower
+          Route::post('flowers/{flower}/stock',  [AdminController::class, 'stockUpdateFlower'])
+               ->name('flowers.stockupdate');
+          // Delete a flower
+          Route::delete('flowers/{flower}',        [AdminController::class, 'destroyFlower'])
+               ->name('flowers.destroy');
 
 
-// Show the form to add stock and update price
-// Route to show the stock management page (no flower parameter needed)
-Route::get('/flowers/stock', [FlowerController::class, 'stock'])->name('flowers.stock');
-//Flower Routes
-Route::resource('flowers', FlowerController::class);
+          // ─── Admin Packagings Subpage ─────────────────────────────
+          Route::get('packagings',            [AdminController::class, 'packagings'])->name('packagings.index');
+          Route::post('packagings',            [AdminController::class, 'storePackaging'])->name('packagings.store');
+          Route::put('packagings/{packaging}', [AdminController::class, 'updatePackaging'])->name('packagings.update');
+          Route::delete('packagings/{packaging}', [AdminController::class, 'destroyPackaging'])->name('packagings.destroy');
 
-// Route to handle the submission to update stock for a specific flower
-Route::post('/flowers/{flower}/stock', [FlowerController::class, 'stockupdate'])->name('flowers.stockupdate');
-// ── Suggestion Routes ────────────────────────────────────────────────────────
-Route::prefix('suggestions')->name('suggestions.')->group(function () {
-    // 1. List all suggestions
-    Route::get('/', [SuggestionController::class, 'index'])->name('index');
-    // 2. Show the “create” form
-    Route::get('create', [SuggestionController::class, 'create'])->name('create');
-    // 3. Save a new suggestion
-    Route::post('/', [SuggestionController::class, 'store'])->name('store');
-});
+          // ─── Admin Discounts Subpage ───────────────────────────
+          // List & show the Discounts subpage inside the dashboard
+          Route::get('discounts', [AdminController::class, 'discounts'])
+               ->name('discounts.index');
+          // Create a new discount
+          Route::post('discounts', [AdminController::class, 'storeDiscount'])
+               ->name('discounts.store');
+          // Update discount details
+          Route::put('discounts/{discount}', [AdminController::class, 'updateDiscount'])
+               ->name('discounts.update');
+          // Delete a discount
+          Route::delete('discounts/{discount}', [AdminController::class, 'destroyDiscount'])
+               ->name('discounts.destroy');
 
+          // ─── Admin Suggestions Subpage ───────────────────────────
+          Route::delete('suggestions/{suggestion}', [AdminController::class, 'destroySuggestion'])
+               ->name('suggestions.destroy');
 
-//// ── Discount Routes ────────────────────────────────────────────────────────
-// 1. List all discounts
-Route::get('/discounts', [DiscountController::class, 'index'])->name('discounts.index');
+          // ─── Admin Products Subpage ───────────────────────────
+          Route::get('products/{product}', [AdminController::class, 'showProduct'])
+               ->name('products.showJson');
+          // Create new product
+          Route::post('products', [AdminController::class, 'storeProduct'])
+               ->name('products.store');
 
+          // Update existing product
+          Route::put('products/{product}', [AdminController::class, 'updateProduct'])
+               ->name('products.update');
 
-//// ── Product Routes ────────────────────────────────────────────────────────
-// 1. List all products
-Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-// 2. Display a single product
-Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
-
-Auth::routes();
-
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+          //Delete product
+          Route::delete('products/{product}', [AdminController::class, 'destroyProduct'])
+               ->name('products.destroy');
+     });

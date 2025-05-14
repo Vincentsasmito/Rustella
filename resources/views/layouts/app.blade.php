@@ -57,7 +57,6 @@
         </div>
     </div>
 
-    {{-- remove the extra semicolon here --}}
     @yield('content')
 
     <!-- Bootstrap JS bundle -->

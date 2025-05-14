@@ -14,6 +14,8 @@ return new class extends Migration
             $table->unsignedTinyInteger('percent');
             $table->unsignedInteger('max_value');
             $table->unsignedInteger('min_purchase');
+            $table->unsignedInteger('usage_limit')->default(1);
+            $table->unsignedInteger('usage_counter')->default(0);
         });
     }
 

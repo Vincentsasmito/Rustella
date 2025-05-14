@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Flower extends Model
@@ -20,10 +19,9 @@ class Flower extends Model
         'price',
     ];
 
-    public function Packaging(): BelongsTo
+    public function FlowerProduct(): HasMany
     {
-        return $this->belongsTo(FlowerProduct::class, 'flower_id', 'id');
+        return $this->hasMany(FlowerProduct::class, 'flower_id', 'id');
     }
-
     
 }

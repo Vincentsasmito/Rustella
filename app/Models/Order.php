@@ -19,12 +19,13 @@ class Order extends Model
         'recipient_name',
         'recipient_phone',
         'recipient_address',
-        'recipient_city',
+        'deliveries_id',
         'delivery_time',
         'progress',
         'cost',
         'user_id',
         'discount_id',
+        'payment_url',
     ];
 
     //If discount doesn't exist, return - to display.
@@ -52,6 +53,10 @@ class Order extends Model
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
+    public function delivery(): BelongsTo
+    {
+        return $this->belongsTo(Delivery::class, 'deliveries_id', 'id');
+    }
 
     public function recalculateCost()
     {
@@ -78,8 +83,9 @@ class Order extends Model
             // Multiply by how many units were ordered
             $cost += $unitCost * $op->quantity;
         }
+        $deliveryFee = Delivery::where('id', $this->deliveries_id)->value('fee') ?? 0;
 
-        $this->cost = $cost;
+        $this->cost = $cost + $deliveryFee;
         $this->save();
     }
     //PROD Admin Dashboard getSales

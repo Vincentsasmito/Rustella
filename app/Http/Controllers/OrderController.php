@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Delivery;
 use App\Models\Order;
 use App\Models\Discount;
 use App\Models\Flower;
@@ -23,6 +24,7 @@ class OrderController extends Controller
     // 2. Show the "create" form (with list of discounts)
     public function create()
     {
+        $deliveries = Delivery::all();
         $discounts = Discount::all();
         return view('orders.create', [
             'discounts' => Discount::all(),
@@ -38,13 +40,20 @@ class OrderController extends Controller
             'sender_note'       => 'nullable|string',
             'recipient_name'    => 'required|string',
             'recipient_phone'   => 'required|string',
-            'recipient_address' => 'required|string',
-            'recipient_city'    => 'required|string',
+            'recipient_address' => 'required|string',       
+            'deliveries_id'     => 'required|exists:deliveries,id',
             'delivery_time'     => 'required|date',
             'progress'          => 'required|string',
             'discount_id'       => 'nullable|exists:discounts,id',
+            'photo'             => 'nullable|mimes:jpg,bmp,png,jpeg',
         ]);
-
+        //save photo, get url
+        if ($file = $request->file('photo')) {
+            $file_path = public_path('payment');
+            $file_input = date('YmdHis') . '-' . $file->getClientOriginalName();
+            $file->move($file_path, $file_input);
+            $validInput['image_url'] = $file_input;
+        }
         // Get the cart items
         $cart = session()->get('cart', []); // [ product_id => quantity, ... ]
 
@@ -81,10 +90,10 @@ class OrderController extends Controller
             }
         }
 
-        // 1) Create the order with cost = 0 as a placeholder
+        // 1) Create the order with cost = 0 as a placeholder, set user ID, and set progress to payment pending.
         $validInput['user_id'] = Auth::id();
         $validInput['cost']    = 0;
-        $validInput['progress'] = "Pending Payment";
+        $validInput['progress'] = "Payment Pending";
         $order = Order::create($validInput);
 
         // 2) Create OrderProduct entries
@@ -186,7 +195,6 @@ class OrderController extends Controller
 
             return view('customerviews.transactions', compact('orders', 'totals'));
         }
-
         return redirect()->route('login')->with('error', 'You must be logged in to view transactions.');
     }
 }

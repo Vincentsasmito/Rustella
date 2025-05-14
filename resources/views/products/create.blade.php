@@ -48,26 +48,12 @@
             <div class="mb-3">
                 <label>Flowers Used</label>
                 @foreach ($flowers as $flower)
-                    @php
-                        $isUsed = isset($usedFlowers[$flower->id]);
-                        $qty = $isUsed ? $usedFlowers[$flower->id] : '';
-                    @endphp
                     <div class="d-flex align-items-center mb-2">
                         <div class="form-check me-3">
-                            <input class="form-check-input" type="checkbox"
-                                   name="flowers[{{ $flower->id }}]"
-                                   id="flower_{{ $flower->id }}"
-                                   {{ $isUsed ? 'checked' : '' }}>
-                            <label class="form-check-label" for="flower_{{ $flower->id }}">
-                                {{ $flower->name }}
-                            </label>
+                            <input class="form-check-input" type="checkbox" name="flowers[{{ $flower->id }}]" id="flower_{{ $flower->id }}">
+                            <label class="form-check-label" for="flower_{{ $flower->id }}">{{ $flower->name }}</label>
                         </div>
-                        <input type="number"
-                               name="quantities[{{ $flower->id }}]"
-                               placeholder="Quantity"
-                               class="form-control w-25"
-                               min="1" step="1"
-                               value="{{ $qty }}">
+                        <input type="number" name="quantities[{{ $flower->id }}]" placeholder="Quantity" class="form-control w-25" min="1" step="1">
                     </div>
                 @endforeach
             </div>

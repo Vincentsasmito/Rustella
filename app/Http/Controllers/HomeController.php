@@ -15,28 +15,33 @@ class HomeController extends Controller
     //In Prod = This function gets the data needed for Homepage (Top 3 Products, Catalogue Products)
     public function index()
     {
-        //Eager-load only in stock products (admin and system check)
-        $products = Product::with('packaging')
+        // 1) Load only in-stock products whose recipe is actually satisfiable
+        $products = Product::with([
+            'packaging',
+            // make sure your relation is actually named flowerProducts
+            'flowerProducts.flower',
+            // likewise, your orderProducts relation
+            'orderProducts',
+        ])
             ->where('in_stock', true)
             ->whereDoesntHave('flowerProducts.flower', function (Builder $q) {
-                // $q is a builder on the flowers table,
-                // direct call because relationship defined in Product model
+                // kick out if recipe.qty > flower.stock
                 $q->whereColumn('flower_products.quantity', '>', 'flowers.quantity');
             })
             ->get();
-        $top3productData = DB::table('order_products')
-            ->select('product_id', DB::raw('SUM(quantity) as total_quantity'))
-            ->groupBy('product_id')
-            ->orderByDesc('total_quantity')
-            ->limit(3)
-            ->get();
 
-        $productIDs = $top3productData->pluck('product_id');
-        $quantities = $top3productData->pluck('total_quantity', 'product_id');
+        // 2) Build a “sold quantities” array keyed by product_id
+        $quantities = $products->mapWithKeys(function (Product $p) {
+            // sum up all the pivot-quantities from orderProducts
+            $sold = $p->orderProducts->sum('quantity');
+            return [$p->id => $sold];
+        });
 
-        // fn($p) is shorthand function to sort through the collection.
-        $top3product = $products->whereIn('id', $productIDs)
-            ->sortBy(fn($p) => $productIDs->search($p->id));
+        // 3) Take the top 3 by that same sold value
+        $top3product = $products
+            ->sortByDesc(fn(Product $p) => $quantities[$p->id])
+            ->take(3)
+            ->values();  // re-index 0,1,2
 
         // Group up product by category(Packaging type)
         $groupedProducts = $products->groupBy(fn($product) => strtolower($product->packaging->name));

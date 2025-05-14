@@ -4,6 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {{-- expose Laravel’s CSRF token for AJAX --}}
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Rustella Florist- Professional Floral Design</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -28,16 +30,33 @@
             }
         }
     </script>
+    <!-- Initialize cart count from session -->
+    @php
+        $initialCount = array_sum(session('cart', []));
+    @endphp
+    <script>
+        window.RustellaCart = {
+            count: {{ $initialCount }}
+        };
+    </script>
     <link
         href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    </script>
+    <!-- AOS Animation Library -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
+    <!-- GSAP for more advanced animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <!-- Lottie for vector animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.10.2/lottie.min.js"></script>
 
     <style>
         body {
             font-family: 'Montserrat', sans-serif;
             color: #322D29;
             background-color: #FFF;
+            overflow-x: hidden;
         }
 
         .font-playfair {
@@ -56,10 +75,239 @@
             font-weight: 600;
             z-index: 1;
         }
+
+        /* Animation Classes */
+        .fade-in {
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+        }
+
+        .slide-up {
+            transform: translateY(50px);
+            opacity: 0;
+            transition: transform 0.8s ease-out, opacity 0.8s ease-out;
+        }
+
+        .slide-up.visible {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .slide-in-left {
+            transform: translateX(-100px);
+            opacity: 0;
+            transition: transform 0.8s ease-out, opacity 0.8s ease-out;
+        }
+
+        .slide-in-left.visible {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .slide-in-right {
+            transform: translateX(100px);
+            opacity: 0;
+            transition: transform 0.8s ease-out, opacity 0.8s ease-out;
+        }
+
+        .slide-in-right.visible {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .scale-in {
+            transform: scale(0.8);
+            opacity: 0;
+            transition: transform 0.6s ease-out, opacity 0.6s ease-out;
+        }
+
+        .scale-in.visible {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        /* Flower Petal Animation */
+        .petal {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background-color: rgba(116, 29, 41, 0.2);
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+            pointer-events: none;
+            z-index: 1000;
+            animation: fall 10s linear forwards;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-10vh) rotate(0deg) scale(0.8);
+                opacity: 0.8;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 0.9;
+            }
+
+            100% {
+                transform: translateY(100vh) rotate(360deg) scale(0.5);
+                opacity: 0;
+            }
+        }
+
+        /* Hover Effects */
+        .btn-hover {
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            transition: color 0.3s ease;
+        }
+
+        .btn-hover:before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0%;
+            background-color: #322D29;
+            transition: height 0.3s ease;
+            z-index: -1;
+        }
+
+        .btn-hover:hover:before {
+            height: 100%;
+        }
+
+        /* Card Hover Effect */
+        .card-hover {
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(50, 45, 41, 0.1);
+        }
+
+        /* Loading Animation */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
+        }
+
+        .loading-spinner {
+            width: 100px;
+            height: 100px;
+            border: 5px solid #EFE9E1;
+            border-top: 5px solid #741D29;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Toast Animation */
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast-notification {
+            animation: slideInRight 0.5s ease forwards;
+        }
+
+        /* Pulse Animation */
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(116, 29, 41, 0.7);
+            }
+
+            70% {
+                transform: scale(1.05);
+                box-shadow: 0 0 0 10px rgba(116, 29, 41, 0);
+            }
+
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(116, 29, 41, 0);
+            }
+        }
+
+        /* Parallax Effect */
+        .parallax {
+            background-attachment: fixed;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+        /* Floating Animation */
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+
+        @keyframes floating {
+            0% {
+                transform: translate(0, 0px);
+            }
+
+            50% {
+                transform: translate(0, 15px);
+            }
+
+            100% {
+                transform: translate(0, 0px);
+            }
+        }
     </style>
 </head>
 
 <body>
+    <!-- Loading Screen -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="text-center">
+            <div class="loading-spinner mb-4"></div>
+            <h2 class="font-playfair text-2xl text-mocha-burgundy mt-4">Rustella Floristry</h2>
+            <p class="text-mocha-medium">Crafting beauty...</p>
+        </div>
+    </div>
+
     <!-- Navigation -->
     <nav class="bg-white shadow-md fixed w-full z-10">
         <div class="container mx-auto px-4 md:px-8">
@@ -69,18 +317,51 @@
                         <img src="{{ asset('/WebsiteStockImage/Rustella.png') }}" alt="Rustella Logo"
                             class="h-8 w-auto">
                     </div>
-                    <a href="#" class="font-playfair text-2xl font-bold text-mocha-dark">Rustella<span
-                            class="text-mocha-medium">Floristry</span></a>
+                    <a href="#" class="font-playfair text-2xl font-bold text-mocha-dark">
+                        <span class="inline-block hover:scale-105 transition-transform duration-300">R</span>
+                        <span class="inline-block hover:scale-105 transition-transform duration-300">u</span>
+                        <span class="inline-block hover:scale-105 transition-transform duration-300">s</span>
+                        <span class="inline-block hover:scale-105 transition-transform duration-300">t</span>
+                        <span class="inline-block hover:scale-105 transition-transform duration-300">e</span>
+                        <span class="inline-block hover:scale-105 transition-transform duration-300">l</span>
+                        <span class="inline-block hover:scale-105 transition-transform duration-300">l</span>
+                        <span class="inline-block hover:scale-105 transition-transform duration-300">a</span>
+                        <span
+                            class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">F</span>
+                        <span
+                            class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">l</span>
+                        <span
+                            class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">o</span>
+                        <span
+                            class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">r</span>
+                        <span
+                            class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">i</span>
+                        <span
+                            class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">s</span>
+                        <span
+                            class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">t</span>
+                        <span
+                            class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">r</span>
+                        <span
+                            class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">y</span>
+                    </a>
                 </div>
 
                 <!-- Desktop Menu -->
                 <div class="hidden md:flex space-x-8">
-                    <a href="#" class="text-mocha-dark hover:text-mocha-burgundy font-medium">Home</a>
-                    <a href="#bestsellers" class="text-mocha-dark hover:text-mocha-burgundy font-medium">Best
+                    <a href="#"
+                        class="text-mocha-dark hover:text-mocha-burgundy font-medium relative after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-mocha-burgundy after:transition-all after:duration-300 hover:after:w-full">Home</a>
+                    <a href="#bestsellers"
+                        class="text-mocha-dark hover:text-mocha-burgundy font-medium relative after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-mocha-burgundy after:transition-all after:duration-300 hover:after:w-full">Best
                         Sellers</a>
-                    <a href="#catalog" class="text-mocha-dark hover:text-mocha-burgundy font-medium">Catalog</a>
-                    <a href="#about" class="text-mocha-dark hover:text-mocha-burgundy font-medium">About Us</a>
-                    <a href="#contact" class="text-mocha-dark hover:text-mocha-burgundy font-medium">Contact</a>
+                    <a href="#catalog"
+                        class="text-mocha-dark hover:text-mocha-burgundy font-medium relative after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-mocha-burgundy after:transition-all after:duration-300 hover:after:w-full">Catalog</a>
+                    <a href="#about"
+                        class="text-mocha-dark hover:text-mocha-burgundy font-medium relative after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-mocha-burgundy after:transition-all after:duration-300 hover:after:w-full">About
+                        Us</a>
+                    <a href="#contact"
+                        class="text-mocha-dark hover:text-mocha-burgundy font-medium relative after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-mocha-burgundy after:transition-all after:duration-300 hover:after:w-full">Suggestion</a>
+
                 </div>
 
                 <!-- Mobile Menu Button -->
@@ -91,41 +372,68 @@
                 </div>
 
                 <!-- Cart Icon -->
-                <div class="hidden md:block">
-                    <button class="text-mocha-dark hover:text-mocha-burgundy">
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="Profieluser.html"
+                        class="text-mocha-burgundy hover:text-mocha-dark transition-colors duration-300">
+                        <i class="fas fa-user text-xl"></i>
+                    </a>
+                    <a href="{{ route('cart.index') }}"
+                        class="text-mocha-dark hover:text-mocha-burgundy transition-colors duration-300 relative">
                         <i class="fas fa-shopping-cart text-xl"></i>
-                        <span class="bg-mocha-burgundy text-white rounded-full px-2 py-1 text-xs">0</span>
-                    </button>
+                        <span id="cart-badge"
+                            class="bg-mocha-burgundy text-white rounded-full px-2 py-1 text-xs absolute -top-2 -right-2 transition-transform duration-300">
+                            {{ $initialCount }}
+                        </span>
+                    </a>
                 </div>
             </div>
         </div>
 
         <!-- Mobile Menu -->
-        <div id="mobile-menu" class="hidden md:hidden bg-white">
+        <div id="mobile-menu"
+            class="hidden md:hidden bg-white transform -translate-y-full transition-transform duration-300 ease-in-out">
             <div class="container mx-auto px-4 py-2 space-y-3">
                 <a href="#" class="block text-mocha-dark hover:text-mocha-burgundy font-medium py-2">Home</a>
                 <a href="#bestsellers" class="block text-mocha-dark hover:text-mocha-burgundy font-medium py-2">Best
                     Sellers</a>
                 <a href="#catalog" class="block text-mocha-dark hover:text-mocha-burgundy font-medium py-2">Catalog</a>
                 <a href="#about" class="block text-mocha-dark hover:text-mocha-burgundy font-medium py-2">About Us</a>
-                <a href="#contact" class="block text-mocha-dark hover:text-mocha-burgundy font-medium py-2">Contact</a>
-                <a href="#" class="block text-mocha-dark hover:text-mocha-burgundy font-medium py-2">
+                <a href="#contact"
+                    class="block text-mocha-dark hover:text-mocha-burgundy font-medium py-2">Suggestion</a>
+                <a href="Profieluser.html" class="block text-mocha-dark hover:text-mocha-burgundy font-medium py-2">
+                    <i class="fas fa-user mr-2"></i> My Profile
+                </a>
+                <a href="{{ route('cart.index') }}"
+                    class="block text-mocha-dark hover:text-mocha-burgundy font-medium py-2">
                     <i class="fas fa-shopping-cart mr-2"></i> Cart
-                    <span class="bg-mocha-burgundy text-white rounded-full px-2 py-1 text-xs">0</span>
+                    <span class="bg-mocha-burgundy text-white rounded-full px-2 py-1 text-xs">3</span>
                 </a>
             </div>
         </div>
     </nav>
 
     <!-- Hero Section -->
-    <section class="pt-24 pb-16 md:pt-32 md:pb-24 bg-mocha-light/20">
+    <section class="pt-24 pb-16 md:pt-32 md:pb-24 bg-mocha-light/20 relative overflow-hidden">
+        <!-- Animated background petals -->
+        <div id="petals-container" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
+
         <div class="container mx-auto px-4 md:px-8">
             <div class="flex flex-col md:flex-row items-center">
-                <div class="md:w-1/2 md:pr-12 mb-8 md:mb-0">
-                    <h1 class="font-playfair text-4xl md:text-5xl lg:text-6xl font-bold text-mocha-dark mb-4">Personal
-                        Touch of Art</h1>
-                    <p class="text-mocha-medium text-lg mb-8">Hand-crafted arrangements that capture nature's beauty and
-                        your unique style.</p>
+                <!-- Text Column (now half width) -->
+                <div class="md:w-1/2 md:pr-12 mb-8 md:mb-0" data-aos="fade-right" data-aos-duration="1000">
+                    <h1 class="font-playfair text-4xl md:text-5xl lg:text-6xl font-bold text-mocha-dark mb-4">
+                        Personal Touch of
+                        <span class="text-mocha-burgundy relative">Art
+                            <svg class="absolute -bottom-2 left-0 w-full" height="6" viewBox="0 0 200 6"
+                                fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M0 3C50 0.5 150 0.5 200 3" stroke="#741D29" stroke-width="5"
+                                    stroke-linecap="round" />
+                            </svg>
+                        </span>
+                    </h1>
+                    <p class="text-mocha-medium text-lg mb-8">
+                        Hand-crafted arrangements that capture nature's beauty and your unique style.
+                    </p>
                     <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
                         <a href="#catalog"
                             class="bg-mocha-burgundy text-white py-3 px-6 rounded-md text-center hover:bg-opacity-90 transition">
@@ -137,36 +445,61 @@
                         </a>
                     </div>
                 </div>
-                <div class="md:w-1/2">
-                    <img src="/WebsiteStockImage/homepage_landscape.png" alt="Elegant flower arrangement"
-                        class="rounded-lg shadow-lg w-full">
+
+                <!-- Image Column (now half width) -->
+                <div class="md:w-1/2" data-aos="fade-left" data-aos-duration="1000">
+                    <div class="relative">
+                        <img src="/WebsiteStockImage/homepage_landscape.png" alt="Elegant flower arrangement"
+                            class="rounded-lg shadow-lg w-full h-auto max-h-[400px] object-cover" />
+
+                        <div class="absolute -bottom-4 -right-4 bg-white p-3 rounded-lg shadow-md" data-aos="fade-up"
+                            data-aos-delay="500">
+                            <div class="flex items-center space-x-2">
+                                <div class="text-amber-500 flex space-x-0.5">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star-half-alt"></i>
+                                </div>
+                                <span class="text-mocha-dark font-medium">4.8/5</span>
+                            </div>
+                            <p class="text-sm text-mocha-medium mt-1">Over 500+ Happy Customers</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
+
+
+
     <!-- Features Section -->
     <section class="py-16 bg-white">
         <div class="container mx-auto px-4 md:px-8">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="text-center p-6 rounded-lg bg-mocha-cream hover:shadow-md transition">
-                    <div class="inline-block p-4 rounded-full bg-mocha-light mb-4">
+                <div class="text-center p-6 rounded-lg bg-mocha-cream hover:shadow-md transition card-hover"
+                    data-aos="fade-up" data-aos-delay="100">
+                    <div class="inline-block p-4 rounded-full bg-mocha-light mb-4 pulse">
                         <i class="fas fa-truck text-2xl text-mocha-burgundy"></i>
                     </div>
                     <h3 class="text-xl font-semibold mb-2">Same Day Delivery</h3>
                     <p class="text-mocha-medium">Order before 2pm for same-day flower delivery within the city.</p>
                 </div>
 
-                <div class="text-center p-6 rounded-lg bg-mocha-cream hover:shadow-md transition">
-                    <div class="inline-block p-4 rounded-full bg-mocha-light mb-4">
+                <div class="text-center p-6 rounded-lg bg-mocha-cream hover:shadow-md transition card-hover"
+                    data-aos="fade-up" data-aos-delay="200">
+                    <div class="inline-block p-4 rounded-full bg-mocha-light mb-4 pulse">
                         <i class="fas fa-leaf text-2xl text-mocha-burgundy"></i>
                     </div>
                     <h3 class="text-xl font-semibold mb-2">Fresh Guarantee</h3>
                     <p class="text-mocha-medium">All our flowers are guaranteed fresh for at least 7 days.</p>
                 </div>
 
-                <div class="text-center p-6 rounded-lg bg-mocha-cream hover:shadow-md transition">
-                    <div class="inline-block p-4 rounded-full bg-mocha-light mb-4">
+                <div class="text-center p-6 rounded-lg bg-mocha-cream hover:shadow-md transition card-hover"
+                    data-aos="fade-up" data-aos-delay="300">
+                    <div class="inline-block p-4 rounded-full bg-mocha-light mb-4 pulse">
                         <i class="fas fa-paint-brush text-2xl text-mocha-burgundy"></i>
                     </div>
                     <h3 class="text-xl font-semibold mb-2">Custom Designs</h3>
@@ -174,58 +507,59 @@
                 </div>
             </div>
         </div>
+
     </section>
 
     <!-- Best Sellers Section -->
     <section id="bestsellers" class="py-16 bg-mocha-burgundy/10">
         <div class="container mx-auto px-4 md:px-8">
-            <div class="text-center mb-12">
+            <div class="text-center mb-12" data-aos="fade-up">
                 <h2 class="font-playfair text-3xl md:text-4xl font-bold text-mocha-dark">Customer Classics</h2>
                 <p class="text-mocha-medium mt-2">Our tried-and-true best sellers, loved by all.</p>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 @foreach ($top3product as $product)
-                    <div class="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition relative">
+                    <div class="card-clickable bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition cursor-pointer"
+                        data-aos="fade-up" data-aos-delay="100" data-id="{{ $product->id }}"
+                        data-name="{{ $product->name }}" data-img="{{ asset('images/' . $product->image_url) }}"
+                        data-desc="{{ $product->description }}"
+                        data-price="Rp {{ number_format($product->price, 0, ',', '.') }}"
+                        data-pack="{{ $product->packaging->name }}" data-recipe='@json($product->flowerProducts->map(fn($fp) => ['name' => $fp->flower->name, 'qty' => $fp->quantity]))'>
                         <span class="bestseller-badge">
                             <i class="fas fa-star mr-1"></i> Best Seller
                         </span>
 
                         <div class="aspect-[1/1] overflow-hidden">
                             <img src="{{ asset('images/' . $product->image_url) }}" alt="{{ $product->name }}"
-                                class="w-full h-full object-cover transition-transform duration-300 hover:scale-105">
+                                class="w-full h-full object-cover transition-transform duration-700 hover:scale-110">
                         </div>
 
                         <div class="p-5">
                             <h3 class="font-playfair text-xl font-semibold mb-2">{{ $product->name }}</h3>
-                            <p class="text-mocha-medium mb-3">{{ $product->description }}</p>
+                            <p class="text-mocha-medium mb-3 truncate">{{ $product->description }}</p>
 
                             <div class="flex justify-between items-center">
                                 <div>
                                     <span class="text-mocha-burgundy font-semibold text-lg">
-                                        Rp.{{ number_format($product->price, 0, ',', '.') }}
+                                        Rp{{ number_format($product->price, 0, ',', '.') }}
                                     </span>
-
                                     @if ($product->original_price && $product->original_price > $product->price)
                                         <span class="text-mocha-medium line-through ml-2">
-                                            Rp.{{ number_format($product->original_price, 0, ',', '.') }}
+                                            Rp{{ number_format($product->original_price, 0, ',', '.') }}
                                         </span>
                                     @endif
                                 </div>
-
                                 <button
-                                    class="add-to-cart bg-mocha-burgundy text-white py-2 px-4 rounded-md hover:bg-opacity-90 transition">
+                                    class="add-to-cart bg-mocha-burgundy text-white py-2 px-4 rounded-md hover:bg-opacity-90 transition"
+                                    data-url="{{ route('cart.add', $product->id) }}">
                                     Add to Cart
                                 </button>
                             </div>
 
                             <div class="mt-3 text-amber-500">
-                                {{-- Optional: Hardcoded stars or dynamic average rating --}}
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i>
                                 <span class="text-mocha-medium ml-1">
                                     ({{ $quantities[$product->id] ?? 0 }} sold)
                                 </span>
@@ -247,13 +581,13 @@
     <!-- Catalog Section -->
     <section id="catalog" class="py-16 bg-mocha-light/10">
         <div class="container mx-auto px-4 md:px-8">
-            <div class="text-center mb-12">
+            <div class="text-center mb-12" data-aos="fade-up">
                 <h2 class="font-playfair text-3xl md:text-4xl font-bold text-mocha-dark">Our Collection</h2>
                 <p class="text-mocha-medium mt-2">Browse our hand-crafted floral arrangements</p>
             </div>
 
             <!-- Category Tabs -->
-            <div class="flex flex-wrap justify-center mb-10">
+            <div class="flex flex-wrap justify-center mb-10" data-aos="fade-up">
                 <!-- “All” tab -->
                 <button class="category-tab active m-2 px-6 py-2 rounded-full bg-mocha-burgundy text-white"
                     data-category="all">
@@ -273,34 +607,34 @@
             <!-- Product Grid -->
             <div id="catalog-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 @foreach ($groupedProducts as $category => $items)
-                    @php
-                        // show the first item for this category
-                        $product = $items[0] ?? null;
-                    @endphp
-
-                    @if ($product)
-                        <div class="product-card" data-category="{{ $category }}">
-                            <div class="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition">
-                                <div class="aspect-[1/1] overflow-hidden">
-                                    <img src="{{ asset('images/' . $product->image_url) }}"
-                                        alt="{{ $product->name }}" class="w-full h-full object-cover">
-                                </div>
-                                <div class="p-4">
-                                    <h3 class="font-playfair text-xl font-semibold mb-2">{{ $product->name }}</h3>
-                                    <p class="text-mocha-medium mb-3">{{ $product->description }}</p>
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-mocha-burgundy font-semibold">
-                                            Rp. {{ number_format($product->price, 0, ',', '.') }}
-                                        </span>
-                                        <button
-                                            class="add-to-cart bg-mocha-dark text-white py-2 px-4 rounded-md hover:bg-opacity-90 transition">
-                                            Add to Cart
-                                        </button>
-                                    </div>
+                    @foreach ($items as $product)
+                        <div class="product-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition cursor-pointer"
+                            data-id     ="{{ $product->id }}" data-name   ="{{ $product->name }}"
+                            data-img    ="{{ asset('images/' . $product->image_url) }}"
+                            data-desc   ="{{ $product->description }}"
+                            data-price  ="Rp {{ number_format($product->price, 0, ',', '.') }}"
+                            data-pack   ="{{ $product->packaging->name }}"
+                            data-recipe ='@json($product->flowerProducts->map(fn($fp) => ['name' => $fp->flower->name, 'qty' => $fp->quantity]))'>
+                            <div class="aspect-[1/1] overflow-hidden">
+                                <img src="{{ asset('images/' . $product->image_url) }}" alt="{{ $product->name }}"
+                                    class="w-full h-full object-cover" />
+                            </div>
+                            <div class="p-4">
+                                <h3 class="font-playfair text-xl font-semibold mb-2">{{ $product->name }}</h3>
+                                <p class="text-mocha-medium mb-3 truncate">{{ $product->description }}</p>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-mocha-burgundy font-semibold text-lg">
+                                        Rp {{ number_format($product->price, 0, ',', '.') }}
+                                    </span>
+                                    <button
+                                        class="add-to-cart bg-mocha-burgundy text-white py-2 px-4 rounded-md hover:bg-opacity-90 transition"
+                                        data-url="{{ route('cart.add', $product->id) }}">
+                                        Add to Cart
+                                    </button>
                                 </div>
                             </div>
                         </div>
-                    @endif
+                    @endforeach
                 @endforeach
             </div>
 
@@ -323,8 +657,12 @@
                 </div>
                 <div class="lg:w-1/2">
                     <h2 class="font-playfair text-3xl md:text-4xl font-bold text-mocha-dark mb-6">Our Story</h2>
-                    <p class="text-mocha-medium mb-4 text-lg">Rustella......................</p>
-                    <p class="text-mocha-medium mb-6">Text</p>
+                    <p class="text-mocha-medium mb-4 text-lg">Founded in 2023 by Vania Evangeline, Rustella Floristry
+                        transforms nature’s finest blooms into handcrafted arrangements that captivate the eye and
+                        uplift the spirit. Each creation is thoughtfully designed to bring warmth, beauty, and joy to
+                        every occasion.
+                    </p>
+                    <p class="text-mocha-medium mb-6"></p>
 
                     <div class="bg-white p-6 rounded-lg shadow-md mb-6">
                         <h3 class="font-playfair text-xl font-semibold mb-3 text-mocha-burgundy">Our Mission</h3>
@@ -360,6 +698,27 @@
                         </a>
                     </div>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Partner Logos Section -->
+    <section class="py-16 bg-mocha-light/10" data-aos="fade-up">
+        <div class="container mx-auto px-4 md:px-8">
+            <div class="text-center mb-10">
+                <h2 class="font-playfair text-3xl font-bold text-mocha-dark">Trusted by</h2>
+                <p class="text-mocha-medium mt-2">Perusahaan-perusahaan yang telah bekerjasama dengan kami</p>
+                <div class="w-24 h-1 bg-mocha-burgundy mx-auto mt-4"></div>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8 items-center">
+                <img src="{{ asset('/WebsiteStockImage/Stockbit.png') }}" alt="Partner 1"
+                    class="mx-auto h-16 object-contain" data-aos="zoom-in" data-aos-delay="100">
+                <img src="{{ asset('/WebsiteStockImage/bca.png') }}" alt="Partner 2"
+                    class="mx-auto h-16 object-contain" data-aos="zoom-in" data-aos-delay="200">
+                <img src="{{ asset('/WebsiteStockImage/manulife.jpg') }}" alt="Partner 3"
+                    class="mx-auto h-16 object-contain" data-aos="zoom-in" data-aos-delay="300">
+                <img src="{{ asset('/WebsiteStockImage/allianz.png') }}" alt="Partner 4"
+                    class="mx-auto h-16 object-contain" data-aos="zoom-in" data-aos-delay="400">
             </div>
         </div>
     </section>
@@ -400,6 +759,7 @@
         </div>
     </section>
 
+
     <!-- Subscribe Section -->
     <section class="py-16 bg-mocha-burgundy text-white">
         <div class="container mx-auto px-4 md:px-8">
@@ -409,6 +769,8 @@
             </div>
         </div>
     </section>
+
+
 
     <!-- Footer -->
     <footer class="bg-mocha-dark text-white pt-12 pb-6">
@@ -470,12 +832,64 @@
         </div>
     </footer>
 
+    <!-- Product Detail Modal -->
+    <div id="product-detail-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 overflow-hidden">
+            <!-- header -->
+            <div class="flex justify-between items-center px-6 py-4 border-b">
+                <h3 id="modal-name" class="text-xl font-semibold"></h3>
+                <button id="modal-close" class="text-mocha-dark hover:text-mocha-burgundy text-2xl">&times;</button>
+            </div>
+
+            <!-- body -->
+            <div class="px-6 py-4 space-y-4">
+                <div class="w-full aspect-[3/2] overflow-hidden rounded">
+                    <img id="modal-image" src="" alt="" class="object-cover w-full h-full" />
+                </div>
+                <p id="modal-desc" class="text-mocha-medium"></p>
+
+                <ul class="space-y-2">
+                    <li><strong>Price:</strong> <span id="modal-price"></span></li>
+                    <li><strong>Packaging:</strong> <span id="modal-packaging"></span></li>
+                    <li>
+                        <strong>Composition:</strong>
+                        <ul id="modal-recipe" class="list-disc list-inside text-mocha-dark"></ul>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- footer -->
+            <div class="px-6 py-4 border-t text-right">
+                <button id="modal-close-footer"
+                    class="px-4 py-2 bg-mocha-burgundy text-white rounded hover:bg-opacity-90">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Script -->
+    <!-- AOS Initialization -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <script>
+        AOS.init();
+    </script>
+    <!-- Loading Screen Fade Out -->
+    <script>
+        window.addEventListener('load', () => {
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.style.opacity = '0';
+            setTimeout(() => overlay.style.display = 'none', 500);
+        });
+    </script>
     <script>
         // Mobile Menu Toggle
-        const menuToggle = document.getElementById('menu-toggle');
-        const mobileMenu = document.getElementById('mobile-menu');
-        menuToggle.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+        document.getElementById('menu-toggle').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+            mobileMenu.classList.toggle('-translate-y-full');
+        });
+
 
         // Toast Notification
         function showToast(message) {
@@ -531,20 +945,43 @@
             cartCount.forEach(count => count.textContent = itemsInCart);
         }
 
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('add-to-cart')) {
-                itemsInCart++;
-                updateCartUI();
-                e.target.textContent = 'Added!';
-                e.target.classList.replace('bg-mocha-dark', 'bg-mocha-burgundy');
-                setTimeout(() => {
-                    e.target.textContent = 'Add to Cart';
-                    e.target.classList.replace('bg-mocha-burgundy', 'bg-mocha-dark');
-                }, 1500);
-                showToast('Item added to your cart!');
+        document.addEventListener('click', async function(e) {
+            const btn = e.target.closest('.add-to-cart');
+            if (!btn) return;
+            e.preventDefault();
+
+            const url = btn.dataset.url;
+            if (!url) return console.error('No data-url on button');
+
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        qty: 1
+                    })
+                });
+
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                const {
+                    count
+                } = await res.json();
+                document.getElementById('cart-badge').textContent = count;
+
+                // quick feedback
+                const prev = btn.textContent;
+                btn.textContent = 'Added!';
+                setTimeout(() => btn.textContent = prev, 1200);
+
+            } catch (err) {
+                console.error('Add to cart failed:', err);
+                alert('Sorry, could not add to cart.');
             }
         });
-
         // Image Hover Effect
         document.querySelectorAll('.product-card img').forEach(img => {
             img.addEventListener('mouseenter', () => img.classList.add('scale-105', 'transition-transform',
@@ -581,29 +1018,51 @@
 
         // 4) Card factory (unchanged)
         function makeCard(p, cat) {
-            const d = document.createElement('div');
-            d.className = 'product-card';
-            d.dataset.category = cat;
+            const d = document.createElement('div')
+            d.className =
+                'product-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition cursor-pointer'
+
+            // carry through your filtering category
+            d.dataset.category = cat
+
+            // now copy the same dataset you used in your blade templates:
+            d.dataset.id = p.id
+            d.dataset.name = p.name
+            d.dataset.img = `/images/${p.image_url}`
+            d.dataset.desc = p.description
+            d.dataset.price = `Rp ${Number(p.price).toLocaleString('id-ID')}`
+            d.dataset.pack = p.packaging.name
+            d.dataset.recipe = JSON.stringify(
+                (p.flower_products || []).map(fp => ({
+                    name: fp.flower.name,
+                    qty: fp.quantity
+                }))
+            )
+
+            // then build the innerHTML exactly as before
             d.innerHTML = `
-                <div class="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition">
-                    <div class="aspect-[1/1] overflow-hidden">
-                    <img src="/images/${p.image_url}" alt="${p.name}"
-                        class="w-full h-full object-cover transition-transform duration-300 hover:scale-105">
-                    </div>
-                    <div class="p-4">
-                    <h3 class="font-playfair text-xl font-semibold mb-2">${p.name}</h3>
-                    <p class="text-mocha-medium mb-3">${p.description}</p>
-                    <div class="flex justify-between items-center">
-                        <span class="text-mocha-burgundy font-semibold">
-                        Rp. ${Number(p.price).toLocaleString('id-ID')}
-                        </span>
-                        <button class="add-to-cart bg-mocha-dark text-white py-2 px-4 rounded-md hover:bg-opacity-90 transition">
-                        Add to Cart
-                        </button>
-                    </div>
-                    </div>
-                </div>`;
-            return d;
+    <div class="aspect-[1/1] overflow-hidden">
+      <img src="/images/${p.image_url}"
+           alt="${p.name}"
+           class="w-full h-full object-cover transition-transform duration-300 hover:scale-105">
+    </div>
+    <div class="p-4">
+      <h3 class="font-playfair text-xl font-semibold mb-2">${p.name}</h3>
+      <p class="text-mocha-medium mb-3 truncate">${p.description}</p>
+      <div class="flex justify-between items-center">
+        <span class="text-mocha-burgundy font-semibold">
+          Rp. ${Number(p.price).toLocaleString('id-ID')}
+        </span>
+        <button
+  class="add-to-cart bg-mocha-burgundy text-white py-2 px-4 rounded-md hover:bg-opacity-90 transition"
+  data-url="/cart/${p.id}"
+>
+  Add to Cart
+</button>
+      </div>
+    </div>`
+
+            return d
         }
 
         // 5) Render first `count` items for any category (including 'all')
@@ -660,6 +1119,56 @@
 
         // 9) Initialize “all” on page load
         document.querySelector('.category-tab[data-category="all"]').click();
+    </script>
+    <script>
+        const modal = document.getElementById('product-detail-modal');
+        const imgEl = document.getElementById('modal-image');
+        const setText = (id, txt) => document.getElementById(id).textContent = txt;
+        const setHTML = (id, html) => document.getElementById(id).innerHTML = html;
+
+        document.addEventListener('click', e => {
+
+            // 1) if they clicked “Add to Cart” (or anything inside it), bail out
+            if (e.target.closest('.add-to-cart')) {
+                return
+            }
+
+            // 2) otherwise, look for a card click
+            const card = e.target.closest('.product-card, .card-clickable')
+            if (!card) return
+
+            // …populate & open your modal as before…
+            const {
+                name,
+                img,
+                desc,
+                price,
+                pack,
+                recipe
+            } = card.dataset
+            const recList = JSON.parse(recipe || '[]')
+
+            setText('modal-name', name)
+            imgEl.src = img
+            imgEl.alt = name
+            setText('modal-desc', desc)
+            setText('modal-price', price)
+            setText('modal-packaging', pack)
+            setHTML('modal-recipe',
+                recList.map(fp => `<li>${fp.name} × ${fp.qty}</li>`).join('')
+            )
+
+            modal.classList.remove('hidden')
+            modal.classList.add('flex')
+        })
+
+        // close buttons & backdrop
+        document.querySelectorAll('#modal-close, #modal-close-footer').forEach(btn =>
+            btn.addEventListener('click', () => modal.classList.add('hidden'))
+        );
+        modal.addEventListener('click', e => {
+            if (e.target === modal) modal.classList.add('hidden');
+        });
     </script>
 </body>
 

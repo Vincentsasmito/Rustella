@@ -20,6 +20,8 @@ class Discount extends Model
         'percent',
         'max_value',
         'min_purchase',
+        'usage_limit',
+        'usage_counter',
     ];
 
     //Relation: Discount has many orders.

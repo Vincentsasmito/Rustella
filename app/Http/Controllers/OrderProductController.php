@@ -15,6 +15,7 @@ class OrderProductController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\Order         $order
      */
+    //not being used
     public function store(Request $request, Order $order)
     {
         $data = $request->validate([

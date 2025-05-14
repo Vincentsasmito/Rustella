@@ -25,18 +25,22 @@ class Product extends Model
     ];
 
 
-    public function flowerProducts():HasMany
+    public function flowerProducts(): HasMany
     {
         return $this->hasMany(FlowerProduct::class, 'product_id');
     }
 
-    public function packaging():BelongsTo
+    public function packaging(): BelongsTo
     {
         return $this->belongsTo(Packaging::class, 'packaging_id', 'id');
     }
 
-    public function suggestion():HasMany
+    public function suggestion(): HasMany
     {
         return $this->hasMany(Suggestion::class);
+    }
+    public function orderProducts()
+    {
+        return $this->hasMany(OrderProduct::class);
     }
 }
