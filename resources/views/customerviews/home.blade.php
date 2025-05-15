@@ -373,7 +373,7 @@
 
                 <!-- Cart Icon -->
                 <div class="hidden md:flex items-center space-x-6">
-                    <a href="Profieluser.html"
+                    <a href="profile"
                         class="text-mocha-burgundy hover:text-mocha-dark transition-colors duration-300">
                         <i class="fas fa-user text-xl"></i>
                     </a>
@@ -959,18 +959,24 @@
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                         'Accept': 'application/json',
+                        'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
                         qty: 1
-                    })
+                    }),
                 });
 
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                // parse JSON regardless of OK or not
+                const payload = await res.json();
 
-                const {
-                    count
-                } = await res.json();
-                document.getElementById('cart-badge').textContent = count;
+                if (!res.ok) {
+                    // server should return { error: "Not enough stock…" }
+                    showToast(payload.error || 'Could not add to cart.');
+                    return;
+                }
+
+                // success path
+                document.getElementById('cart-badge').textContent = payload.count;
 
                 // quick feedback
                 const prev = btn.textContent;
@@ -979,7 +985,7 @@
 
             } catch (err) {
                 console.error('Add to cart failed:', err);
-                alert('Sorry, could not add to cart.');
+                showToast('Network error—please try again.');
             }
         });
         // Image Hover Effect

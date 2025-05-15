@@ -551,7 +551,7 @@
 
 
     <script>
-        // 1) CSRF‐aware fetch helper
+        // 1) CSRF-aware fetch helper, with clone for debugging
         async function request(url, method, data = {}) {
             const token = document.querySelector('meta[name="csrf-token"]').content;
             const res = await fetch(url, {
@@ -559,15 +559,26 @@
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': token,
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
                 },
-                body: method !== 'DELETE' ? JSON.stringify(data) : null
+                body: method !== 'DELETE' ? JSON.stringify(data) : null,
             });
-            const text = await res.text();
-            console.log('Raw Response:', text); // ← look for an HTML page here
-            if (!res.ok) throw new Error(await res.text());
-            return res.json();
+
+            // clone so we can peek the raw text without consuming the main body
+            const debugText = await res.clone().text();
+            console.log('Raw Response:', debugText);
+
+            // parse the real JSON payload
+            const payload = await res.json();
+
+            if (!res.ok) {
+                // assume your API returns { error: "..." }
+                throw new Error(payload.error || debugText || 'Request failed');
+            }
+
+            return payload;
         }
+
 
         // 2) Recompute badge, line totals & summary
         function updateCartTotal() {
@@ -611,25 +622,31 @@
             });
         });
 
-        // 4) Qty buttons → PATCH
+        // 4) Qty buttons → PATCH, with revert-on-failure
         document.querySelectorAll('.cart-item').forEach(item => {
             const id = item.dataset.id;
             item.querySelectorAll('.qty-btn').forEach(btn => {
                 btn.addEventListener('click', async () => {
                     const input = item.querySelector('.item-qty');
-                    let qty = parseInt(input.value, 10) + (btn.textContent.trim() === '+' ? 1 :
-                        -1);
-                    qty = Math.max(1, qty);
-                    input.value = qty;
+                    const oldQty = parseInt(input.value, 10) || 0;
+                    const delta = btn.textContent.trim() === '+' ? 1 : -1;
+                    const newQty = Math.max(1, oldQty + delta);
+
+                    // optimistically update UI
+                    input.value = newQty;
+                    updateCartTotal();
 
                     try {
                         await request(`/cart/${id}`, 'PATCH', {
-                            quantity: qty
+                            quantity: newQty
                         });
+                        // success: UI already shows newQty
+                    } catch (err) {
+                        console.error(err);
+                        showToast(err.message || 'Could not update quantity.');
+                        // revert UI back
+                        input.value = oldQty;
                         updateCartTotal();
-                    } catch (e) {
-                        console.error(e);
-                        showToast('Could not update quantity.');
                     }
                 });
             });

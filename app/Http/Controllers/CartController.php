@@ -49,37 +49,100 @@ class CartController extends Controller
     // Add an item (qty = 1 by default)
     public function add(Request $request, Product $product)
     {
-        $qty = $request->input('qty', 1);
-
-        // merge into session cart:
+        // 1) figure out the new cart quantities, *including* this add
+        $qty  = $request->input('qty', 1);
         $cart = session('cart', []);
         $cart[$product->id] = ($cart[$product->id] ?? 0) + $qty;
+
+        // 2) eager‐load every product in that cart
+        $products = Product::with('flowerProducts.flower')
+            ->whereIn('id', array_keys($cart))
+            ->get();
+
+        // 3) build a usage map: flower_id => total stems required
+        $usage = [];
+        foreach ($products as $prod) {
+            $count = $cart[$prod->id];
+            foreach ($prod->flowerProducts as $fp) {
+                $fid = $fp->flower->id;
+                $usage[$fid] = ($usage[$fid] ?? 0) + ($fp->quantity * $count);
+            }
+        }
+
+        // 4) check *every* flower’s total usage against its stock
+        $shortages = [];
+        foreach ($products->flatMap->flowerProducts as $fp) {
+            $flower = $fp->flower;
+            $needed = $usage[$flower->id] ?? 0;
+            if ($needed > $flower->quantity) {
+                $shortages[] = "{$flower->name}: needed {$needed}, available {$flower->quantity}";
+            }
+        }
+
+        if (! empty($shortages)) {
+            $msg = 'Insufficient stock for: ' . implode('; ', array_unique($shortages));
+            if ($request->wantsJson()) {
+                return response()->json(['error' => $msg], 400);
+            }
+            return back()->withErrors(['stock' => $msg]);
+        }
+
+        // 5) all good → write back the new cart & respond
         session(['cart' => $cart]);
-
         $totalCount = array_sum($cart);
-
-        // if the client expects JSON, send back the new count
         if ($request->wantsJson()) {
             return response()->json(['count' => $totalCount]);
         }
-
-        // otherwise fallback to normal redirect
         return redirect()->back();
     }
 
     public function update(Request $request, Product $product)
     {
+        // 1) validate incoming quantity
         $data = $request->validate([
-            'quantity' => 'required|integer|min:1',   // ← validate "quantity"
+            'quantity' => 'required|integer|min:1',
         ]);
+        $newQty = $data['quantity'];
 
+        // 2) load current cart & apply this change
         $cart = session('cart', []);
+        if (! array_key_exists($product->id, $cart)) {
+            // nothing to update if product not in cart
+            abort(404);
+        }
+        $cart[$product->id] = $newQty;
 
-        if (isset($cart[$product->id])) {
-            $cart[$product->id] = $data['quantity'];  // ← read $request->quantity
-            session(['cart' => $cart]);
+        // 3) eager-load all cart products with their flower recipes
+        $products = Product::with('flowerProducts.flower')
+            ->whereIn('id', array_keys($cart))
+            ->get();
+
+        // 4) build up total stems needed per flower across the entire cart
+        $usage = [];  // flower_id => total required stems
+        foreach ($products as $prod) {
+            $count = $cart[$prod->id];
+            foreach ($prod->flowerProducts as $fp) {
+                $fid = $fp->flower->id;
+                $usage[$fid] = ($usage[$fid] ?? 0) + ($fp->quantity * $count);
+            }
         }
 
+        // 5) check each flower’s total usage vs its stock
+        foreach ($products->flatMap->flowerProducts as $fp) {
+            $flower = $fp->flower;
+            $needed = $usage[$flower->id];
+            if ($needed > $flower->quantity) {
+                $msg = "Not enough stock for “{$flower->name}.” You need {$needed} stems but only {$flower->quantity} available.";
+
+                if ($request->wantsJson()) {
+                    return response()->json(['error' => $msg], 400);
+                }
+                return back()->withErrors(['stock' => $msg]);
+            }
+        }
+
+        // 6) all good → write back and calculate totals
+        session(['cart' => $cart]);
         $lineTotal  = $product->price * $cart[$product->id];
         $totalCount = array_sum($cart);
 
@@ -92,6 +155,7 @@ class CartController extends Controller
 
         return back()->with('success', 'Cart updated');
     }
+
 
     public function remove(Request $request, Product $product)
     {

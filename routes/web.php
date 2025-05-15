@@ -16,6 +16,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderProductController;
 use App\Http\Controllers\SuggestionController;
 use App\Http\Controllers\DiscountController;
+use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\PackagingController;
 // ────────────────────────────────────────────────────────────────
 // AUTHENTICATION & PASSWORD RESET
@@ -65,6 +66,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
                Route::patch('products/{orderProduct}', [OrderProductController::class, 'update'])->name('products.update');
                Route::delete('products/{orderProduct}', [OrderProductController::class, 'destroy'])->name('products.destroy');
           });
+
+     Route::get('/profile', [UserProfileController::class, 'index'])
+          ->name('profile.index');
+     Route::put('/profile', [UserProfileController::class, 'updateProfile'])
+          ->name('profile.update');
+     Route::put('/profile/password', [UserProfileController::class, 'updatePassword'])
+          ->name('profile.password.update');
+     // Upload payment screenshot
+     Route::post(
+          '/orders/{order}/upload-payment',
+          [UserProfileController::class, 'updatePayment']
+     )->name('orders.uploadPayment');
 
      // User transactions, suggestions, discounts, product management…
      Route::get('orders/usertransactions', [OrderController::class, 'getTransactions'])
