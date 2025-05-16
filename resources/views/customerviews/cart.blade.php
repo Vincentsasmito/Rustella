@@ -167,284 +167,261 @@
                 </div>
     </nav>
 
-    <!-- Sections -->
-    <main class="pt-28">
-        <section id="cart-section" class="checkout-section active container mx-auto px-4 md:px-8 pb-16">
-            <h1 class="font-playfair text-3xl md:text-4xl font-bold text-center mb-10">Your Shopping Cart</h1>
 
-            <div class="flex flex-col lg:flex-row gap-8">
-                <!-- 2/3: Cart Items -->
-                <div class="lg:w-2/3">
-                    <div class="bg-white rounded-lg shadow-md p-6">
-                        <h2 class="font-playfair text-xl font-semibold mb-6">Items</h2>
-                        <div id="cart-items" class="space-y-6">
-                            @forelse($cart as $item)
-                                @php
-                                    $p = $item['product'];
-                                    $qty = $item['quantity'];
-                                @endphp
 
-                                <div class="cart-item flex items-center py-4 border-b border-mocha-light"
-                                    data-id="{{ $p->id }}" data-price="{{ $p->price }}">
-                                    {{-- 1) LEFT: thumbnail + name --}}
-                                    <div class="flex items-center space-x-4 flex-1">
-                                        <div class="w-20 h-20 bg-mocha-light/30 rounded-lg overflow-hidden">
-                                            <img src="{{ asset('images/' . $p->image_url) }}" alt="{{ $p->name }}"
-                                                class="w-full h-full object-cover" />
-                                        </div>
-                                        <div>
-                                            <h3 class="font-playfair font-semibold">{{ $p->name }}</h3>
-                                            <p class="text-sm text-mocha-medium">{{ Str::limit($p->description, 50) }}
-                                            </p>
-                                        </div>
-                                    </div>
+    <form method="POST" action="{{ route('cart.checkout') }}" enctype="multipart/form-data">
+        @csrf
+        {{-- carry the validated discount_id through --}}
+        <input type="hidden" name="discount_id" id="discount-id" value="">
 
-                                    {{-- 2) RIGHT GROUP: qty controls, price, remove --}}
-                                    <div class="flex items-center space-x-6">
-                                        <!-- a) qty controls -->
-                                        <div class="flex-shrink-0 flex items-center space-x-1">
-                                            <button
-                                                class="qty-btn h-8 w-8 p-0 leading-none flex items-center justify-center">−</button>
-                                            <input type="text" value="{{ $qty }}"
-                                                class="item-qty w-10 h-8 leading-none text-center bg-transparent border border-mocha-light rounded" />
-                                            <button
-                                                class="qty-btn h-8 w-8 p-0 leading-none flex items-center justify-center">+</button>
-                                        </div>
+        <main class="pt-28">
+            <!-- ===== CART SECTION ===== -->
+            <section id="cart-section" class="checkout-section active container mx-auto px-4 md:px-8 pb-16">
+                <h1 class="font-playfair text-3xl md:text-4xl font-bold text-center mb-10">
+                    Your Shopping Cart
+                </h1>
 
-                                        <!-- b) line total -->
-                                        <div class="flex-shrink-0 text-right w-24 line-total">
-                                            <p class="font-semibold">
-                                                Rp.{{ number_format($p->price * $qty, 0, ',', '.') }}
-                                            </p>
-                                            @if ($p->original_price > $p->price)
-                                                <p class="text-sm text-mocha-medium line-through">
-                                                    Rp.{{ number_format($p->original_price * $qty, 0, ',', '.') }}
+                <div class="flex flex-col lg:flex-row gap-8">
+                    <!-- Cart Items -->
+                    <div class="lg:w-2/3">
+                        <div class="bg-white rounded-lg shadow-md p-6">
+                            <h2 class="font-playfair text-xl font-semibold mb-6">Items</h2>
+                            <div id="cart-items" class="space-y-6">
+                                @forelse($cart as $item)
+                                    @php
+                                        $p = $item['product'];
+                                        $qty = $item['quantity'];
+                                    @endphp
+                                    <div class="cart-item flex items-center py-4 border-b border-mocha-light"
+                                        data-id="{{ $p->id }}" data-price="{{ $p->price }}">
+                                        <!-- Thumbnail + Name -->
+                                        <div class="flex items-center space-x-4 flex-1">
+                                            <div class="w-20 h-20 bg-mocha-light/30 rounded-lg overflow-hidden">
+                                                <img src="{{ asset('images/' . $p->image_url) }}"
+                                                    alt="{{ $p->name }}" class="w-full h-full object-cover" />
+                                            </div>
+                                            <div>
+                                                <h3 class="font-playfair font-semibold">{{ $p->name }}</h3>
+                                                <p class="text-sm text-mocha-medium">
+                                                    {{ Str::limit($p->description, 50) }}
                                                 </p>
-                                            @endif
+                                            </div>
                                         </div>
 
-
-                                        <!-- c) remove -->
-                                        <button
-                                            class="flex-shrink-0 remove-item text-mocha-medium hover:text-mocha-burgundy">
-                                            <i class="fas fa-times"></i>
-                                        </button>
+                                        <!-- Qty & Price & Remove -->
+                                        <div class="flex items-center space-x-6">
+                                            <div class="flex-shrink-0 flex items-center space-x-1">
+                                                <button type="button"
+                                                    class="qty-btn h-8 w-8 flex items-center justify-center">−
+                                                </button>
+                                                <input type="text" value="{{ $qty }}" readonly
+                                                    class="item-qty w-10 h-8 text-center bg-transparent border border-mocha-light rounded" />
+                                                <button type="button"
+                                                    class="qty-btn h-8 w-8 flex items-center justify-center">+
+                                                </button>
+                                            </div>
+                                            <div class="flex-shrink-0 text-right w-24 line-total">
+                                                <p class="font-semibold">
+                                                    Rp.{{ number_format($p->price * $qty, 0, ',', '.') }}
+                                                </p>
+                                                @if ($p->original_price > $p->price)
+                                                    <p class="text-sm text-mocha-medium line-through">
+                                                        Rp.{{ number_format($p->original_price * $qty, 0, ',', '.') }}
+                                                    </p>
+                                                @endif
+                                            </div>
+                                            <button type="button"
+                                                class="remove-item text-mocha-medium hover:text-mocha-burgundy">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
-                            @empty
-                                <p class="text-center py-10">Your cart is empty.</p>
-                            @endforelse
+                                @empty
+                                    <p class="text-center py-10">Your cart is empty.</p>
+                                @endforelse
+                            </div>
                         </div>
-
                     </div>
-                </div> <!-- ← close the lg:w-2/3 here -->
 
-                <!-- Order Summary -->
-                <div class="lg:w-1/3">
-                    <div class="bg-white rounded-lg shadow-md p-6 sticky top-24">
-                        <h2 class="font-playfair text-xl font-semibold mb-6">Order Summary</h2>
+                    <!-- Order Summary -->
+                    <div class="lg:w-1/3">
+                        <div class="bg-white rounded-lg shadow-md p-6 sticky top-24">
+                            <h2 class="font-playfair text-xl font-semibold mb-6">Order Summary</h2>
 
-                        {{-- Subtotal Row --}}
-                        <div class="space-y-3 mb-6">
-                            <div class="flex justify-between">
-                                <span class="text-mocha-medium">Subtotal</span>
-                                <span id="order-subtotal" class="font-semibold">Rp.
-                                    {{ number_format($subtotal ?? 0, 0, ',', '.') }}</span>
+                            <div class="space-y-3 mb-6">
+                                <div class="flex justify-between">
+                                    <span class="text-mocha-medium">Subtotal</span>
+                                    <span id="order-subtotal" class="font-semibold">
+                                        Rp.{{ number_format($subtotal ?? 0, 0, ',', '.') }}
+                                    </span>
+                                </div>
+
+                                {{-- Discount Input --}}
+                                <div class="flex items-center space-x-2">
+                                    <input id="discount-code" type="text" placeholder="Enter discount code"
+                                        class="w-full px-4 py-2 border border-mocha-light rounded focus:ring-mocha-burgundy" />
+                                    <button type="button" id="apply-discount"
+                                        class="bg-mocha-burgundy text-white px-4 py-2 rounded hover:bg-opacity-90">
+                                        Use
+                                    </button>
+                                </div>
+
+                                {{-- Discount Result Row --}}
+                                <div id="discount-row" class="flex justify-between hidden">
+                                    <span class="text-mocha-medium">Discount</span>
+                                    <span id="discount-amount" class="text-green-600 font-semibold">-</span>
+                                </div>
                             </div>
 
-                            {{-- Discount Input --}}
-                            <div class="flex items-center space-x-2">
-                                <input id="discount-code" type="text" placeholder="Enter discount code"
-                                    class="w-full px-4 py-2 border border-mocha-light rounded focus:outline-none focus:ring-2 focus:ring-mocha-burgundy" />
-                                <button id="apply-discount"
-                                    class="bg-mocha-burgundy text-white px-4 py-2 rounded hover:bg-opacity-90 transition">
-                                    Use
+                            <div class="border-t border-b border-mocha-light py-4 mb-6">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-semibold">Total</span>
+                                    <span id="order-total" class="font-semibold text-xl">
+                                        Rp.{{ number_format($total ?? 0, 0, ',', '.') }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            @if (count($cart ?? []))
+                                <button type="button" id="proceed-to-checkout"
+                                    class="w-full bg-mocha-burgundy text-white py-3 rounded-md hover:bg-opacity-90 transition font-medium">
+                                    Proceed to Checkout
                                 </button>
-                            </div>
-
-                            {{-- Discount Result Row --}}
-                            <div id="discount-row" class="flex justify-between hidden">
-                                <span class="text-mocha-medium">Discount</span>
-                                <span id="discount-amount" class="text-green-600 font-semibold">-</span>
-                            </div>
+                            @endif
                         </div>
+                    </div>
+                </div>
+            </section>
 
-                        {{-- Total Row --}}
-                        <div class="border-t border-b border-mocha-light py-4 mb-6">
-                            <div class="flex justify-between items-center">
-                                <span class="font-semibold">Total</span>
-                                <span id="order-total" class="font-semibold text-xl">Rp.
-                                    {{ number_format($total ?? 0, 0, ',', '.') }}</span>
-                            </div>
+            <!-- ===== DETAILS SECTION ===== -->
+            <section id="details-section" class="checkout-section hidden container mx-auto px-4 md:px-8 pb-16">
+                <h2 class="font-playfair text-3xl font-bold text-center mb-10">
+                    Customer & Delivery Details
+                </h2>
+
+                <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label for="sender_email" class="block text-sm font-medium mb-1">Your Email *</label>
+                            <input type="email" name="sender_email" id="sender_email"
+                                value="{{ old('sender_email', $user->email) }}" readonly
+                                class="w-full border border-mocha-light rounded px-3 py-2 bg-gray-100 cursor-not-allowed" />
                         </div>
+                        <div>
+                            <label for="sender_phone" class="block text-sm font-medium mb-1">Your Phone *</label>
+                            <input type="tel" name="sender_phone" id="sender_phone" required
+                                class="w-full border border-mocha-light rounded px-3 py-2" />
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="sender_note" class="block text-sm font-medium mb-1">Note for Recipient</label>
+                            <textarea name="sender_note" id="sender_note" class="w-full border border-mocha-light rounded px-3 py-2"></textarea>
+                        </div>
+                        <div>
+                            <label for="recipient_name" class="block text-sm font-medium mb-1">Recipient Name
+                                *</label>
+                            <input type="text" name="recipient_name" id="recipient_name" required
+                                class="w-full border border-mocha-light rounded px-3 py-2" />
+                        </div>
+                        <div>
+                            <label for="recipient_phone" class="block text-sm font-medium mb-1">Recipient Phone
+                                *</label>
+                            <input type="tel" name="recipient_phone" id="recipient_phone" required
+                                class="w-full border border-mocha-light rounded px-3 py-2" />
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="recipient_address" class="block text-sm font-medium mb-1">Delivery Address
+                                *</label>
+                            <input type="text" name="recipient_address" id="recipient_address" required
+                                class="w-full border border-mocha-light rounded px-3 py-2" />
+                        </div>
+                        <div>
+                            <label for="deliveries_id" class="block text-sm font-medium mb-1">City / Subdistrict *
+                            </label>
+                            <select name="deliveries_id" id="deliveries_id" required
+                                class="w-full border border-mocha-light rounded px-3 py-2">
+                                @foreach ($deliveries as $d)
+                                    <option value="{{ $d->id }}" data-fee="{{ $d->fee }}">
+                                        {{ $d->city }}, {{ $d->subdistrict }} —
+                                        Rp.{{ number_format($d->fee, 0, ',', '.') }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label for="delivery_time" class="block text-sm font-medium mb-1">Delivery Date & Time
+                                *</label>
+                            <input type="datetime-local" name="delivery_time" id="delivery_time" required
+                                class="w-full border border-mocha-light rounded px-3 py-2" />
+                        </div>
+                    </div>
 
-                        <button id="proceed-to-checkout"
-                            class="w-full bg-mocha-burgundy text-white py-3 rounded-md hover:bg-opacity-90 transition font-medium">
-                            Proceed to Checkout
+                    <div class="flex justify-between mt-6">
+                        <button type="button" id="back-to-cart"
+                            class="px-4 py-2 border border-mocha-medium rounded">
+                            Back to Cart
+                        </button>
+                        <button type="button" id="proceed-to-payment"
+                            class="px-4 py-2 bg-mocha-burgundy text-white rounded">
+                            Proceed to Payment
                         </button>
                     </div>
                 </div>
-            </div>
+            </section>
+        </main>
+
+
         </section>
-        <section id="details-section" class="checkout-section container mx-auto px-4 md:px-8 pb-16">
-            <h2 class="font-playfair text-3xl font-bold text-center mb-10">Customer Details</h2>
-            <form class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label for="first-name" class="block text-sm font-medium mb-1">First Name *</label>
-                        <input type="text" id="first-name"
-                            class="w-full border border-mocha-light rounded-md px-4 py-2" required>
-                    </div>
-                    <div>
-                        <label for="last-name" class="block text-sm font-medium mb-1">Last Name *</label>
-                        <input type="text" id="last-name"
-                            class="w-full border border-mocha-light rounded-md px-4 py-2" required>
-                    </div>
-                </div>
-
-                <div class="mb-4">
-                    <label for="email" class="block text-sm font-medium mb-1">Email Address *</label>
-                    <input type="email" id="email"
-                        class="w-full border border-mocha-light rounded-md px-4 py-2" required>
-                </div>
-
-                <div class="mb-4">
-                    <label for="phone" class="block text-sm font-medium mb-1">Phone Number *</label>
-                    <input type="tel" id="phone"
-                        class="w-full border border-mocha-light rounded-md px-4 py-2" required>
-                </div>
-
-                <h3 class="font-playfair text-2xl font-semibold mt-8 mb-4">Delivery Information</h3>
-
-                <div class="mb-4">
-                    <label for="address" class="block text-sm font-medium mb-1">Address *</label>
-                    <input type="text" id="address"
-                        class="w-full border border-mocha-light rounded-md px-4 py-2 mb-2" required>
-                    <input type="text" id="address2"
-                        class="w-full border border-mocha-light rounded-md px-4 py-2"
-                        placeholder="Apartment, suite, etc. (optional)">
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    <div>
-                        <label for="city" class="block text-sm font-medium mb-1">City *</label>
-                        <input type="text" id="city"
-                            class="w-full border border-mocha-light rounded-md px-4 py-2" required>
-                    </div>
-                    <div>
-                        <label for="province" class="block text-sm font-medium mb-1">Province *</label>
-                        <select id="province" class="w-full border border-mocha-light rounded-md px-4 py-2" required>
-                            <option value="">Select Province</option>
-                            <option value="DKI Jakarta">DKI Jakarta</option>
-                            <option value="Banten">Banten</option>
-                            <option value="Jawa Barat">Jawa Barat</option>
-                            <option value="Jawa Tengah">Jawa Tengah</option>
-                            <option value="Jawa Timur">Jawa Timur</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="postal-code" class="block text-sm font-medium mb-1">Postal Code *</label>
-                        <input type="text" id="postal-code"
-                            class="w-full border border-mocha-light rounded-md px-4 py-2" required>
-                    </div>
-                </div>
-
-                <div class="mb-4">
-                    <label for="delivery-notes" class="block text-sm font-medium mb-1">Delivery Notes
-                        (Optional)</label>
-                    <textarea id="delivery-notes" class="w-full border border-mocha-light rounded-md px-4 py-2" rows="3"
-                        placeholder="Special instructions for delivery"></textarea>
-                </div>
-
-                <h3 class="font-playfair text-2xl font-semibold mt-8 mb-4">Delivery Options</h3>
-
-                <div class="space-y-3 mb-6">
-                    <label
-                        class="flex items-center border border-mocha-light rounded-md px-4 py-3 cursor-pointer hover:bg-mocha-cream/30">
-                        <input type="radio" name="delivery-option" value="standard" class="hidden" checked>
-                        <div class="flex justify-between w-full">
-                            <div>
-                                <p class="font-medium">Standard Delivery</p>
-                                <p class="text-sm text-mocha-medium">Delivery within 24 hours</p>
-                            </div>
-                            <div class="font-semibold">Rp.25.000</div>
-                        </div>
-                    </label>
-
-                    <label
-                        class="flex items-center border border-mocha-light rounded-md px-4 py-3 cursor-pointer hover:bg-mocha-cream/30">
-                        <input type="radio" name="delivery-option" value="express" class="hidden">
-                        <div class="flex justify-between w-full">
-                            <div>
-                                <p class="font-medium">Express Delivery</p>
-                                <p class="text-sm text-mocha-medium">Delivery within 3 hours</p>
-                            </div>
-                            <div class="font-semibold">Rp.50.000</div>
-                        </div>
-                    </label>
-
-                    <label
-                        class="flex items-center border border-mocha-light rounded-md px-4 py-3 cursor-pointer hover:bg-mocha-cream/30">
-                        <input type="radio" name="delivery-option" value="scheduled" class="hidden">
-                        <div class="flex justify-between w-full">
-                            <div>
-                                <p class="font-medium">Scheduled Delivery</p>
-                                <p class="text-sm text-mocha-medium">Choose your delivery date</p>
-                            </div>
-
-                            <div class="font-semibold">Rp.35.000</div>
-                        </div>
-                    </label>
-                </div>
-
-
-
-                <div class="flex justify-between mt-8">
-                    <button type="button" id="back-to-cart"
-                        class="inline-flex items-center border border-mocha-medium text-mocha-dark py-2 px-4 rounded-md hover:bg-mocha-light/30">
-                        <i class="fas fa-arrow-left mr-2"></i> Back to Cart
-                    </button>
-                    <button type="submit" id="continue-to-payment"
-                        class="inline-flex items-center bg-mocha-burgundy text-white py-2 px-4 rounded-md hover:bg-opacity-90">
-                        Continue to Payment <i class="fas fa-arrow-right ml-2"></i>
-                    </button>
-                </div>
-            </form>
-        </section>
+        <!-- ===== PAYMENT SECTION ===== -->
         <section id="payment-section" class="checkout-section container mx-auto px-4 md:px-8 py-16">
             <div class="max-w-xl mx-auto bg-white p-8 rounded-lg shadow-md text-center">
                 <h2 class="font-playfair text-2xl font-bold mb-6">Transfer Payment</h2>
                 <img src="https://via.placeholder.com/150x50?text=Bank+Logo" alt="Bank Logo" class="mx-auto mb-4">
                 <p class="text-mocha-medium text-lg mb-2">Bank Mandiri</p>
-                <p class="text-xl font-semibold tracking-widest">1234567890</p>
-                <p class="text-sm text-mocha-medium mt-1">a.n. Rustella Florist</p>
+                <p class="text-xl font-semibold tracking-widest mb-6">1234567890</p>
+
+                <!-- breakdown table -->
+                <table class="w-full text-left mb-8">
+                    <tbody>
+                        <tr>
+                            <td class="py-1">Subtotal</td>
+                            <td class="py-1 text-right" id="payment-subtotal">Rp.0</td>
+                        </tr>
+                        <tr>
+                            <td class="py-1">Shipping Fee</td>
+                            <td class="py-1 text-right" id="payment-fee">Rp.0</td>
+                        </tr>
+                        <tr class="border-t border-mocha-light">
+                            <th class="pt-2">Total</th>
+                            <th class="pt-2 text-right text-xl" id="amount-to-pay">Rp.0</th>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <button id="continue-to-confirmation" type="button"
+                    class="mt-6 bg-mocha-burgundy text-white px-6 py-3 rounded-md hover:bg-opacity-90 transition">
+                    Saya Sudah Transfer
+                </button>
             </div>
-            <button id="continue-to-confirmation"
-                class="mt-6 bg-mocha-burgundy text-white px-6 py-3 rounded-md hover:bg-opacity-90 transition">
-                Saya Sudah Transfer
-            </button>
         </section>
 
         <section id="confirmation-section" class="checkout-section container mx-auto px-4 md:px-8 py-16">
             <div class="max-w-xl mx-auto bg-white p-8 rounded-lg shadow-md text-center">
                 <h2 class="font-playfair text-2xl font-bold mb-4">Upload Bukti Pembayaran</h2>
                 <p class="text-mocha-medium mb-6">Silakan unggah bukti transfer Anda untuk memproses pesanan.</p>
-                <form id="payment-proof-form">
-                    <input type="file" id="payment-proof" accept="image/*,.pdf"
-                        class="block w-full text-sm text-mocha-dark file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-mocha-cream file:text-mocha-dark hover:file:bg-mocha-light mb-4"
-                        required>
-                    <div id="preview-container" class="mb-4 hidden">
-                        <p class="text-sm mb-2">Preview:</p>
-                        <img id="preview-image" class="mx-auto max-h-60 border rounded shadow-md" alt="Preview">
-                    </div>
-                    <button type="submit"
-                        class="bg-mocha-burgundy text-white px-6 py-2 rounded-md hover:bg-opacity-90 transition">Kirim
-                        Bukti Pembayaran</button>
-                </form>
+                <input type="file" id="photo" name="photo" accept="image/*,.pdf"
+                    class="block w-full text-sm text-mocha-dark file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-mocha-cream file:text-mocha-dark hover:file:bg-mocha-light mb-4"
+                    required>
+                <div id="preview-container" class="mb-4 hidden">
+                    <p class="text-sm mb-2">Preview:</p>
+                    <img id="preview-image" class="mx-auto max-h-60 border rounded shadow-md" alt="Preview">
+                </div>
+                <button type="submit"
+                    class="bg-mocha-burgundy text-white px-6 py-2 rounded-md hover:bg-opacity-90 transition">Kirim
+                    Bukti Pembayaran</button>
             </div>
         </section>
-    </main>
-
+        </main>
+    </form>
 
 
     <script>
@@ -465,12 +442,9 @@
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
         }
-        document.getElementById('menu-toggle').addEventListener('click', () => {
-            document.getElementById('mobile-menu').classList.toggle('hidden');
-        });
     </script>
     <script>
-        document.getElementById('payment-proof').addEventListener('change', function(event) {
+        document.getElementById('photo').addEventListener('change', function(event) {
             const file = event.target.files[0];
             const previewContainer = document.getElementById('preview-container');
             const previewImage = document.getElementById('preview-image');
@@ -486,12 +460,6 @@
                 previewImage.src = '';
                 previewContainer.classList.add('hidden');
             }
-        });
-
-        document.getElementById('payment-proof-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            showToast('Bukti pembayaran berhasil dikirim!');
-            // Implementasi upload ke server akan ditambahkan di sini
         });
     </script>
     <script>
@@ -531,15 +499,31 @@
         // Tombol navigasi
         document.getElementById("proceed-to-checkout")?.addEventListener("click", () => showSection("details"));
         document.getElementById("back-to-cart")?.addEventListener("click", () => showSection("cart"));
-        document.getElementById("continue-to-payment")?.addEventListener("click", (e) => {
+        document.getElementById("proceed-to-payment")?.addEventListener("click", (e) => {
             e.preventDefault(); // Hindari reload
-            showSection("payment");
-        });
+            // 1) parse existing total (subtotal–discount)
+            const rawTotal = document.getElementById("order-total").textContent
+                .replace(/[^\d]/g, '');
+            const baseTotal = parseInt(rawTotal, 10) || 0;
 
-        document.getElementById("payment-proof-form")?.addEventListener("submit", function(e) {
-            e.preventDefault();
-            showToast("Bukti pembayaran berhasil dikirim!");
-            showSection("confirmation");
+            // 2) get the selected shipping fee
+            const fee = parseInt(
+                document.querySelector('#deliveries_id option:checked').dataset.fee,
+                10
+            ) || 0;
+
+            // 3) calculate grand total
+            const grand = baseTotal + fee;
+
+            // 4) inject into table
+            document.getElementById("payment-subtotal").textContent =
+                `Rp.${baseTotal.toLocaleString('id-ID')}`;
+            document.getElementById("payment-fee").textContent =
+                `Rp.${fee.toLocaleString('id-ID')}`;
+            document.getElementById("amount-to-pay").textContent =
+                `Rp.${grand.toLocaleString('id-ID')}`;
+
+            showSection("payment");
         });
     </script>
     <script>
@@ -610,7 +594,6 @@
             btn.addEventListener('click', async () => {
                 const item = btn.closest('.cart-item');
                 const id = item.dataset.id;
-                if (!confirm('Remove this item?')) return;
                 try {
                     await request(`/cart/${id}`, 'DELETE');
                     item.remove();
@@ -618,6 +601,15 @@
                 } catch (e) {
                     console.error(e);
                     showToast('Could not remove item.');
+                }
+
+                const proceedBtn = document.getElementById('proceed-to-checkout');
+                const hasItems = document.querySelectorAll('#cart-items .cart-item').length > 0;
+                if (proceedBtn) {
+                    // using Tailwind’s “hidden” class
+                    proceedBtn.classList.toggle('hidden', !hasItems);
+                    // OR via inline style:
+                    // proceedBtn.style.display = hasItems ? 'block' : 'none';
                 }
             });
         });
@@ -660,7 +652,8 @@
         document.getElementById('apply-discount').addEventListener('click', async () => {
             const code = document.getElementById('discount-code').value.trim();
             const subtotal = parseInt(
-                (document.getElementById('order-subtotal').textContent || '0').replace(/[^\d]/g, '')
+                (document.getElementById('order-subtotal').textContent || '0')
+                .replace(/[^\d]/g, '')
             );
 
             if (!code) return showToast('Please enter a discount code.');
@@ -679,10 +672,12 @@
                 });
 
                 const json = await res.json();
-
                 if (!res.ok) {
                     throw new Error(json?.error?.message || 'Invalid discount.');
                 }
+
+                // ←— inject discount_id into hidden input
+                document.getElementById('discount-id').value = json.discount_id;
 
                 const discountAmount = parseInt(json.discount_amount || 0);
                 const total = subtotal - discountAmount;

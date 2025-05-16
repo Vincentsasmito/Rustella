@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\Suggestion;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -19,30 +20,22 @@ class UserProfileController extends Controller
         $cartCount       = array_sum(session('cart', []));
         $suggestionCount = Suggestion::where('user_id', $user->id)->count();
 
-        // build the base query, eager-load exactly what we need
-        $q = Order::with([
-            'orderProducts.product',  // your line-items
-            'discount',               // via discount_id
-            'delivery'                // via deliveries_id
-        ])
+        // build & paginate
+        $q = Order::with(['orderProducts.product', 'discount', 'delivery'])
             ->where('user_id', $user->id)
             ->orderBy('created_at', 'desc');
 
-        // filter by status dropdown
         if ($request->filled('progress') && $request->progress !== 'all') {
             $q->where('progress', $request->progress);
         }
 
-        // paginate (and keep your filters in the query string)
         $orders     = $q->paginate(5)->withQueryString();
         $orderCount = $orders->total();
 
-        // compute money-fields on each order and build items array
+        // compute money‐fields & items_json
         $orders->getCollection()->transform(function ($order) {
-            // 1) subtotal
             $subtotal = $order->orderProducts->sum('price');
 
-            // 2) discount amount (if any)
             $discountAmount = 0;
             if ($order->discount && $subtotal >= $order->discount->min_purchase) {
                 $rawDisc = $subtotal * ($order->discount->percent / 100);
@@ -51,19 +44,16 @@ class UserProfileController extends Controller
                     : $rawDisc;
             }
 
-            // 3) delivery fee
             $deliveryFee = optional($order->delivery)->fee ?? 0;
+            $grandTotal  = $subtotal - $discountAmount + $deliveryFee;
 
-            // 4) grand total
-            $grandTotal = $subtotal - $discountAmount + $deliveryFee;
-
-            // attach for Blade & JS
+            // Attach for Blade display
             $order->subtotal        = $subtotal;
             $order->discount_amount = $discountAmount;
             $order->delivery_fee    = $deliveryFee;
             $order->grand_total     = $grandTotal;
 
-            // build items for the modal JSON
+            // Build items array for JS
             $order->items_json = $order->orderProducts->map(function ($op) {
                 return [
                     'name'       => $op->product->name,
@@ -77,12 +67,63 @@ class UserProfileController extends Controller
             return $order;
         });
 
+        // Build a pure PHP array for JS consumption
+        $ordersForJs = $orders->getCollection()->map(function ($order) {
+            return [
+                'id'            => $order->id,
+                'date'          => $order->created_at->format('F j, Y'),
+
+                // 1) deliveryTime straight from the column:
+                'deliveryTime' => $order->delivery_time
+                    ? Carbon::parse($order->delivery_time)->format('F j, Y H:i')
+                    : null,
+
+                'status'        => $order->progress,
+
+                // 2) build location from the related delivery model:
+                'location'      => optional($order->delivery)->city
+                    ? optional($order->delivery)->city . ', ' . optional($order->delivery)->subdistrict
+                    : null,
+
+                'recipientName'    => $order->recipient_name,
+                'senderEmail'      => $order->user->email,
+                'recipientPhone'   => $order->recipient_phone,
+                'recipientAddress' => $order->recipient_address,
+                'note'             => $order->note ?? '',
+
+                // 3) items: unitPrice = price/quantity
+                'items'         => collect($order->items_json)->map(function ($it) {
+                    return [
+                        'image'     => $it['image'],
+                        'name'      => $it['name'],
+                        'unitPrice' => $it['total'] / $it['quantity'],
+                        'quantity'  => $it['quantity'],
+                        'total'     => $it['total'],
+                    ];
+                })->toArray(),
+
+                'subtotal'      => $order->subtotal,
+                'discount'      => $order->discount_amount,
+                'deliveryFee'   => $order->delivery_fee,
+                'grandTotal'    => $order->grand_total,
+            ];
+        })->toArray();
+
+        // Reviews (unchanged)
+        $reviews = Suggestion::with('product')
+            ->where('user_id', $user->id)
+            ->where('type', 'product')
+            ->orderByDesc('created_at')
+            ->get();
+
         return view('customerviews.userprofile', compact(
             'user',
             'orders',
             'orderCount',
             'cartCount',
-            'suggestionCount'
+            'suggestionCount',
+            'reviews',
+            'ordersForJs'
         ));
     }
 

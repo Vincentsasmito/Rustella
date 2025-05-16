@@ -1,10 +1,8 @@
-<?php
-
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+class CreateStockTransactionsTable extends Migration
 {
     public function up()
     {
@@ -17,8 +15,8 @@ return new class extends Migration
             $table->unsignedBigInteger('packaging_id')->nullable();
             $table->string('packaging_name')->nullable();
 
-            $table->enum('type', ['FI', 'FO', 'PI', 'PO'])
-                ->comment('FI=FlowerIn, FO=FlowerOut, PI=PackagingIn, PO=PackagingOut');
+            $table->enum('type', ['FI','FO','PI','PO'])
+                  ->comment('FI=FlowerIn, FO=FlowerOut, PI=PackagingIn, PO=PackagingOut');
 
             $table->integer('quantity');
             $table->decimal('price', 10, 2);
@@ -35,4 +33,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('stock_transactions');
     }
-};
+}

@@ -118,9 +118,7 @@
         <div class="container mx-auto px-4 md:px-8">
             <div class="flex justify-between items-center py-4">
                 <div class="flex items-center space-x-2">
-                    <div class="text-mocha-burgundy">
-                        <i class="fas fa-flower text-2xl"></i>
-                    </div>
+                    <img src="{{ asset('/WebsiteStockImage/Rustella.png') }}" alt="Rustella Logo" class="h-8 w-auto">
                     <a href="home" class="font-playfair text-2xl font-bold text-mocha-dark">Rustella<span
                             class="text-mocha-burgundy">Floristry</span></a>
                 </div>
@@ -145,7 +143,7 @@
 
                 <!-- Cart Icon -->
                 <div class="hidden md:flex items-center space-x-6">
-                    <a href="UserProfile.html" class="text-mocha-burgundy hover:text-mocha-dark">
+                    <a href="#" class="text-mocha-burgundy hover:text-mocha-dark">
                         <i class="fas fa-user text-xl"></i>
                     </a>
                     <a href="{{ route('cart.index') }}"
@@ -313,46 +311,41 @@
                             <div class="p-6 hover:bg-mocha-cream/10 transition">
 
                                 {{-- Header --}}
-                                <div class="flex flex-col lg:flex-row lg:items-center justify-between mb-4">
-                                    <div>
+                                <div class="flex flex-wrap items-center mb-4 gap-y-2">
+                                    <!-- 1) Order Info -->
+                                    <div class="w-full lg:w-1/4">
                                         <p class="text-sm text-mocha-medium mb-1">Order #{{ $order->id }}</p>
                                         <p class="font-semibold">{{ $order->created_at->format('F j, Y') }}</p>
                                     </div>
 
-                                    <span class="order-status {{ $cls }} font-medium">
-                                        {{ $order->progress }}
-                                    </span>
+                                    <!-- 2) Status Badge -->
+                                    <div class="w-full lg:w-1/4 flex justify-start lg:justify-center">
+                                        <span class="order-status {{ $cls }} font-medium">
+                                            {{ $order->progress }}
+                                        </span>
+                                    </div>
 
-                                    <p class="font-bold text-mocha-burgundy">
-                                        Rp {{ number_format($order->grand_total, 0, ',', '.') }}
-                                    </p>
+                                    <!-- 3) Grand Total -->
+                                    <div class="w-full lg:w-1/4 text-left lg:text-center">
+                                        <p class="font-bold text-mocha-burgundy">
+                                            Rp {{ number_format($order->grand_total, 0, ',', '.') }}
+                                        </p>
+                                    </div>
 
-                                    <div class="mt-3 lg:mt-0 flex space-x-2">
+                                    <!-- 4) Actions -->
+                                    <div class="w-full lg:w-1/4 flex justify-start lg:justify-end space-x-2">
                                         <button type="button"
                                             class="details-btn bg-mocha-light/50 text-mocha-dark text-sm py-1 px-3 rounded hover:bg-mocha-light transition"
-                                            data-order-id        ="{{ $order->id }}"
-                                            data-recipient-name  ="{{ $order->recipient_name }}"
-                                            data-sender-email    ="{{ $order->sender_email }}"
-                                            data-recipient-phone ="{{ $order->recipient_phone }}"
-                                            data-recipient-address="{{ $order->recipient_address }}"
-                                            data-order-date      ="{{ $order->created_at->format('F j, Y') }}"
-                                            data-status          ="{{ $order->progress }}"
-                                            data-location        ="{{ optional($order->delivery)->city }}, {{ optional($order->delivery)->subdistrict }}"
-                                            data-items='@json($order->items_json)'
-                                            data-subtotal        ="{{ $order->subtotal }}"
-                                            data-discount        ="{{ $order->discount_amount }}"
-                                            data-delivery-fee    ="{{ $order->delivery_fee }}"
-                                            data-grand-total     ="{{ $order->grand_total }}"
-                                            data-payment-url     ="{{ $order->payment_url ?? '' }}"
-                                            data-sender-note     ="{{ $order->sender_note }}">
-                                            Details </button>
+                                            data-order-id="{{ $order->id }}">
+                                            Details
+                                        </button>
 
                                         @if ($order->progress === 'Payment Pending')
                                             <form action="{{ route('orders.uploadPayment', $order) }}" method="POST"
-                                                enctype="multipart/form-data" class="inline-block">
+                                                enctype="multipart/form-data">
                                                 @csrf
-                                                <input type="file" name="photo" accept="image/*"
-                                                    class="hidden js-upload-input" onchange="this.form.submit()">
+                                                <input type="file" name="photo" class="hidden js-upload-input"
+                                                    onchange="this.form.submit()">
                                                 <button type="button"
                                                     class="bg-mocha-burgundy text-white text-sm py-1 px-3 rounded hover:bg-opacity-90 transition"
                                                     onclick="this.closest('form').querySelector('.js-upload-input').click()">
@@ -362,13 +355,12 @@
                                         @endif
                                     </div>
                                 </div>
-
                                 {{-- Line Items (will wrap to new rows automatically) --}}
                                 <div class="flex flex-wrap gap-6 mb-4">
                                     @foreach ($order->orderProducts as $op)
                                         <div class="flex items-center space-x-3 flex-shrink-0">
                                             <div class="w-16 h-16 rounded-md overflow-hidden">
-                                                <img src="{{ asset('Images/' . $op->product->image_url) }}"
+                                                <img src="{{ asset('images/' . $op->product->image_url) }}"
                                                     alt="{{ $op->product->name }}"
                                                     class="w-full h-full object-cover">
                                             </div>
@@ -407,7 +399,9 @@
 
                                     <div class="font-semibold text-mocha-burgundy">
                                         Total:
-                                        Rp {{ number_format($order->grand_total, 0, ',', '.') }}
+                                        <span class="underline">
+                                            Rp {{ number_format($order->grand_total, 0, ',', '.') }}
+                                        </span>
                                     </div>
                                 </div>
 
@@ -424,356 +418,259 @@
                         {{ $orders->withQueryString()->links() }}
                     </div>
 
+                </div>
+            </div>
 
-                    <!-- Reviews Tab Content -->
-                    <div id="content-reviews" class="tab-content hidden">
-                        <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                            <div class="p-6 border-b border-mocha-light">
-                                <h2 class="font-playfair text-xl font-semibold text-mocha-dark mb-2">My Reviews</h2>
-                                <p class="text-mocha-medium">View and manage your product reviews</p>
-                            </div>
+            <!-- Reviews Tab Content -->
+            <div id="content-reviews" class="tab-content hidden">
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="p-6 border-b border-mocha-light">
+                        <h2 class="font-playfair text-xl font-semibold text-mocha-dark mb-2">My Reviews</h2>
+                        <p class="text-mocha-medium">View your product reviews</p>
+                    </div>
 
-                            <!-- Review Filters -->
-                            <div class="p-4 border-b border-mocha-light bg-mocha-cream/30">
-                                <div class="flex flex-wrap items-center justify-between gap-4">
-                                    <div class="flex items-center space-x-2">
-                                        <label for="review-rating" class="text-sm text-mocha-dark">Filter by
-                                            rating:</label>
-                                        <select id="review-rating"
-                                            class="border border-mocha-light rounded-md px-3 py-1 text-sm">
-                                            <option value="all">All Ratings</option>
-                                            <option value="5">5 Stars</option>
-                                            <option value="4">4 Stars</option>
-                                            <option value="3">3 Stars</option>
-                                            <option value="2">2 Stars</option>
-                                            <option value="1">1 Star</option>
-                                        </select>
-                                    </div>
-                                    <div class="relative">
-                                        <input type="text" placeholder="Search reviews..."
-                                            class="border border-mocha-light rounded-md pl-8 pr-3 py-1 w-full focus:outline-none focus:ring-1 focus:ring-mocha-burgundy">
-                                        <i
-                                            class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-mocha-medium"></i>
+                    <div class="divide-y divide-mocha-light">
+                        @forelse($reviews as $review)
+                            <div class="p-6 hover:bg-mocha-cream/10 transition">
+                                <div class="flex flex-col md:flex-row md:items-start justify-between mb-4">
+                                    <div class="flex items-start mb-4 md:mb-0">
+                                        <div class="w-16 h-16 rounded-md overflow-hidden mr-4">
+                                            <img src="{{ 'images/' . $review->product->image_url ?? '/api/placeholder/100/100' }}"
+                                                alt="{{ $review->product->name }}"
+                                                class="w-full h-full object-cover">
+                                        </div>
+                                        <div>
+                                            <h3 class="font-medium mb-1">{{ $review->product->name }}</h3>
+                                            <div class="flex text-amber-500 mb-1">
+                                                @for ($i = 1; $i <= 5; $i++)
+                                                    @if ($i <= $review->rating)
+                                                        <i class="fas fa-star"></i>
+                                                    @else
+                                                        <i class="far fa-star"></i>
+                                                    @endif
+                                                @endfor
+                                            </div>
+                                            <p class="text-sm text-mocha-medium">
+                                                Reviewed on: {{ $review->created_at->format('F j, Y') }}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <!-- Reviews List -->
-                            <div class="divide-y divide-mocha-light">
-                                <!-- Review 1 -->
-                                <div class="p-6 hover:bg-mocha-cream/10 transition">
-                                    <div class="flex flex-col md:flex-row md:items-start justify-between mb-4">
-                                        <div class="flex items-start mb-4 md:mb-0">
-                                            <div class="w-16 h-16 rounded-md overflow-hidden mr-4">
-                                                <img src="/api/placeholder/100/100" alt="Bunga 1"
-                                                    class="w-full h-full object-cover">
-                                            </div>
-                                            <div>
-                                                <h3 class="font-medium mb-1">Bunga 1</h3>
-                                                <div class="flex text-amber-500 mb-1">
-                                                    <i class="fas fa-star"></i>
-                                                    <i class="fas fa-star"></i>
-                                                    <i class="fas fa-star"></i>
-                                                    <i class="fas fa-star"></i>
-                                                    <i class="fas fa-star"></i>
-                                                </div>
-                                                <p class="text-sm text-mocha-medium">Reviewed on: April 18, 2025</p>
-                                            </div>
-                                        </div>
-                                        <div class="flex space-x-2">
-                                            <button class="text-mocha-burgundy hover:text-mocha-dark transition">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button class="text-mocha-medium hover:text-mocha-dark transition">
-                                                <i class="fas fa-trash-alt"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div class="bg-mocha-cream/30 p-4 rounded-md">
-                                        <p class="text-mocha-dark mb-3">These flowers were absolutely beautiful! The
-                                            arrangement was exactly as pictured and they stayed fresh for over a week.
-                                            I'm very
-                                            satisfied with my purchase and will definitely order again.</p>
+                                <div class="bg-mocha-cream/30 p-4 rounded-md">
+                                    <p class="text-mocha-dark mb-3">{{ $review->message }}</p>
+
+                                    @if (!empty($review->images) && $review->images->count())
                                         <div class="flex flex-wrap gap-2 mt-3">
-                                            <div class="w-16 h-16 rounded-md overflow-hidden">
-                                                <img src="/api/placeholder/100/100" alt="Review image"
-                                                    class="w-full h-full object-cover">
-                                            </div>
-                                            <div class="w-16 h-16 rounded-md overflow-hidden">
-                                                <img src="/api/placeholder/100/100" alt="Review image"
-                                                    class="w-full h-full object-cover">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Review 2 -->
-                                <div class="p-6 hover:bg-mocha-cream/10 transition">
-                                    <div class="flex flex-col md:flex-row md:items-start justify-between mb-4">
-                                        <div class="flex items-start mb-4 md:mb-0">
-                                            <div class="w-16 h-16 rounded-md overflow-hidden mr-4">
-                                                <img src="/api/placeholder/100/100" alt="Bunga 2"
-                                                    class="w-full h-full object-cover">
-                                            </div>
-                                            <div>
-                                                <h3 class="font-medium mb-1">Bunga 2</h3>
-                                                <div class="flex text-amber-500 mb-1">
-                                                    <i class="fas fa-star"></i>
-                                                    <i class="fas fa-star"></i>
-                                                    <i class="fas fa-star"></i>
-                                                    <i class="fas fa-star"></i>
-                                                    <i class="fas fa-star-half-alt"></i>
+                                            @foreach ($review->images as $image)
+                                                <div class="w-16 h-16 rounded-md overflow-hidden">
+                                                    <img src="{{ $image->url }}" alt="Review image"
+                                                        class="w-full h-full object-cover">
                                                 </div>
-                                                <p class="text-sm text-mocha-medium">Reviewed on: April 2, 2025</p>
-                                            </div>
+                                            @endforeach
                                         </div>
-                                        <div class="flex space-x-2">
-                                            <button class="text-mocha-burgundy hover:text-mocha-dark transition">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button class="text-mocha-medium hover:text-mocha-dark transition">
-                                                <i class="fas fa-trash-alt"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div class="bg-mocha-cream/30 p-4 rounded-md">
-                                        <p class="text-mocha-dark">Very satisfied with my purchase. The flowers were
-                                            fresh and
-                                            beautifully arranged. Would have given 5 stars but delivery was a bit later
-                                            than
-                                            expected. Otherwise perfect!</p>
-                                    </div>
-                                </div>
-
-                                <!-- Review 3 -->
-                                <div class="p-6 hover:bg-mocha-cream/10 transition">
-                                    <div class="flex flex-col md:flex-row md:items-start justify-between mb-4">
-                                        <div class="flex items-start mb-4 md:mb-0">
-                                            <div class="w-16 h-16 rounded-md overflow-hidden mr-4">
-                                                <img src="/api/placeholder/100/100" alt="Bunga 3"
-                                                    class="w-full h-full object-cover">
-                                            </div>
-                                            <div>
-                                                <h3 class="font-medium mb-1">Bunga 3</h3>
-                                                <div class="flex text-amber-500 mb-1">
-                                                    <i class="fas fa-star"></i>
-                                                    <i class="fas fa-star"></i>
-                                                    <i class="fas fa-star"></i>
-                                                    <i class="fas fa-star-half-alt"></i>
-                                                    <i class="far fa-star"></i>
-                                                </div>
-                                                <p class="text-sm text-mocha-medium">Reviewed on: March 25, 2025</p>
-                                            </div>
-                                        </div>
-                                        <div class="flex space-x-2">
-                                            <button class="text-mocha-burgundy hover:text-mocha-dark transition">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button class="text-mocha-medium hover:text-mocha-dark transition">
-                                                <i class="fas fa-trash-alt"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div class="bg-mocha-cream/30 p-4 rounded-md">
-                                        <p class="text-mocha-dark">Nice arrangement overall, but the wrapping was a bit
-                                            crumpled. Still a good experience!</p>
-                                    </div>
+                                    @endif
                                 </div>
                             </div>
-                        </div>
+                        @empty
+                            <p class="p-6 text-mocha-medium">You haven’t written any reviews yet.</p>
+                        @endforelse
                     </div>
                 </div>
-                <div id="editProfileModal" class="fixed inset-0 bg-black/50 flex items-center justify-center hidden">
-                    <div class="bg-white rounded-lg w-full max-w-lg p-6 relative">
-                        <!-- Close button -->
-                        <button id="closeEditModal"
-                            class="absolute top-4 right-4 text-gray-500 hover:text-gray-900 text-2xl">&times;</button>
+            </div>
+            <div id="editProfileModal" class="fixed inset-0 bg-black/50 flex items-center justify-center hidden">
+                <div class="bg-white rounded-lg w-full max-w-lg p-6 relative">
+                    <!-- Close button -->
+                    <button id="closeEditModal"
+                        class="absolute top-4 right-4 text-gray-500 hover:text-gray-900 text-2xl">&times;</button>
 
-                        <h2 class="text-xl font-semibold mb-4">Edit Profile</h2>
+                    <h2 class="text-xl font-semibold mb-4">Edit Profile</h2>
 
-                        <!-- Tabs -->
-                        <div class="flex border-b border-mocha-light mb-6">
-                            <button id="tabInfoBtn" class="px-4 py-2 font-medium border-b-2 border-b-mocha-burgundy">
-                                Profile Info
-                            </button>
-                            <button id="tabPassBtn" class="px-4 py-2 font-medium text-mocha-medium">
-                                Change Password
-                            </button>
-                        </div>
-
-                        <!-- Profile Info Form -->
-                        <div id="tabInfo">
-                            <form action="{{ route('profile.update') }}" method="POST">
-                                @csrf @method('PUT')
-                                <div class="mb-4">
-                                    <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
-                                    <input type="text" name="name" id="name" value="{{ $user->name }}"
-                                        required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-                                </div>
-                                <div class="flex justify-end">
-                                    <button type="submit"
-                                        class="bg-mocha-burgundy text-white px-4 py-2 rounded-md hover:bg-opacity-90">
-                                        Save
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-
-                        <!-- Change Password Form -->
-                        <div id="tabPass" class="hidden">
-                            <form action="{{ route('profile.password.update') }}" method="POST">
-                                @csrf @method('PUT')
-                                <div class="mb-4">
-                                    <label for="current_password"
-                                        class="block text-sm font-medium text-gray-700">Current
-                                        Password</label>
-                                    <input type="password" name="current_password" id="current_password" required
-                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-                                </div>
-                                <div class="mb-4">
-                                    <label for="password" class="block text-sm font-medium text-gray-700">New
-                                        Password</label>
-                                    <input type="password" name="password" id="password" required
-                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-                                </div>
-                                <div class="mb-4">
-                                    <label for="password_confirmation"
-                                        class="block text-sm font-medium text-gray-700">Confirm
-                                        Password</label>
-                                    <input type="password" name="password_confirmation" id="password_confirmation"
-                                        required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-                                </div>
-                                <div class="flex justify-end">
-                                    <button type="submit"
-                                        class="bg-mocha-burgundy text-white px-4 py-2 rounded-md hover:bg-opacity-90">
-                                        Update Password
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
+                    <!-- Tabs -->
+                    <div class="flex border-b border-mocha-light mb-6">
+                        <button id="tabInfoBtn" class="px-4 py-2 font-medium border-b-2 border-b-mocha-burgundy">
+                            Profile Info
+                        </button>
+                        <button id="tabPassBtn" class="px-4 py-2 font-medium text-mocha-medium">
+                            Change Password
+                        </button>
                     </div>
-                </div>
 
-                <!-- Order Detail Modal -->
-                <div id="order-detail-modal"
-                    class="modal fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center overflow-y-auto z-50">
-                    <!-- This wrapper gives us vertical centering & padding -->
-                    <div class="flex items-start sm:items-center justify-center min-h-screen p-4 w-full">
-                        <!-- The actual panel -->
-                        <div
-                            class="bg-white rounded-lg shadow-lg w-full max-w-4xl mx-auto
-             max-h-[90vh] flex flex-col overflow-hidden">
-                            <!-- Header -->
-                            <div class="flex justify-between items-center p-4 border-b">
-                                <h3 class="text-lg font-semibold">
-                                    Order <span id="modal-order-id"></span>
-                                </h3>
-                                <button class="close-modal text-mocha-dark hover:text-mocha-burgundy">
-                                    <i class="fas fa-times"></i>
+                    <!-- Profile Info Form -->
+                    <div id="tabInfo">
+                        <form action="{{ route('profile.update') }}" method="POST">
+                            @csrf @method('PUT')
+                            <div class="mb-4">
+                                <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+                                <input type="text" name="name" id="name" value="{{ $user->name }}"
+                                    required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                            </div>
+                            <div class="flex justify-end">
+                                <button type="submit"
+                                    class="bg-mocha-burgundy text-white px-4 py-2 rounded-md hover:bg-opacity-90">
+                                    Save
                                 </button>
                             </div>
+                        </form>
+                    </div>
 
-                            <!-- Body (scrollable) -->
-                            <div class="overflow-y-auto p-6 flex-1">
-                                <!-- Customer & Order Info -->
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                                    <!-- Customer Info -->
-                                    <div>
-                                        <h4 class="text-sm font-medium mb-3">Customer Information</h4>
-                                        <div class="bg-mocha-cream/20 p-4 rounded-lg">
-                                            <p class="text-sm mb-2"><span class="font-medium">Name:</span> <span
-                                                    id="modal-customer-name"></span></p>
-                                            <p class="text-sm mb-2"><span class="font-medium">Email:</span> <span
-                                                    id="modal-customer-email"></span></p>
-                                            <p class="text-sm mb-2"><span class="font-medium">Phone:</span> <span
-                                                    id="modal-recipient-phone"></span></p>
-                                            <p class="text-sm"><span class="font-medium">Address:</span> <span
-                                                    id="modal-recipient-address"></span></p>
-                                        </div>
-                                    </div>
-                                    <!-- Order Info -->
-                                    <div>
-                                        <h4 class="text-sm font-medium mb-3">Order Information</h4>
-                                        <div class="bg-mocha-cream/20 p-4 rounded-lg">
-                                            <p class="text-sm mb-2"><span class="font-medium">Order Date:</span> <span
-                                                    id="modal-order-date"></span></p>
-                                            <p class="text-sm mb-2">
-                                                <span class="font-medium">Payment Screenshot:</span><br>
-                                                <img id="modal-payment-screenshot" src="" alt="Payment"
-                                                    class="w-32 h-auto hidden rounded" />
-                                            </p>
-                                            <p class="text-sm mb-2"><span class="font-medium">Status:</span> <span
-                                                    id="modal-current-status" class="font-semibold"></span></p>
-                                            <p class="text-sm"><span class="font-medium">Location:</span> <span
-                                                    id="modal-location"></span></p>
-                                        </div>
+                    <!-- Change Password Form -->
+                    <div id="tabPass" class="hidden">
+                        <form action="{{ route('profile.password.update') }}" method="POST">
+                            @csrf @method('PUT')
+                            <div class="mb-4">
+                                <label for="current_password" class="block text-sm font-medium text-gray-700">Current
+                                    Password</label>
+                                <input type="password" name="current_password" id="current_password" required
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                            </div>
+                            <div class="mb-4">
+                                <label for="password" class="block text-sm font-medium text-gray-700">New
+                                    Password</label>
+                                <input type="password" name="password" id="password" required
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                            </div>
+                            <div class="mb-4">
+                                <label for="password_confirmation"
+                                    class="block text-sm font-medium text-gray-700">Confirm
+                                    Password</label>
+                                <input type="password" name="password_confirmation" id="password_confirmation"
+                                    required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                            </div>
+                            <div class="flex justify-end">
+                                <button type="submit"
+                                    class="bg-mocha-burgundy text-white px-4 py-2 rounded-md hover:bg-opacity-90">
+                                    Update Password
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Detail Modal -->
+            <div id="order-detail-modal"
+                class="modal fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center overflow-y-auto z-50">
+                <!-- This wrapper gives us vertical centering & padding -->
+                <div class="flex items-start sm:items-center justify-center min-h-screen p-4 w-full">
+                    <!-- The actual panel -->
+                    <div
+                        class="bg-white rounded-lg shadow-lg w-full max-w-4xl mx-auto
+             max-h-[90vh] flex flex-col overflow-hidden">
+                        <!-- Header -->
+                        <div class="flex justify-between items-center p-4 border-b">
+                            <h3 class="text-lg font-semibold">
+                                Order <span id="modal-order-id"></span>
+                            </h3>
+                            <button class="close-modal text-mocha-dark hover:text-mocha-burgundy">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+
+                        <!-- Body (scrollable) -->
+                        <div class="overflow-y-auto p-6 flex-1">
+                            <!-- Customer & Order Info -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                <!-- Customer Info -->
+                                <div>
+                                    <h4 class="text-sm font-medium mb-3">Customer Information</h4>
+                                    <div class="bg-mocha-cream/20 p-4 rounded-lg">
+                                        <p class="text-sm mb-2"><span class="font-medium">Name:</span> <span
+                                                id="modal-customer-name"></span></p>
+                                        <p class="text-sm mb-2"><span class="font-medium">Email:</span> <span
+                                                id="modal-customer-email"></span></p>
+                                        <p class="text-sm mb-2"><span class="font-medium">Phone:</span> <span
+                                                id="modal-recipient-phone"></span></p>
+                                        <p class="text-sm"><span class="font-medium">Address:</span> <span
+                                                id="modal-recipient-address"></span></p>
                                     </div>
                                 </div>
-
-                                <!-- Items Table -->
-                                <h4 class="text-sm font-medium mb-3">Order Items</h4>
-                                <div class="overflow-x-auto mb-6">
-                                    <table class="w-full">
-                                        <thead>
-                                            <tr class="border-b border-mocha-light/30">
-                                                <th
-                                                    class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
-                                                    Image</th>
-                                                <th
-                                                    class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
-                                                    Product</th>
-                                                <th
-                                                    class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
-                                                    Unit Price</th>
-                                                <th
-                                                    class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
-                                                    Quantity</th>
-                                                <th
-                                                    class="px-4 py-3 text-right text-xs font-medium text-mocha-medium uppercase">
-                                                    Total</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="modal-order-items">
-
-                                        </tbody>
-                                        <tfoot>
-                                            <tr class="border-b border-mocha-light/20">
-                                                <td colspan="4" class="px-4 py-3 text-right font-medium">Subtotal
-                                                </td>
-                                                <td class="px-4 py-3 text-right" id="modal-subtotal"></td>
-                                            </tr>
-                                            <tr id="modal-discount-row" class="border-b border-mocha-light/20 hidden">
-                                                <td colspan="4" class="px-4 py-3 text-right font-medium">Discount
-                                                </td>
-                                                <td class="px-4 py-3 text-right text-red-600" id="modal-discount">
-                                                </td>
-                                            </tr>
-                                            <tr class="border-b border-mocha-light/20">
-                                                <td colspan="4" class="px-4 py-3 text-right font-medium">Shipping
-                                                </td>
-                                                <td class="px-4 py-3 text-right" id="modal-shipping"></td>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="4" class="px-4 py-3 text-right font-medium">Total</td>
-                                                <td class="px-4 py-3 text-right font-bold" id="modal-total"></td>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
-                                </div>
-
-                                <!-- Notes -->
-                                <div class="mb-6">
-                                    <h4 class="text-sm font-medium mb-3">Order Notes</h4>
-                                    <div class="bg-mocha-cream/20 p-4 rounded-lg h-32 overflow-y-auto">
-                                        <p class="text-sm" id="modal-notes"></p>
+                                <!-- Order Info -->
+                                <div>
+                                    <h4 class="text-sm font-medium mb-3">Order Information</h4>
+                                    <div class="bg-mocha-cream/20 p-4 rounded-lg">
+                                        <p class="text-sm mb-2"><span class="font-medium">Order Date:</span> <span
+                                                id="modal-order-date"></span></p>
+                                        <p class="text-sm mb-2">
+                                            <span class="font-medium">Delivery Time:</span>
+                                            <span id="modal-delivery-time"></span>
+                                        </p>
+                                        <p class="text-sm mb-2"><span class="font-medium">Status:</span> <span
+                                                id="modal-current-status" class="font-semibold"></span></p>
+                                        <p class="text-sm"><span class="font-medium">Location:</span> <span
+                                                id="modal-location"></span></p>
                                     </div>
+                                </div>
+                            </div>
+
+                            <!-- Items Table -->
+                            <h4 class="text-sm font-medium mb-3">Order Items</h4>
+                            <div class="overflow-x-auto mb-6">
+                                <table class="w-full table-fixed border-collapse">
+                                    <thead>
+                                        <tr class="border-b border-mocha-light/30">
+                                            <th
+                                                class="w-1/5 px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
+                                                Image
+                                            </th>
+                                            <th
+                                                class="w-1/5 px-4 py-3 text-left   text-xs font-medium text-mocha-medium uppercase">
+                                                Product
+                                            </th>
+                                            <th
+                                                class="w-1/5 px-4 py-3 text-right  text-xs font-medium text-mocha-medium uppercase">
+                                                Unit Price
+                                            </th>
+                                            <th
+                                                class="w-1/5 px-4 py-3 text-center text-xs font-medium text-mocha-medium uppercase">
+                                                Quantity
+                                            </th>
+                                            <th
+                                                class="w-1/5 px-4 py-3 text-right  text-xs font-medium text-mocha-medium uppercase">
+                                                Total
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="modal-order-items">
+
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="border-b border-mocha-light/20">
+                                            <td colspan="4" class="px-4 py-3 text-right font-medium">Subtotal
+                                            </td>
+                                            <td class="px-4 py-3 text-right" id="modal-subtotal"></td>
+                                        </tr>
+                                        <tr id="modal-discount-row" class="border-b border-mocha-light/20 hidden">
+                                            <td colspan="4" class="px-4 py-3 text-right font-medium">Discount
+                                            </td>
+                                            <td class="px-4 py-3 text-right text-red-600" id="modal-discount">
+                                            </td>
+                                        </tr>
+                                        <tr class="border-b border-mocha-light/20">
+                                            <td colspan="4" class="px-4 py-3 text-right font-medium">Shipping
+                                            </td>
+                                            <td class="px-4 py-3 text-right" id="modal-shipping"></td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="4" class="px-4 py-3 text-right font-medium">Total</td>
+                                            <td class="px-4 py-3 text-right font-bold" id="modal-total"></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+
+                            <!-- Notes -->
+                            <div class="mb-6">
+                                <h4 class="text-sm font-medium mb-3">Order Notes</h4>
+                                <div class="bg-mocha-cream/20 p-4 rounded-lg h-32 overflow-y-auto">
+                                    <p class="text-sm" id="modal-notes"></p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
     </main>
-
     <!-- JavaScript for Tabs -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -855,69 +752,65 @@
             @endif
 
             // — 4) ORDER DETAIL MODAL —
+            const allOrders = @json($ordersForJs);
+            console.log(allOrders);
             const detailBtns = document.querySelectorAll('.details-btn');
             const odModal = document.getElementById('order-detail-modal');
 
-            detailBtns.forEach(btn => btn.addEventListener('click', () => {
-                if (!odModal) return;
-                const fmt = n => `Rp ${Number(n).toLocaleString('id-ID')}`;
-                const getEl = id => document.getElementById(id);
+            document.querySelectorAll('.details-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = parseInt(btn.dataset.orderId, 10);
+                    const order = allOrders.find(o => o.id === id);
+                    if (!order) return console.error('Order not found', id);
 
-                // Header
-                getEl('modal-order-id').textContent = btn.dataset.orderId;
-                getEl('modal-order-date').textContent = btn.dataset.orderDate;
-                getEl('modal-current-status').textContent = btn.dataset.status;
-                getEl('modal-location').textContent = btn.dataset.location;
+                    const fmt = n => `Rp ${Number(n).toLocaleString('id-ID')}`;
+                    const set = (el, v) => document.getElementById(el).textContent = v;
 
-                // Customer
-                getEl('modal-customer-name').textContent = btn.dataset.recipientName;
-                getEl('modal-customer-email').textContent = btn.dataset.senderEmail;
-                getEl('modal-recipient-phone').textContent = btn.dataset.recipientPhone;
-                getEl('modal-recipient-address').textContent = btn.dataset.recipientAddress;
-                getEl('modal-notes').textContent = btn.dataset.senderNote || '';
+                    // populate the modal exactly as before…
+                    set('modal-order-id', order.id);
+                    set('modal-order-date', order.date);
+                    set('modal-delivery-time', order.deliveryTime);
+                    set('modal-current-status', order.status);
+                    set('modal-location', order.location);
 
-                // Payment screenshot
-                const ps = getEl('modal-payment-screenshot');
-                if (btn.dataset.paymentUrl) {
-                    ps.src = `/payment/${btn.dataset.paymentUrl}`;
-                    ps.classList.remove('hidden');
-                } else {
-                    ps.classList.add('hidden');
-                }
+                    set('modal-customer-name', order.recipientName);
+                    set('modal-customer-email', order.senderEmail);
+                    set('modal-recipient-phone', order.recipientPhone);
+                    set('modal-recipient-address', order.recipientAddress);
+                    set('modal-notes', order.note);
 
-                // Items
-                const items = JSON.parse(btn.dataset.items || '[]');
-                const tbody = getEl('modal-order-items');
-                tbody.innerHTML = '';
-                items.forEach(it => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-        <td class="px-4 py-2">
-      <img src="${it.image}" alt="${it.name}" class="w-12 h-12 object-cover rounded" />
+                    const tbody = document.getElementById('modal-order-items');
+                    tbody.innerHTML = '';
+                    order.items.forEach(it => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+         <td class="w-1/5 px-4 py-2 text-left">
+       <div class="flex justify-start">
+      <img src="${it.image}" class="w-12 h-12 rounded"/>
+    </div>
     </td>
-    <td class="px-4 py-2">${it.name}</td>
-    <td class="px-4 py-2">${fmt(it.unit_price)}</td>
-    <td class="px-4 py-2">${it.quantity}</td>
-    <td class="px-4 py-2 text-right">${fmt(it.total)}</td>
+    <td class="w-1/5 px-4 py-2 text-left">${it.name}</td>
+    <td class="w-1/5 px-4 py-2 text-right">${fmt(it.unitPrice)}</td>
+    <td class="w-1/5 px-4 py-2 text-center">${it.quantity}</td>
+    <td class="w-1/5 px-4 py-2 text-right">${fmt(it.total)}</td>
       `;
-                    tbody.appendChild(tr);
+                        tbody.appendChild(tr);
+                    });
+
+                    set('modal-subtotal', fmt(order.subtotal));
+                    const discRow = document.getElementById('modal-discount-row');
+                    if (order.discount > 0) {
+                        discRow.classList.remove('hidden');
+                        set('modal-discount', `-${fmt(order.discount)}`);
+                    } else {
+                        discRow.classList.add('hidden');
+                    }
+                    set('modal-shipping', fmt(order.deliveryFee));
+                    set('modal-total', fmt(order.grandTotal));
+
+                    document.getElementById('order-detail-modal').classList.remove('hidden');
                 });
-
-                // Totals
-                getEl('modal-subtotal').textContent = fmt(btn.dataset.subtotal);
-                const discRow = getEl('modal-discount-row');
-                if (Number(btn.dataset.discount) > 0) {
-                    discRow.classList.remove('hidden');
-                    getEl('modal-discount').textContent = `-${fmt(btn.dataset.discount)}`;
-                } else {
-                    discRow.classList.add('hidden');
-                }
-                getEl('modal-shipping').textContent = fmt(btn.dataset.deliveryFee);
-                getEl('modal-total').textContent = fmt(btn.dataset.grandTotal);
-
-                // Show modal
-                odModal.classList.remove('hidden');
-            }));
+            });
 
             // Close order-detail modal
             document.querySelectorAll('.close-modal').forEach(btn => {

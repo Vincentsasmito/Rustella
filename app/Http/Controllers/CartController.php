@@ -8,7 +8,12 @@ use App\Models\Product;
 use App\Models\Order;
 use App\Models\OrderProduct;
 use App\Models\Discount;
+use App\Models\Flower;
+use App\Models\FlowerProduct;
+use App\Models\Packaging;
+use App\Models\StockTransaction;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -17,6 +22,7 @@ class CartController extends Controller
     // Show the cart
     public function index()
     {
+
         // 1) Grab the raw session cart [ product_id => quantity ]
         $cart = session('cart', []);
         // 2) Eager‐load all Products (with packaging & flowerProducts→flower) in one go
@@ -36,13 +42,16 @@ class CartController extends Controller
             }
         }
 
-        // 4) Pull in any discounts or delivery options
+        // 4) Pull in delivery options
         $deliveries = Delivery::all();
+
+        $user = Auth::user();
 
         // 5) Pass to the view
         return view('customerviews.cart', [
             'cart'       => $detailedCart,
             'deliveries' => $deliveries,
+            'user'       => $user,
         ]);
     }
 
@@ -207,8 +216,122 @@ class CartController extends Controller
         }
 
         return response()->json([
+            'discount_id'   => $discount->id,
             'discount_amount' => (int) $discountAmt,
             'message' => 'Discount applied successfully.'
         ]);
+    }
+
+    public function storeOrder(Request $request)
+    {
+        // 1) Validate
+        $validInput = $request->validate([
+            'sender_email'      => 'required|email',
+            'sender_phone'      => 'required|string',
+            'sender_note'       => 'nullable|string',
+            'recipient_name'    => 'required|string',
+            'recipient_phone'   => 'required|string',
+            'recipient_address' => 'required|string',
+            'deliveries_id'     => 'required|exists:deliveries,id',
+            'delivery_time'     => 'required|date',
+            'discount_id'       => 'nullable|exists:discounts,id',
+            'photo'             => 'mimes:jpg,bmp,png,jpeg',
+        ]);
+
+
+        //save photo, get url
+        if ($file = $request->file('photo')) {
+            $file_path = public_path('payment');
+            $file_input = date('YmdHis') . '-' . $file->getClientOriginalName();
+            $file->move($file_path, $file_input);
+            $validInput['image_url'] = $file_input;
+        }
+
+        $cart = session('cart', []);
+
+        $flowerRequirements = []; // flower_id => total quantity
+
+        //Get the flowers needed
+        foreach ($cart as $productId => $qty) {
+            $flowerUsed = FlowerProduct::where('product_id', $productId)->get();
+
+            foreach ($flowerUsed as $usage) {
+                $totalUsed = $usage->quantity * $qty;
+                $flowerRequirements[$usage->flower_id] =
+                    ($flowerRequirements[$usage->flower_id] ?? 0) + $totalUsed;
+            }
+        }
+
+        //Check if stock is available
+        foreach ($flowerRequirements as $flowerId => $requiredQty) {
+            $flower = Flower::find($flowerId);
+
+            if (!$flower || $flower->quantity < $requiredQty) {
+                return redirect()->back()
+                    ->with('error', 'Not enough stock for flower: ' . ($flower->name ?? 'Unknown'));
+            }
+        }
+
+
+        DB::transaction(function () use ($validInput, $cart) {
+            //Create the order
+            $validInput['user_id'] = Auth::id();
+            $validInput['cost']    = 0;
+            $validInput['progress'] = "Payment Pending";
+            $order = Order::create($validInput);
+
+            //Create OrderProduct entries
+            foreach ($cart as $productId => $qty) {
+                $product = Product::find($productId);
+
+                // OrderProduct entry with selling price
+                OrderProduct::create([
+                    'order_id'   => $order->id,
+                    'product_id' => $productId,
+                    'quantity'   => $qty,
+                    'price'      => $product->price * $qty, // ✅ customer pays this
+                ]);
+            }
+
+            //Reduce Flowers
+            foreach ($cart as $productId => $qty) {
+                $flowerUsed = FlowerProduct::where('product_id', $productId)->get();
+                $product = Product::find($productId);
+
+                if ($product->packaging_id) {
+                    $packaging = Packaging::find($product->packaging_id);
+                    StockTransaction::create([
+                        'order_id'    => $order->id,
+                        'packaging_id'   => $packaging->id,
+                        'packaging_name' => $packaging->name,
+                        'type'        => 'PO',
+                        'quantity'    => 1,
+                        'price'       => $packaging->price,
+                    ]);
+                }
+
+                foreach ($flowerUsed as $usage) {
+                    $flower = Flower::find($usage->flower_id);
+                    $totalUsed = $usage->quantity * $qty;
+                    // log the transaction for flowers
+                    StockTransaction::create([
+                        'order_id'    => $order->id,
+                        'flower_id'   => $flower->id,
+                        'flower_name' => $flower->name,
+                        'type'        => 'FO',
+                        'quantity'    => $totalUsed,
+                        'price'       => $flower->price,
+                    ]);
+                    $flower->decrement('quantity', $totalUsed);
+                }
+            }
+
+            //Recalculate & save final cost
+            $order->recalculateCost();
+        });
+
+        session()->forget('cart');
+
+        return redirect()->route('home');
     }
 }

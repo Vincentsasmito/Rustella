@@ -766,7 +766,7 @@
                                         <td class="px-4 py-3 whitespace-nowrap">
                                             {{ $order->created_at->format('F j, Y') }}</td>
                                         <td class="px-4 py-3 whitespace-nowrap">Rp
-                                            {{ number_format($order->sales, 0, ',', '.') }}</td>
+                                            {{ number_format($order->grand_total, 0, ',', '.') }}</td>
                                         <td class="px-4 py-3 whitespace-nowrap">
                                             @php
                                                 $map = [
@@ -785,8 +785,8 @@
                                             </span>
                                         </td>
                                         <td class="px-4 py-3 whitespace-nowrap text-right">
-                                            <button class="view-order-btn text-mocha-burgundy hover:underline"
-                                                data-id="{{ $order->id }}">
+                                            <button class="details-btn text-mocha-burgundy hover:underline"
+                                                data-order-id="{{ $order->id }}">
                                                 View
                                             </button>
                                         </td>
@@ -1084,8 +1084,17 @@
                                         <td class="px-4 py-3">{{ $prod->name }}</td>
 
                                         <!-- Description -->
-                                        <td class="px-4 py-3">{{ Str::limit($prod->description, 60) }}</td>
-
+                                        <td class="px-4 py-3">
+                                            <details>
+                                                <summary
+                                                    class="cursor-pointer text-sm text-mocha-dark hover:text-mocha-burgundy">
+                                                    {{ Str::limit($prod->description, 30) }}
+                                                </summary>
+                                                <p class="mt-2 text-sm text-mocha-medium">
+                                                    {{ $prod->description }}
+                                                </p>
+                                            </details>
+                                        </td>
                                         <!-- Price -->
                                         <td class="px-4 py-3">Rp {{ number_format($prod->price, 0, ',', '.') }}</td>
 
@@ -1382,9 +1391,10 @@
                                         <p class="text-sm mb-2"><span class="font-medium">Order Date:</span> <span
                                                 id="modal-order-date"></span></p>
                                         <p class="text-sm mb-2">
-                                            <span class="font-medium">Payment Screenshot:</span><br>
-                                            <img id="modal-payment-screenshot" src="" alt="Payment"
-                                                class="w-32 h-auto hidden rounded" />
+                                        <p class="text-sm mb-2">
+                                            <span class="font-medium">Delivery Time:</span>
+                                            <span id="modal-delivery-time"></span>
+                                        </p>
                                         </p>
                                         <p class="text-sm mb-2"><span class="font-medium">Status:</span> <span
                                                 id="modal-current-status" class="font-semibold"></span></p>
@@ -1589,6 +1599,7 @@
             // ——— Data injections from Blade ——————————————————————————————————————————————————
             const salesChartData = @json($salesChartData);
             const recentOrders = @json($recentOrders);
+            const allOrders = @json($orders->items());
             const flowerDataMap = @json($flowers->mapWithKeys(fn($f) => [$f->id => ['name' => $f->name, 'price' => $f->price, 'quantity' => $f->quantity]]));
 
             function populateFlowerList(selectedQuantities = {}) {
@@ -1867,11 +1878,9 @@
                 }
 
 
-                // ——— View Order Modal ——————————————————————————————————————————————————
-                const orderModal = document.getElementById('order-detail-modal');
-                const closeOrder = orderModal.querySelector('.close-modal');
-                const saveStatus = document.getElementById('modal-save-status');
+                // ——— View Order Modal 5 Recent & All——————————————————————————————————————————————————
 
+                //Helper to format currency
                 function fmt(v) {
                     return new Intl.NumberFormat('id-ID', {
                         style: 'currency',
@@ -1880,96 +1889,107 @@
                     }).format(v);
                 }
 
-                document.querySelectorAll('.view-order-btn').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        const id = btn.dataset.id;
-                        const o = recentOrders.find(x => x.id == id);
-                        if (!o) return;
+                //Modal references
+                const orderModal = document.getElementById('order-detail-modal');
+                const closeButtons = orderModal.querySelectorAll('.close-modal');
+                const discountRow = document.getElementById('modal-discount-row');
+                const statusSelect = document.getElementById('modal-status-select');
+                const saveStatusBtn = document.getElementById('modal-save-status');
 
-                        // header
-                        document.getElementById('modal-order-id').textContent = '#' + o.id;
+                //Function fills up modals
+                function populateModal(o) {
+                    // header
+                    document.getElementById('modal-order-id').textContent = '#' + o.id;
+                    document.getElementById('modal-order-date').textContent = new Date(o.created_at).toLocaleString();
+                    document.getElementById('modal-delivery-time').textContent = o.delivery_time;
+                    document.getElementById('modal-current-status').textContent = o.progress;
+                    statusSelect.value = o.progress;
+                    document.getElementById('modal-location').textContent =
+                        `${o.delivery?.city} — ${o.delivery?.subdistrict}`;
 
-                        // customer
-                        document.getElementById('modal-customer-name').textContent = o.user.name;
-                        document.getElementById('modal-customer-email').textContent = o.user.email;
-                        document.getElementById('modal-recipient-phone').textContent = o
-                            .recipient_phone;
-                        document.getElementById('modal-recipient-address').textContent = o
-                            .recipient_address;
+                    // customer
+                    document.getElementById('modal-customer-name').textContent = o.user.name;
+                    document.getElementById('modal-customer-email').textContent = o.user.email;
+                    document.getElementById('modal-recipient-phone').textContent = o.recipient_phone;
+                    document.getElementById('modal-recipient-address').textContent = o.recipient_address;
 
-                        // info
-                        document.getElementById('modal-order-date').textContent = new Date(o.created_at)
-                            .toLocaleString();
-                        const img = document.getElementById('modal-payment-screenshot');
-                        if (o.image_url) {
-                            img.src = `/storage/${o.image_url}`;
-                            show(img);
-                        } else {
-                            hide(img);
-                        }
-                        document.getElementById('modal-current-status').textContent = o.progress;
-                        document.getElementById('modal-status-select').value = o.progress;
-                        document.getElementById('modal-location').textContent =
-                            `${o.delivery?.city} — ${o.delivery?.subdistrict}`;
-
-                        // items
-                        let tbody = document.getElementById('modal-order-items');
-                        tbody.innerHTML = '';
-                        let subtotal = 0;
-                        o.order_products.forEach(item => {
-                            const p = item.product;
-                            const tr = document.createElement('tr');
-                            tr.classList.add('border-b', 'border-mocha-light/20');
-                            tr.innerHTML = `
+                    // items
+                    const tbody = document.getElementById('modal-order-items');
+                    tbody.innerHTML = '';
+                    let subtotal = 0;
+                    o.order_products.forEach(item => {
+                        const p = item.product;
+                        const tr = document.createElement('tr');
+                        tr.className = 'border-b border-mocha-light/20';
+                        tr.innerHTML = `
         <td class="px-4 py-3 flex items-center">
           <img src="/images/${p.image_url}" class="w-12 h-12 rounded mr-3">
           <h5 class="text-sm font-medium">${p.name}</h5>
         </td>
-        <td class="px-4 py-3">${fmt(item.price / item.quantity)}</td>
+        <td class="px-4 py-3">${fmt(item.price/item.quantity)}</td>
         <td class="px-4 py-3">${item.quantity}</td>
-        <td class="px-4 py-3 text-right">${fmt(item.price)}</td>`;
-                            tbody.appendChild(tr);
-                            subtotal += item.price;
-                        });
+        <td class="px-4 py-3 text-right">${fmt(item.price)}</td>
+      `;
+                        tbody.appendChild(tr);
+                        subtotal += item.price;
+                    });
 
-                        // subtotal & shipping
-                        document.getElementById('modal-subtotal').textContent = fmt(subtotal);
-                        const shippingAmt = o.delivery?.fee || 0;
-                        document.getElementById('modal-shipping').textContent = fmt(shippingAmt);
+                    // totals
+                    document.getElementById('modal-subtotal').textContent = fmt(subtotal);
+                    const shippingAmt = o.delivery?.fee || 0;
+                    document.getElementById('modal-shipping').textContent = fmt(shippingAmt);
 
-                        // ——— DISCOUNT CALCULATION & TOGGLE —————————————————————————————
-                        // o.discount comes from eager-loaded relation with {min_purchase, percent, max_value}
-                        const d = o.discount || null;
-                        let discountAmt = 0;
-                        if (d && subtotal >= d.min_purchase) {
-                            discountAmt = subtotal * (d.percent / 100);
-                            if (d.max_value && discountAmt > d.max_value) {
-                                discountAmt = d.max_value;
-                            }
+                    // discount
+                    let discountAmt = 0;
+                    if (o.discount && subtotal >= o.discount.min_purchase) {
+                        discountAmt = subtotal * (o.discount.percent / 100);
+                        if (o.discount.max_value && discountAmt > o.discount.max_value) {
+                            discountAmt = o.discount.max_value;
                         }
+                    }
+                    if (discountAmt > 0) {
+                        discountRow.classList.remove('hidden');
+                        document.getElementById('modal-discount').textContent = fmt(discountAmt);
+                    } else {
+                        discountRow.classList.add('hidden');
+                    }
 
-                        const discountRow = document.getElementById('modal-discount-row');
-                        const discountCell = document.getElementById('modal-discount');
-                        if (discountAmt > 0) {
-                            discountCell.textContent = fmt(discountAmt);
-                            discountRow.classList.remove('hidden');
-                        } else {
-                            discountRow.classList.add('hidden');
-                        }
-                        // ————————————————————————————————————————————————————————
+                    // grand total
+                    document.getElementById('modal-total').textContent = fmt(subtotal + shippingAmt - discountAmt);
 
-                        // total (subtract discount)
-                        const total = subtotal + shippingAmt - discountAmt;
-                        document.getElementById('modal-total').textContent = fmt(total);
+                    // notes
+                    document.getElementById('modal-notes').textContent = o.sender_note || '';
 
-                        // notes
-                        document.getElementById('modal-notes').textContent = o.sender_note || '';
+                    orderModal.classList.remove('hidden');
+                    orderModal.classList.add('flex');
+                }
 
-                        show(orderModal);
+                // ⑤ wire “Recent Orders” buttons
+                document.querySelectorAll('.view-order-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = btn.dataset.id;
+                        const o = recentOrders.find(x => x.id == id);
+                        if (o) populateModal(o);
                     });
                 });
 
-                closeOrder.addEventListener('click', () => hide(orderModal));
+                // ⑥ wire “All Orders” buttons
+                document.querySelectorAll('.details-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = btn.dataset.orderId;
+                        const o = allOrders.find(x => x.id == id);
+                        if (o) populateModal(o);
+                    });
+                });
+
+
+
+                closeButtons.forEach(btn =>
+                    btn.addEventListener('click', () => {
+                        orderModal.classList.remove('flex');
+                        orderModal.classList.add('hidden');
+                    })
+                );
                 orderModal.addEventListener('click', e => {
                     // If the click target isn't inside the white panel, close
                     if (!e.target.closest('.bg-white')) {
@@ -1978,7 +1998,7 @@
                 });
 
 
-                saveStatus.addEventListener('click', () => {
+                saveStatusBtn.addEventListener('click', () => {
                     const orderId = document.getElementById('modal-order-id').textContent.slice(1);
                     const newStatus = document.getElementById('modal-status-select').value;
 
@@ -2002,7 +2022,9 @@
                         .then(json => {
                             // update rows & modal
                             document
-                                .querySelectorAll(`.view-order-btn[data-id="${orderId}"]`)
+                                .querySelectorAll(
+                                    `.view-order-btn[data-id="${orderId}"], .details-btn[data-order-id ="${orderId}"]`
+                                    )
                                 .forEach(btn => {
                                     const row = btn.closest('tr');
                                     const badge = row.querySelector('span');
@@ -2029,11 +2051,12 @@
                             setTimeout(() => {
                                 orderModal.classList.remove('flex');
                                 orderModal.classList.add('hidden');
+                                window.location.reload();
                             }, 150);
                         })
                         .catch(err => {
                             console.error('Order-status update failed:', err);
-                            showToast('Couldn’t update status. Check console.');
+                            showToast('Couldn’t update status. Order already cancelled!');
                         });
                 });
 
@@ -2198,9 +2221,6 @@
                     b.addEventListener('click', () => {
                         b.parentElement.querySelector('input[type="file"]').click();
                     });
-                });
-                document.getElementById('upload-profile-pic').addEventListener('click', () => {
-                    document.getElementById('profile-image').click();
                 });
             });
         </script>

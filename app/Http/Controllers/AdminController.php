@@ -10,6 +10,7 @@ use App\Models\Discount;
 use App\Models\Flower;
 use App\Models\FlowerProduct;
 use App\Models\Packaging;
+use App\Models\StockTransaction;
 use App\Models\Suggestion;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -67,7 +68,7 @@ class AdminController extends Controller
                 return $carry + ($subtotal - $discAmt + $fee);
             }, 0);
         };
-        
+
         //Compute totals
         $totalThis = $computeNet($ordersThisMonth);
         $totalLast = $computeNet($ordersLastMonth);
@@ -184,34 +185,34 @@ class AdminController extends Controller
             'user',
             'delivery',
             'discount',
-            'orderProducts.product'
+            'orderProducts.product',
         ])
             ->orderBy('created_at', 'desc')
-            ->paginate(15);
+            ->paginate(15)
+            ->through(function ($order) {
+                // calculate subtotal
+                $subtotal = $order->orderProducts->sum('price');
 
-        // 2) compute the sales for each order on $this page
-        $orders->getCollection()->transform(function ($order) {
-            // subtotal = sum of all orderProducts.price
-            $subtotal = $order->orderProducts->sum('price');
+                // calculate discount
+                $discountAmt = 0;
+                if ($order->discount && $subtotal >= $order->discount->min_purchase) {
+                    $raw    = $subtotal * ($order->discount->percent / 100);
+                    $discountAmt = $order->discount->max_value
+                        ? min($raw, $order->discount->max_value)
+                        : $raw;
+                }
 
-            // compute discount amount
-            $discountAmt = 0;
-            if ($order->discount && $subtotal >= $order->discount->min_purchase) {
-                $rawDisc = $subtotal * ($order->discount->percent / 100);
-                $discountAmt = $order->discount->max_value
-                    ? min($rawDisc, $order->discount->max_value)
-                    : $rawDisc;
-            }
+                // delivery fee
+                $fee = optional($order->delivery)->fee ?? 0;
 
-            // delivery fee
-            $fee = $order->delivery->fee ?? 0;
+                // attach your custom fields
+                $order->subtotal        = $subtotal;
+                $order->discount_amount = $discountAmt;
+                $order->delivery_fee    = $fee;
+                $order->grand_total     = $subtotal - $discountAmt + $fee;
 
-            // attach a sales property
-            $order->sales = $subtotal - $discountAmt + $fee;
-
-            return $order;
-        });
-
+                return $order;
+            });
         //__Packagings Subpage__
         $packagings = Packaging::all();
 
@@ -328,25 +329,88 @@ class AdminController extends Controller
 
     public function updateOrderStatus(Request $request, Order $order)
     {
-        // 1) Validate that the incoming 'progress' is one of your allowed values:
+        // 0) Disallow any change if already cancelled
+        if ($order->progress === 'Cancelled') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot update a cancelled order.'
+            ], 422);
+        }
+
+        // 1) Validate incoming status
         $data = $request->validate([
             'progress' => [
                 'required',
-                // adjust these to exactly match your <option> values:
                 'in:Payment Pending,On Progress,Ready to Deliver,Delivery,Completed,Cancelled',
             ],
         ]);
 
-        // 2) Update & save:
-        $order->progress = $data['progress'];
-        $order->save();
+        $newStatus = $data['progress'];
 
-        // 3) Return a JSON “OK” so your JS can reload or give feedback:
+        DB::transaction(function () use ($order, $newStatus) {
+            // 2) If we’re moving *to* “Cancelled”, reverse all stock transactions
+            if ($newStatus === 'Cancelled') {
+                $transactions = StockTransaction::where('order_id', $order->id)->get();
+                foreach ($transactions as $tx) {
+                    if ($tx->type === 'FO') {
+                        // Flower refund
+                        $flower = Flower::findOrFail($tx->flower_id);
+
+                        $oldQty   = $flower->quantity;
+                        $oldPrice = $flower->price;
+
+                        $refundQty   = $tx->quantity;
+                        $refundPrice = $tx->price;
+
+                        // compute new quantity & weighted‐average price
+                        $newQty   = $oldQty + $refundQty;
+                        $newPrice = ($oldPrice * $oldQty + $refundPrice * $refundQty) / $newQty;
+
+                        // write them back
+                        $flower->quantity = $newQty;
+                        $flower->price    = $newPrice;
+                        $flower->save();
+
+                        // log the reversal
+                        StockTransaction::create([
+                            'order_id'     => $order->id,
+                            'flower_id'    => $flower->id,
+                            'flower_name'  => $flower->name,
+                            'type'         => 'FI',             // Flower In
+                            'quantity'     => $refundQty,
+                            'price'        => $refundPrice,
+                        ]);
+                    } elseif ($tx->type === 'PO') {
+                        // Packaging refund
+                        $packaging = Packaging::findOrFail($tx->packaging_id);
+
+
+                        // log the reversal
+                        StockTransaction::create([
+                            'order_id'      => $order->id,
+                            'packaging_id'  => $packaging->id,
+                            'packaging_name' => $packaging->name,
+                            'type'          => 'PI',          // Packaging In
+                            'quantity'      => $tx->quantity,
+                            'price'         => $tx->price,
+                        ]);
+                    }
+                }
+            }
+
+            // 3) Update order status
+            $order->progress = $newStatus;
+            $order->save();
+        });
+
+        // 4) Return success JSON
         return response()->json([
-            'success' => true,
+            'success'    => true,
             'new_status' => $order->progress,
         ]);
     }
+
+
 
     //Flowers Subpage Handlers
     //Get All Flowers
