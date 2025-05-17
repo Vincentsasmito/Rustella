@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
 
 class LoginController extends Controller
 {
@@ -66,7 +68,6 @@ class LoginController extends Controller
 
     protected function loggedOut(Request $request)
     {
-        // e.g. back to login page, or anywhere else you like:
         return redirect()->route('login');
     }
 }

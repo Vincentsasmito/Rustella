@@ -283,7 +283,7 @@
                     @csrf
 
                     <div class="input-wrapper">
-                        <input name="email" id="email" type="email" autocomplete="username"
+                        <input name="email" id="email" type="email" autocomplete="email"
                             value="{{ old('email') }}" placeholder="Email Address" required
                             class="login-input w-full bg-mocha-cream/50 rounded-md p-4 placeholder-transparent" />
                         <label for="email" class="form-label">Email Address</label>
@@ -309,20 +309,14 @@
 
                     {{-- Remember & Forgot --}}
                     <div class="flex justify-between items-center text-sm">
-                        <label class="flex items-center cursor-pointer group">
-                            <input type="checkbox" name="remember" id="remember" class="sr-only"
-                                {{ old('remember') ? 'checked' : '' }}>
-                            <div class="relative">
-                                <div
-                                    class="w-4 h-4 border border-mocha-medium rounded group-hover:border-mocha-burgundy">
-                                </div>
-                                <div
-                                    class="absolute inset-0 hidden group-hover:flex items-center justify-center text-mocha-burgundy transform scale-0 group-hover:scale-75 transition-transform">
-                                    <i class="fas fa-check text-xs"></i>
-                                </div>
-                            </div>
-                            <span class="ml-2 text-mocha-medium group-hover:text-mocha-dark">Remember me</span>
-                        </label>
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}
+                                class="h-4 w-4 border border-mocha-medium rounded text-mocha-burgundy focus:ring-mocha-burgundy" />
+                            <label for="remember" class="text-mocha-medium hover:text-mocha-dark select-none">
+                                Remember me
+                            </label>
+                        </div>
+
                         @if (Route::has('password.request'))
                             <a class="text-mocha-burgundy hover:underline" href="{{ route('password.request') }}">
                                 Forgot Password?

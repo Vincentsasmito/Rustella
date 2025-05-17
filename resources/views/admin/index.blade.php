@@ -352,21 +352,21 @@
                         </div>
                     </div>
 
-                    <!-- Customers Card -->
+                    <!-- Profit Card -->
                     <div class="bg-white rounded-lg shadow p-6">
                         <div class="flex justify-between items-start">
                             <div>
-                                <p class="text-sm text-mocha-medium mb-1">Customers (Month-to-Date)</p>
+                                <p class="text-sm text-mocha-medium mb-1">Profit (Month-to-Date)</p>
                                 <h3 class="text-2xl font-bold">
-                                    {{ $totalCustomers }}
+                                    Rp {{ number_format($totalProfit, 0, ',', '.') }}
                                 </h3>
-                                <p class="text-xs mt-1 {{ $customersUp ? 'text-green-500' : 'text-red-500' }}">
-                                    <i class="fas fa-arrow-{{ $customersUp ? 'up' : 'down' }} mr-1"></i>
-                                    {{ $customersChange }}% from last month
+                                <p class="text-xs mt-1 {{ $profitUp ? 'text-green-500' : 'text-red-500' }}">
+                                    <i class="fas fa-arrow-{{ $profitUp ? 'up' : 'down' }} mr-1"></i>
+                                    {{ $profitUp ? 'Up' : 'Down' }} {{ $profitChange }}% from last month
                                 </p>
                             </div>
-                            <div class="rounded-full bg-purple-100 p-3">
-                                <i class="fas fa-users text-purple-600"></i>
+                            <div class="rounded-full bg-emerald-100 p-3">
+                                <i class="fas fa-coins text-emerald-600"></i>
                             </div>
                         </div>
                     </div>
@@ -1568,7 +1568,7 @@
         <!-- Toast Notification -->
         <div id="toast"
             class="toast fixed bottom-0 right-0 m-6 p-4 bg-mocha-dark text-white rounded-lg shadow-lg hidden flex items-center">
-            <i class="fas fa-check-circle text-green-400 mr-3"></i>
+            <i id="toast-icon" class="fa-solid fa-check-circle text-green-400 mr-3"></i>
             <span id="toast-message">Changes saved successfully!</span>
             <button class="ml-4 text-white/70 hover:text-white"
                 onclick="document.getElementById('toast').classList.add('hidden')">
@@ -1650,18 +1650,31 @@
                 // ——— Helpers ———————————————————————————————————————————————————————————————
                 const show = el => el.classList.remove('hidden') && el.classList.add('flex');
                 const hide = el => el.classList.remove('flex') && el.classList.add('hidden');
-                const toast = document.getElementById('toast');
-                const toastMsg = document.getElementById('toast-message');
 
-                function showToast(msg) {
-                    toast.classList.remove('flex'); // Force reset
-                    toast.classList.add('hidden'); // Ensure it's hidden
 
+                function showToast(msg, type = 'success') {
+                    const toast = document.getElementById('toast');
+                    const toastMsg = document.getElementById('toast-message');
+                    const toastIcon = document.getElementById('toast-icon');
+                    toast.classList.remove('flex');
+                    toast.classList.add('hidden');
                     toastMsg.textContent = msg;
+
+
+                    // Replace the icon element entirely
+                    const newIcon = document.createElement('i');
+                    if (type === 'error') {
+                        newIcon.className = 'fa-solid fa-circle-xmark text-red-400 mr-3';
+                    } else {
+                        newIcon.className = 'fa-solid fa-check-circle text-green-400 mr-3';
+                    }
+                    newIcon.id = 'toast-icon';
+                    toastIcon.replaceWith(newIcon);
+
                     setTimeout(() => {
                         toast.classList.remove('hidden');
                         toast.classList.add('flex');
-                    }, 10); // Tiny delay forces a reflow and guarantees animation trigger
+                    }, 10);
 
                     setTimeout(() => {
                         toast.classList.remove('flex');
@@ -1861,7 +1874,7 @@
                                 show(productModal);
                             } catch (err) {
                                 console.error('Failed to load product:', err);
-                                showToast('Could not load product details.');
+                                showToast('Could not load product details.', 'error');
                             }
                         });
                     });
@@ -2024,7 +2037,7 @@
                             document
                                 .querySelectorAll(
                                     `.view-order-btn[data-id="${orderId}"], .details-btn[data-order-id ="${orderId}"]`
-                                    )
+                                )
                                 .forEach(btn => {
                                     const row = btn.closest('tr');
                                     const badge = row.querySelector('span');
@@ -2051,12 +2064,16 @@
                             setTimeout(() => {
                                 orderModal.classList.remove('flex');
                                 orderModal.classList.add('hidden');
-                                window.location.reload();
+                                if (o.progress === "Cancelled") {
+                                    window.location.reload();
+                                }
                             }, 150);
                         })
                         .catch(err => {
                             console.error('Order-status update failed:', err);
-                            showToast('Couldn’t update status. Order already cancelled!');
+                            showToast('Couldn’t update status. Order already cancelled!', 'error');
+                            orderModal.classList.remove('flex');
+                            orderModal.classList.add('hidden');
                         });
                 });
 

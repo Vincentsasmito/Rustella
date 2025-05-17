@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 class HomeController extends Controller
 {
 
-    //In Prod = This function gets the data needed for Homepage (Top 3 Products, Catalogue Products)
+    // In Prod = This function gets the data needed for Homepage (Top 3 Products, Catalogue Products)
     public function index()
     {
         // 1) Load only in-stock products whose recipe is actually satisfiable
@@ -20,8 +20,12 @@ class HomeController extends Controller
             'packaging',
             // make sure your relation is actually named flowerProducts
             'flowerProducts.flower',
-            // likewise, your orderProducts relation
-            'orderProducts',
+            // only include orderProducts from non-cancelled orders
+            'orderProducts' => function ($q) {
+                $q->whereHas('order', function (Builder $q) {
+                    $q->where('progress', '!=', 'Cancelled');
+                });
+            },
         ])
             ->where('in_stock', true)
             ->whereDoesntHave('flowerProducts.flower', function (Builder $q) {
@@ -30,20 +34,20 @@ class HomeController extends Controller
             })
             ->get();
 
-        // 2) Build a “sold quantities” array keyed by product_id
+        // 2) Build a “sold quantities” array keyed by product_id,
+        //    now only summing non-cancelled sales
         $quantities = $products->mapWithKeys(function (Product $p) {
-            // sum up all the pivot-quantities from orderProducts
             $sold = $p->orderProducts->sum('quantity');
             return [$p->id => $sold];
         });
 
-        // 3) Take the top 3 by that same sold value
+        // 3) Take the top 3 by that sold value
         $top3product = $products
             ->sortByDesc(fn(Product $p) => $quantities[$p->id])
             ->take(3)
             ->values();  // re-index 0,1,2
 
-        // Group up product by category(Packaging type)
+        // Group up product by category (packaging type)
         $groupedProducts = $products->groupBy(fn($product) => strtolower($product->packaging->name));
 
         return view('customerviews.home', compact('products', 'top3product', 'quantities', 'groupedProducts'));

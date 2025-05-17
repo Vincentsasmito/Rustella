@@ -235,12 +235,22 @@
                         </div>
                     </div>
 
-                    <!-- Edit Button -->
-                    <div class="mt-6 md:mt-0 md:ml-auto">
+                    <!-- Edit & Logout Buttons -->
+                    <div class="mt-6 md:mt-0 md:ml-auto flex space-x-2">
+                        <!-- Edit Profile -->
                         <button id="openEditModal"
                             class="bg-mocha-light/80 text-mocha-dark py-2 px-4 rounded-md hover:bg-mocha-light transition flex items-center">
                             <i class="fas fa-edit mr-2"></i> Edit Profile
                         </button>
+
+                        <!-- Logout -->
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit"
+                                class="bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition flex items-center">
+                                <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>

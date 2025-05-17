@@ -229,6 +229,19 @@ class AdminController extends Controller
             'flowerProducts.flower'
         ])->get();
 
+        // Calculate profit for this month and last month
+        $totalProfitThis = $totalThis - $cogsThis;
+        $totalProfitLast = $totalLast - $cogsLast;
+
+        // Calculate profit change percentage
+        if ($totalProfitLast != 0) {
+            $profitChange = round((($totalProfitThis - $totalProfitLast) / abs($totalProfitLast)) * 100, 1);
+        } else {
+            $profitChange = $totalProfitThis > 0 ? 100 : 0;
+        }
+        $profitUp = $profitChange >= 0;
+
+
         return view('admin.index', [
             // sales data
             'totalSales'   => $totalThis,
@@ -278,6 +291,11 @@ class AdminController extends Controller
 
             //products subpage data
             'products' => $products,
+
+            //profit data
+            'totalProfit'   => $totalProfitThis,
+            'profitChange'  => abs($profitChange),
+            'profitUp'      => $profitUp,
         ]);
     }
 

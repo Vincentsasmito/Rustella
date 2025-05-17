@@ -46,28 +46,11 @@ Route::resource('products', ProductController::class)
 Route::resource('orders', OrderController::class)
      ->only(['index', 'create', 'show', 'store', 'edit', 'destroy']);
 
-
-// 1) Checkout must come first
-Route::post('cart/checkout', [CartController::class, 'storeOrder'])
-     ->name('cart.checkout');
-
-// 2) Discount must come next
-Route::post('cart/discount', [CartController::class, 'discountIfExist'])
-     ->name('cart.discount');
-
-// 3) Then the wildcard for add/update/remove
-Route::get('cart',            [CartController::class, 'index'])->name('cart.index');
-
 // Only match numeric product IDs:
 Route::post('cart/{product}',  [CartController::class, 'add'])
      ->whereNumber('product')
      ->name('cart.add');
 
-Route::patch('cart/{product}',  [CartController::class, 'update'])
-     ->whereNumber('product');
-
-Route::delete('cart/{product}',  [CartController::class, 'remove'])
-     ->whereNumber('product');
 
 // ────────────────────────────────────────────────────────────────
 // AUTHENTICATED & VERIFIED USERS
@@ -75,6 +58,25 @@ Route::delete('cart/{product}',  [CartController::class, 'remove'])
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
+
+     // 1) Checkout must come first
+     Route::post('cart/checkout', [CartController::class, 'storeOrder'])
+          ->name('cart.checkout');
+
+     // 2) Discount must come next
+     Route::post('cart/discount', [CartController::class, 'discountIfExist'])
+          ->name('cart.discount');
+
+     // 3) Then the wildcard for add/update/remove
+     Route::get('cart',            [CartController::class, 'index'])->name('cart.index');
+
+
+
+     Route::patch('cart/{product}',  [CartController::class, 'update'])
+          ->whereNumber('product');
+
+     Route::delete('cart/{product}',  [CartController::class, 'remove'])
+          ->whereNumber('product');
      // Nested Order → OrderProduct
      Route::prefix('orders/{order}')
           ->name('orders.')

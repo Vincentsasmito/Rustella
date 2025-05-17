@@ -373,8 +373,7 @@
 
                 <!-- Cart Icon -->
                 <div class="hidden md:flex items-center space-x-6">
-                    <a href="profile"
-                        class="text-mocha-burgundy hover:text-mocha-dark transition-colors duration-300">
+                    <a href="profile" class="text-mocha-burgundy hover:text-mocha-dark transition-colors duration-300">
                         <i class="fas fa-user text-xl"></i>
                     </a>
                     <a href="{{ route('cart.index') }}"
@@ -439,7 +438,8 @@
                             class="bg-mocha-burgundy text-white py-3 px-6 rounded-md text-center hover:bg-opacity-90 transition">
                             Explore Catalog
                         </a>
-                        <a href="#contact"
+                        <a href="https://wa.me/6282210672099?text=Hai%20Rustella%2C%20saya%20ingin%20mengajukan%20Custom%20Order"
+                            target="_blank" rel="noopener noreferrer"
                             class="border border-mocha-medium text-mocha-dark py-3 px-6 rounded-md text-center hover:bg-mocha-light/30 transition">
                             Custom Order
                         </a>
