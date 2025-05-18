@@ -280,6 +280,11 @@ class CartController extends Controller
             $validInput['progress'] = "Payment Pending";
             $order = Order::create($validInput);
 
+            //Increase Discount Counter
+            if ($order->discount_id) {
+                Discount::where('id', $order->discount_id)->increment('usage_count');
+            }
+
             //Create OrderProduct entries
             foreach ($cart as $productId => $qty) {
                 $product = Product::find($productId);

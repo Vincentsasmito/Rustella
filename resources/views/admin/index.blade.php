@@ -262,6 +262,12 @@
                     <i class="fas fa-tags w-5 text-center"></i>
                     <span class="sidebar-link-text">Products</span>
                 </a>
+                <a href="#stocklogs"
+                    class="nav-link flex items-center space-x-3 p-3 rounded-lg hover:bg-mocha-burgundy hover:bg-opacity-30 mb-1"
+                    data-page="stocklogs">
+                    <i class="fas fa-warehouse w-5 text-center"></i>
+                    <span class="sidebar-link-text">Stock Logs</span>
+                </a>
             </nav>
         </div>
         <div class="absolute bottom-0 w-full p-5">
@@ -960,6 +966,209 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Stock Logs Page -->
+            <div id="stocklogs-page" class="page hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- FO Table -->
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b border-mocha-light/20">
+                            <h2 class="text-xl font-semibold">FO (Stock Out - Order Fulfillment)</h2>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full table-hover">
+                                <thead>
+                                    <tr class="border-b border-mocha-light/30">
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
+                                            ID</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
+                                            Date</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
+                                            Quantity</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
+                                            Order ID</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
+                                            Flower ID</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($stockLogsFO as $log)
+                                        <tr class="border-b border-mocha-light/20 hover:bg-mocha-light/10">
+                                            <td class="px-4 py-3">#{{ $log->id }}</td>
+                                            <td class="px-4 py-3">{{ $log->created_at->format('F j, Y') }}</td>
+                                            <td class="px-4 py-3">{{ $log->quantity }}</td>
+                                            <td class="px-4 py-3">{{ $log->order_id ?? '-' }}</td>
+                                            <td class="px-4 py-3">{{ $log->flower_id ?? '-' }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="5" class="px-4 py-3 text-center text-sm text-gray-500">
+                                                No FO logs found.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="px-4 py-2">
+                            {{ $stockLogsFO->links() }}
+                        </div>
+                    </div>
+                    <!-- FI Table -->
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b border-mocha-light/20">
+                            <h2 class="text-xl font-semibold">FI (Stock In - Purchase/Restock)</h2>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full table-hover">
+                                <thead>
+                                    <tr class="border-b border-mocha-light/30">
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
+                                            ID</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
+                                            Date</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
+                                            Quantity</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
+                                            Order ID</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
+                                            Flower ID</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($stockLogsFI as $log)
+                                        <tr class="border-b border-mocha-light/20 hover:bg-mocha-light/10">
+                                            <td class="px-4 py-3">#{{ $log->id }}</td>
+                                            <td class="px-4 py-3">{{ $log->created_at->format('F j, Y') }}</td>
+                                            <td class="px-4 py-3">{{ $log->quantity }}</td>
+                                            <td class="px-4 py-3">{{ $log->order_id }}</td>
+                                            <td class="px-4 py-3">{{ $log->flower_id ?? '-' }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="4" class="px-4 py-3 text-center text-sm text-gray-500">
+                                                No FI logs found.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="px-4 py-2">
+                            {{ $stockLogsFI->links() }}
+                        </div>
+                    </div>
+                    <!-- PO Table -->
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b border-mocha-light/20">
+                            <h2 class="text-xl font-semibold">PO (Stock Out - Manual Adjustment)</h2>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full table-hover">
+                                <thead>
+                                    <tr class="border-b border-mocha-light/30">
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
+                                            ID</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
+                                            Date</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
+                                            Quantity</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
+                                            Order ID</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
+                                            Packaging ID</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($stockLogsPO as $log)
+                                        <tr class="border-b border-mocha-light/20 hover:bg-mocha-light/10">
+                                            <td class="px-4 py-3">#{{ $log->id }}</td>
+                                            <td class="px-4 py-3">{{ $log->created_at->format('F j, Y') }}</td>
+                                            <td class="px-4 py-3">{{ $log->quantity }}</td>
+                                            <td class="px-4 py-3">{{ $log->order_id ?? '-' }}</td>
+                                            <td class="px-4 py-3">{{ $log->packaging_id ?? '-' }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="4" class="px-4 py-3 text-center text-sm text-gray-500">
+                                                No PO logs found.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="px-4 py-2">
+                            {{ $stockLogsPO->links() }}
+                        </div>
+                    </div>
+                    <!-- PI Table -->
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b border-mocha-light/20">
+                            <h2 class="text-xl font-semibold">PI (Stock In - Manual Adjustment)</h2>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full table-hover">
+                                <thead>
+                                    <tr class="border-b border-mocha-light/30">
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
+                                            ID</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
+                                            Date</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
+                                            Quantity</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
+                                            Order ID</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
+                                            Packaging ID</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($stockLogsPI as $log)
+                                        <tr class="border-b border-mocha-light/20 hover:bg-mocha-light/10">
+                                            <td class="px-4 py-3">#{{ $log->id }}</td>
+                                            <td class="px-4 py-3">{{ $log->created_at->format('F j, Y') }}</td>
+                                            <td class="px-4 py-3">{{ $log->quantity }}</td>
+                                            <td class="px-4 py-3">{{ $log->order_id ?? '-' }}</td>
+                                            <td class="px-4 py-3">{{ $log->packaging_id ?? '-' }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="4" class="px-4 py-3 text-center text-sm text-gray-500">
+                                                No PI logs found.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="px-4 py-2">
+                            {{ $stockLogsPI->links() }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Discounts Page -->
             <div id="discounts-page" class="page hidden">
                 <div class="bg-white rounded-lg shadow mb-6">
@@ -2125,7 +2334,16 @@
                 });
                 const hash = window.location.hash.slice(1);
                 if (hash) document.querySelector(`.nav-link[data-page="${hash}"]`)?.click();
-
+                // Ensure Stock Logs page is shown after pagination reload
+                const urlParams = new URLSearchParams(window.location.search);
+                if (
+                    urlParams.has('fo_page') ||
+                    urlParams.has('fi_page') ||
+                    urlParams.has('po_page') ||
+                    urlParams.has('pi_page')
+                ) {
+                    document.querySelector('.nav-link[data-page="stocklogs"]')?.click();
+                }
                 // ——— Sales Chart —————————————————————————————————————————————————————
                 (function initSalesChart() {
                     const ctx = document.getElementById('salesChart').getContext('2d');

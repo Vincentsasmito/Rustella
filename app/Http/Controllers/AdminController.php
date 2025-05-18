@@ -32,11 +32,11 @@ class AdminController extends Controller
 
         //Load orders with products AND discount
         $ordersThisMonth = Order::with(['orderProducts', 'discount', 'delivery'])
-            ->whereBetween('created_at', [$thisStart, $thisEnd])
+            ->whereBetween('created_at', [$thisStart, $thisEnd])->where('progress', '!=', 'Cancelled')
             ->get();
 
         $ordersLastMonth = Order::with(['orderProducts', 'discount', 'delivery'])
-            ->whereBetween('created_at', [$lastStart, $lastEnd])
+            ->whereBetween('created_at', [$lastStart, $lastEnd])->where('progress', '!=', 'Cancelled')
             ->get();
         //Load Deliveries
 
@@ -135,7 +135,7 @@ class AdminController extends Controller
             // Count only those orderProducts whose order falls in this month:
             'orderProducts as sold_qty' => function ($q) use ($thisStart, $thisEnd) {
                 $q->whereHas('order', function ($q2) use ($thisStart, $thisEnd) {
-                    $q2->whereBetween('created_at', [$thisStart, $thisEnd]);
+                    $q2->whereBetween('created_at', [$thisStart, $thisEnd])->where('progress', '!=', 'Cancelled');
                 });
             }
         ])
@@ -241,6 +241,13 @@ class AdminController extends Controller
         }
         $profitUp = $profitChange >= 0;
 
+        //Stock Logs
+        $stockLogsFO = StockTransaction::where('type', 'FO')->latest()->paginate(10, ['*'], 'fo_page');
+        $stockLogsFI = StockTransaction::where('type', 'FI')->latest()->paginate(10, ['*'], 'fi_page');
+        $stockLogsPO = StockTransaction::where('type', 'PO')->latest()->paginate(10, ['*'], 'po_page');
+        $stockLogsPI = StockTransaction::where('type', 'PI')->latest()->paginate(10, ['*'], 'pi_page');
+
+
 
         return view('admin.index', [
             // sales data
@@ -296,6 +303,12 @@ class AdminController extends Controller
             'totalProfit'   => $totalProfitThis,
             'profitChange'  => abs($profitChange),
             'profitUp'      => $profitUp,
+
+            //stock logs
+            'stockLogsFO' => $stockLogsFO,
+            'stockLogsFI' => $stockLogsFI,
+            'stockLogsPO' => $stockLogsPO,
+            'stockLogsPI' => $stockLogsPI,
         ]);
     }
 
@@ -320,7 +333,7 @@ class AdminController extends Controller
             ->whereBetween('created_at', [
                 $startDate->copy()->startOfDay(),
                 $endDate->copy()->endOfDay()
-            ])
+            ])->where('progress', '!=', 'Cancelled')
             ->get();
 
         // 4. Accumulate each order into its day’s bucket

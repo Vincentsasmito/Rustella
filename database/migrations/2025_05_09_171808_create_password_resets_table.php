@@ -1,38 +1,28 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
-return new class extends Migration
+class CreatePasswordResetsTable extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up()
     {
-        Schema::create('stock_transactions', function (Blueprint $table) {
-            $table->id();
-
-            $table->unsignedBigInteger('order_id');
-            $table->unsignedBigInteger('flower_id')->nullable();
-            $table->string('flower_name')->nullable();
-            $table->unsignedBigInteger('packaging_id')->nullable();
-            $table->string('packaging_name')->nullable();
-
-            $table->enum('type', ['FI', 'FO', 'PI', 'PO'])
-                ->comment('FI=FlowerIn, FO=FlowerOut, PI=PackagingIn, PO=PackagingOut');
-
-            $table->integer('quantity');
-            $table->decimal('price', 10, 2);
-
-            $table->timestamp('created_at')->useCurrent();
-
-            $table->index('order_id');
-            $table->index('flower_id');
-            $table->index('packaging_id');
+        Schema::create('password_resets', function (Blueprint $table) {
+            $table->string('email')->index();
+            $table->string('token');
+            $table->timestamp('created_at')->nullable();
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down()
     {
-        Schema::dropIfExists('stock_transactions');
+        Schema::dropIfExists('password_resets');
     }
-};
+}
