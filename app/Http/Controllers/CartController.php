@@ -203,11 +203,30 @@ class CartController extends Controller
             return response()->json(['message' => 'Invalid discount code.'], 422);
         }
 
+        //Get the current date, check if the discount's start date and end date are valid
+        $currentDate = now();
+        if (
+            $currentDate->lt($discount->start_date)
+            || ($discount->end_date && $currentDate->gt($discount->end_date))
+        ) {
+            return response()->json([
+                'message' => 'Discount code period is not currently valid.'
+            ], 422);
+        }
+
+        if ($discount->usage_counter >= $discount->max_usage && $discount->max_usage != 0) {
+            return response()->json([
+                'message' => 'Sorry, the discount limit has been reached.'
+            ], 422);
+        }
+
         if ($data['subtotal'] < $discount->min_purchase) {
             return response()->json([
                 'message' => 'Minimum purchase for this code is Rp ' . number_format($discount->min_purchase, 0, ',', '.')
             ], 422);
         }
+
+
 
         $discountAmt = $data['subtotal'] * $discount->percent / 100;
 
@@ -244,7 +263,7 @@ class CartController extends Controller
             $file_path = public_path('payment');
             $file_input = date('YmdHis') . '-' . $file->getClientOriginalName();
             $file->move($file_path, $file_input);
-            $validInput['image_url'] = $file_input;
+            $validInput['payment_url'] = $file_input;
         }
 
         $cart = session('cart', []);
@@ -282,7 +301,7 @@ class CartController extends Controller
 
             //Increase Discount Counter
             if ($order->discount_id) {
-                Discount::where('id', $order->discount_id)->increment('usage_count');
+                Discount::where('id', $order->discount_id)->increment('usage_counter');
             }
 
             //Create OrderProduct entries
@@ -337,6 +356,7 @@ class CartController extends Controller
 
         session()->forget('cart');
 
-        return redirect()->route('home');
+
+        return redirect()->route('profile.index')->with('success', 'Order created successfully!');
     }
 }

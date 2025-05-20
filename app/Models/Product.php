@@ -43,4 +43,12 @@ class Product extends Model
     {
         return $this->hasMany(OrderProduct::class);
     }
+    public function limitedReviews()
+    {
+        return $this->hasMany(Suggestion::class)
+            ->where('type', 'product')
+            ->latest('created_at')
+            ->limit(10)
+            ->with('user');
+    }
 }

@@ -101,6 +101,33 @@
             background-color: #3B82F6;
         }
 
+        .badge-onprogress {
+            /* blue-500 */
+            background-color: #3B82F6;
+        }
+
+        .badge-readytodeliver {
+            /* teal-500 */
+            background-color: #14B8A6;
+        }
+
+        .badge-delivery {
+            /* violet-500 */
+            background-color: #8B5CF6;
+        }
+
+        .badge-pending,
+        .badge-onprogress,
+        .badge-readytodeliver,
+        .badge-delivery,
+        .badge-success,
+        .badge-cancelled {
+            width: 130px;
+            text-align: center;
+            display: inline-block;
+        }
+
+
         .tab-active {
             border-bottom: 2px solid #741D29;
             color: #741D29;
@@ -508,9 +535,9 @@
                                             @php
                                                 $map = [
                                                     'Pending Payment' => 'badge-pending',
-                                                    'On Progress' => 'badge-processing',
-                                                    'Delivery' => 'badge-processing',
-                                                    'Ready to Deliver' => 'badge-processing',
+                                                    'On Progress' => 'badge-onprogress',
+                                                    'Delivery' => 'badge-delivery',
+                                                    'Ready to Deliver' => 'badge-readytodeliver',
                                                     'Completed' => 'badge-success',
                                                     'Cancelled' => 'badge-cancelled',
                                                 ];
@@ -552,11 +579,6 @@
                         <div class="flex flex-col md:flex-row md:items-center md:justify-between">
                             <h2 class="text-xl font-semibold mb-4 md:mb-0">Flower Management</h2>
                             <div class="flex flex-col sm:flex-row gap-3">
-                                <div class="relative">
-                                    <input type="text" placeholder="Search flowers..."
-                                        class="w-full px-4 py-2 border border-mocha-light/30 rounded-md focus:outline-none focus:border-mocha-burgundy">
-                                    <i class="fas fa-search absolute right-3 top-3 text-mocha-medium"></i>
-                                </div>
                                 <!-- Add New Flower (could open a modal or link to a create form) -->
                                 <button type="button"
                                     class="add-flower-btn bg-mocha-burgundy text-white px-4 py-2 rounded-md hover:bg-opacity-90 transition flex items-center justify-center">
@@ -604,11 +626,11 @@
                                                 method="POST" class="flex items-center space-x-2">
                                                 @csrf
                                                 <input name="quantity" type="number" min="1"
-                                                    placeholder="Qty"
-                                                    class="w-16 px-2 py-1 border rounded-md text-sm">
+                                                    placeholder="Qty" class="w-16 px-2 py-1 border rounded-md text-sm"
+                                                    required>
                                                 <input name="price" type="number" min="0"
                                                     placeholder="Total Rp"
-                                                    class="w-24 px-2 py-1 border rounded-md text-sm">
+                                                    class="w-24 px-2 py-1 border rounded-md text-sm" required>
                                                 <button type="submit"
                                                     class="bg-green-500 text-white px-3 py-1 rounded-md text-sm">
                                                     Add
@@ -717,25 +739,40 @@
                         <div class="flex flex-col md:flex-row md:items-center md:justify-between">
                             <h2 class="text-xl font-semibold mb-4 md:mb-0">Order Management</h2>
                             <div class="flex flex-col sm:flex-row gap-3">
-                                <div class="relative">
-                                    <input type="text" placeholder="Search orders..."
-                                        class="w-full px-4 py-2 border border-mocha-light/30 rounded-md focus:outline-none focus:border-mocha-burgundy">
-                                    <i class="fas fa-search absolute right-3 top-3 text-mocha-medium"></i>
-                                </div>
-                                <div>
-                                    <select
-                                        class="w-full px-4 py-2 border border-mocha-light/30 rounded-md focus:outline-none focus:border-mocha-burgundy">
-                                        <option value="">Filter by Status</option>
-                                        <option value="completed">Completed</option>
-                                        <option value="processing">Processing</option>
-                                        <option value="pending">Pending</option>
-                                        <option value="cancelled">Cancelled</option>
-                                    </select>
-                                </div>
-                                <button
-                                    class="export-orders-btn bg-mocha-dark text-white px-4 py-2 rounded-md hover:bg-opacity-90 transition flex items-center justify-center">
-                                    <i class="fas fa-download mr-2"></i> Export
-                                </button>
+                                <form method="GET" action="{{ route('admin.index') }}"
+                                    class="flex flex-col sm:flex-row gap-3">
+                                    <input type="hidden" name="tab" value="orders">
+                                    <div class="relative">
+                                        <input type="text" name="order_search"
+                                            value="{{ request('order_search') }}" placeholder="Search by Order ID..."
+                                            class="w-full px-4 py-2 border border-mocha-light/30 rounded-md focus:outline-none focus:border-mocha-burgundy">
+                                        <button type="submit" class="absolute right-3 top-3 text-mocha-medium">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <select name="order_status"
+                                            class="w-full px-4 py-2 border border-mocha-light/30 rounded-md focus:outline-none focus:border-mocha-burgundy"
+                                            onchange="this.form.submit()">
+                                            <option value="">All Orders</option>
+                                            <option value="Payment Pending"
+                                                {{ request('order_status') == 'Payment Pending' ? 'selected' : '' }}>
+                                                Payment Pending</option>
+                                            <option value="On Progress"
+                                                {{ request('order_status') == 'On Progress' ? 'selected' : '' }}>On
+                                                Progress</option>
+                                            <option value="Ready to Deliver"
+                                                {{ request('order_status') == 'Ready to Deliver' ? 'selected' : '' }}>
+                                                Ready to Deliver</option>
+                                            <option value="Delivery"
+                                                {{ request('order_status') == 'Delivery' ? 'selected' : '' }}>Delivery
+                                            </option>
+                                            <option value="Cancelled"
+                                                {{ request('order_status') == 'Cancelled' ? 'selected' : '' }}>
+                                                Cancelled</option>
+                                        </select>
+                                    </div>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -777,9 +814,9 @@
                                             @php
                                                 $map = [
                                                     'Pending Payment' => 'badge-pending',
-                                                    'On Progress' => 'badge-processing',
-                                                    'Delivery' => 'badge-processing',
-                                                    'Ready to Deliver' => 'badge-processing',
+                                                    'On Progress' => 'badge-onprogress',
+                                                    'Delivery' => 'badge-delivery',
+                                                    'Ready to Deliver' => 'badge-readytodeliver',
                                                     'Completed' => 'badge-success',
                                                     'Cancelled' => 'badge-cancelled',
                                                 ];
@@ -809,7 +846,7 @@
                     </div>
 
                     <div class="px-6 py-4">
-                        {{ $orders->links() }}
+                        {{ $orders->appends(['order_search' => request('order_search'), 'order_status' => request('order_status')])->fragment('orders')->links() }}
                     </div>
                 </div>
             </div>
@@ -1176,11 +1213,6 @@
                         class="p-6 border-b border-mocha-light/20 flex flex-col md:flex-row md:items-center md:justify-between">
                         <h2 class="text-xl font-semibold mb-4 md:mb-0">Discount Management</h2>
                         <div class="flex flex-col sm:flex-row gap-3">
-                            <div class="relative">
-                                <input type="text" placeholder="Search discounts..."
-                                    class="w-full px-4 py-2 border border-mocha-light/30 rounded-md focus:outline-none focus:border-mocha-burgundy">
-                                <i class="fas fa-search absolute right-3 top-3 text-mocha-medium"></i>
-                            </div>
                             <button
                                 class="add-discount-btn bg-mocha-burgundy text-white px-4 py-2 rounded-md hover:bg-opacity-90 transition flex items-center justify-center">
                                 <i class="fas fa-plus mr-2"></i> Add New Discount
@@ -1210,6 +1242,13 @@
                                     <th
                                         class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase tracking-wider">
                                         Usage Count</th>
+                                    <!-- New headers -->
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase tracking-wider">
+                                        Start Date</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase tracking-wider">
+                                        End Date</th>
                                     <th
                                         class="px-4 py-3 text-right text-xs font-medium text-mocha-medium uppercase tracking-wider">
                                         Actions</th>
@@ -1220,12 +1259,21 @@
                                     <tr class="border-b border-mocha-light/20 hover:bg-mocha-light/10">
                                         <td class="px-4 py-3 whitespace-nowrap">{{ $d->code }}</td>
                                         <td class="px-4 py-3 whitespace-nowrap">{{ $d->percent }}%</td>
-                                        <td class="px-4 py-3 whitespace-nowrap">Rp
-                                            {{ number_format($d->max_value, 0, ',', '.') }}</td>
-                                        <td class="px-4 py-3 whitespace-nowrap">Rp
-                                            {{ number_format($d->min_purchase, 0, ',', '.') }}</td>
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            Rp {{ number_format($d->max_value, 0, ',', '.') }}
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            Rp {{ number_format($d->min_purchase, 0, ',', '.') }}
+                                        </td>
                                         <td class="px-4 py-3 whitespace-nowrap">{{ $d->usage_limit ?: '∞' }}</td>
                                         <td class="px-4 py-3 whitespace-nowrap">{{ $d->usage_counter }}</td>
+                                        <!-- New data cells -->
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            {{ $d->start_date ? $d->start_date->format('F j, Y') : '—' }}
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            {{ $d->end_date ? $d->end_date->format('F j, Y') : '—' }}
+                                        </td>
                                         <td class="px-4 py-3 whitespace-nowrap text-right space-x-2">
                                             <button class="edit-discount-btn text-blue-600 hover:text-blue-800"
                                                 data-id="{{ $d->id }}">
@@ -1233,7 +1281,8 @@
                                             </button>
                                             <form action="{{ route('admin.discounts.destroy', $d) }}" method="POST"
                                                 onsubmit="return confirm('Delete this discount?')" class="inline">
-                                                @csrf @method('DELETE')
+                                                @csrf
+                                                @method('DELETE')
                                                 <button type="submit"
                                                     class="delete-discount-btn text-red-600 hover:text-red-800">
                                                     <i class="fas fa-trash-alt"></i>
@@ -1512,48 +1561,69 @@
                         </div>
 
                         <div>
-                            <label for="discount-maxvalue" class="block text-sm font-medium text-mocha-dark mb-1">Max
-                                Value
-                                (Rp)</label>
+                            <label for="discount-maxvalue" class="block text-sm font-medium text-mocha-dark mb-1">
+                                Max Value (Rp)
+                            </label>
                             <input id="discount-maxvalue" name="max_value" type="number" min="0" required
                                 class="w-full px-4 py-2 border border-mocha-light/30 rounded-md form-input">
                         </div>
 
                         <div>
-                            <label for="discount-minpurchase"
-                                class="block text-sm font-medium text-mocha-dark mb-1">Min
-                                Purchase (Rp)</label>
+                            <label for="discount-minpurchase" class="block text-sm font-medium text-mocha-dark mb-1">
+                                Min Purchase (Rp)
+                            </label>
                             <input id="discount-minpurchase" name="min_purchase" type="number" min="0"
                                 required class="w-full px-4 py-2 border border-mocha-light/30 rounded-md form-input">
                         </div>
 
                         <div>
-                            <label for="discount-usagelimit"
-                                class="block text-sm font-medium text-mocha-dark mb-1">Usage
-                                Limit</label>
+                            <label for="discount-usagelimit" class="block text-sm font-medium text-mocha-dark mb-1">
+                                Usage Limit
+                            </label>
                             <input id="discount-usagelimit" name="usage_limit" type="number" min="0"
-                                placeholder="0 = unlimited"
+                                placeholder="0 for infinite"
                                 class="w-full px-4 py-2 border border-mocha-light/30 rounded-md form-input">
                         </div>
 
                         <div>
-                            <label for="discount-usagecounter"
-                                class="block text-sm font-medium text-mocha-dark mb-1">Usage
-                                Counter</label>
+                            <label for="discount-usagecounter" class="block text-sm font-medium text-mocha-dark mb-1">
+                                Usage Counter
+                            </label>
                             <input id="discount-usagecounter" name="usage_counter" type="number" min="0"
                                 value="0"
                                 class="w-full px-4 py-2 border border-mocha-light/30 rounded-md form-input">
                         </div>
 
+                        <!-- New Start/End Date Fields -->
+                        <div>
+                            <label for="discount-start-date" class="block text-sm font-medium text-mocha-dark mb-1">
+                                Start Date
+                            </label>
+                            <input id="discount-start-date" name="start_date" type="date"
+                                class="w-full px-4 py-2 border border-mocha-light/30 rounded-md form-input">
+                        </div>
+
+                        <div>
+                            <label for="discount-end-date" class="block text-sm font-medium text-mocha-dark mb-1">
+                                End Date
+                            </label>
+                            <input id="discount-end-date" name="end_date" type="date"
+                                class="w-full px-4 py-2 border border-mocha-light/30 rounded-md form-input">
+                        </div>
+
                         <div class="flex justify-end space-x-3 mt-6">
-                            <button type="button"
-                                class="close-modal px-4 py-2 border border-mocha-light rounded-md">Cancel</button>
+                            <button type="button" class="close-modal px-4 py-2 border border-mocha-light rounded-md">
+                                Cancel
+                            </button>
                             <button id="discount-form-submit" type="submit"
-                                class="px-4 py-2 bg-mocha-burgundy text-white rounded-md">Save Discount</button>
+                                class="px-4 py-2 bg-mocha-burgundy text-white rounded-md">
+                                Save Discount
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
+
 
 
             <!-- Order Detail Modal -->
@@ -1669,10 +1739,6 @@
 
                         <!-- Footer -->
                         <div class="p-4 border-t flex justify-between items-center">
-                            <button
-                                class="px-4 py-2 bg-mocha-dark text-white rounded-md hover:bg-opacity-90 transition flex items-center">
-                                <i class="fas fa-print mr-2"></i> Print Invoice
-                            </button>
                             <div class="flex items-center space-x-2">
                                 <span class="text-sm">Change Status:</span>
                                 <select id="modal-status-select"
@@ -1694,51 +1760,68 @@
 
             <!-- Add/Edit Product Modal -->
             <div id="product-modal"
-                class="modal fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-                <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg mx-auto">
+                class="modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
+                <div
+                    class="
+      bg-white rounded-lg shadow-lg p-6
+      w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl
+      max-h-full overflow-y-auto
+    ">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 id="product-modal-title" class="text-lg font-semibold">Add New Product</h3>
+                        <h3 id="product-modal-title" class="text-lg font-semibold">
+                            Add New Product
+                        </h3>
                         <button class="close-modal text-mocha-dark hover:text-mocha-burgundy">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
+
                     <form id="product-form" method="POST" enctype="multipart/form-data">
                         @csrf
                         <input type="hidden" name="_method" id="product-form-method" value="POST">
+
                         <div class="space-y-4">
                             <div>
                                 <label class="block text-sm font-medium mb-1">Name</label>
                                 <input name="name" type="text" required
-                                    class="w-full px-4 py-2 border rounded-md form-input">
+                                    class="w-full px-4 py-2 border rounded-md form-input" />
                             </div>
                             <div>
                                 <label class="block text-sm font-medium mb-1">Description</label>
                                 <textarea name="description" rows="3" required class="w-full px-4 py-2 border rounded-md form-input"></textarea>
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-1">Price (Rp)</label>
-                                <input name="price" type="number" min="0" required
-                                    class="w-full px-4 py-2 border rounded-md form-input">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Price (Rp)</label>
+                                    <input name="price" type="number" min="0" required
+                                        class="w-full px-4 py-2 border rounded-md form-input" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Image</label>
+                                    <input type="file" name="photo" accept="image/*"
+                                        class="w-full border rounded-md form-input" />
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-1">Image</label>
-                                <input type="file" name="photo" accept="image/*"
-                                    class="w-full border rounded-md form-input">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Packaging</label>
+                                    <select name="packaging_id" required
+                                        class="w-full px-4 py-2 border rounded-md form-input">
+                                        @foreach ($packagings as $pkg)
+                                            <option value="{{ $pkg->id }}">{{ $pkg->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <input name="in_stock" type="checkbox" id="product-in-stock"
+                                        class="form-checkbox" />
+                                    <label for="product-in-stock" class="text-sm">
+                                        In Stock
+                                    </label>
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-1">Packaging</label>
-                                <select name="packaging_id" required
-                                    class="w-full px-4 py-2 border rounded-md form-input">
-                                    @foreach ($packagings as $pkg)
-                                        <option value="{{ $pkg->id }}">{{ $pkg->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="flex items-center">
-                                <input name="in_stock" type="checkbox" id="product-in-stock" class="mr-2">
-                                <label for="product-in-stock" class="text-sm">In Stock</label>
-                            </div>
-                            {{-- Flower Recipe Section --}}
+
+                            <!-- Flower Recipe Section -->
                             <div class="border-t pt-4">
                                 <h4 class="text-sm font-medium mb-2">Recipe (Flowers)</h4>
                                 <div id="flower-list">
@@ -1747,22 +1830,27 @@
                                             <div class="flex items-center space-x-2">
                                                 <input type="checkbox" name="flowers[{{ $flower->id }}]"
                                                     value="1" id="flower-{{ $flower->id }}"
-                                                    class="form-checkbox">
-                                                <label for="flower-{{ $flower->id }}"
-                                                    class="flex-1">{{ $flower->name }}</label>
+                                                    class="form-checkbox" />
+                                                <label for="flower-{{ $flower->id }}" class="flex-1 truncate">
+                                                    {{ $flower->name }}
+                                                </label>
                                                 <input type="number" name="quantities[{{ $flower->id }}]"
                                                     min="1" placeholder="Qty"
                                                     id="quantity-{{ $flower->id }}" disabled
-                                                    class="w-20 px-2 py-1 border rounded-md form-input">
+                                                    class="w-20 px-2 py-1 border rounded-md form-input" />
                                             </div>
                                         @endforeach
                                     </div>
                                 </div>
                             </div>
+
                             <div class="flex justify-end space-x-3 mt-6">
-                                <button type="button" class="close-modal px-4 py-2 border rounded-md">Cancel</button>
+                                <button type="button"
+                                    class="close-modal px-4 py-2 border rounded-md hover:bg-gray-100 transition">
+                                    Cancel
+                                </button>
                                 <button type="submit" id="product-form-submit"
-                                    class="px-4 py-2 bg-mocha-burgundy text-white rounded-md">
+                                    class="px-4 py-2 bg-mocha-burgundy text-white rounded-md hover:bg-opacity-90 transition">
                                     Save Product
                                 </button>
                             </div>
@@ -1770,6 +1858,7 @@
                     </form>
                 </div>
             </div>
+
         </main>
 
 
@@ -1797,6 +1886,8 @@
                             'max_value' => $d->max_value,
                             'usage_limit' => $d->usage_limit,
                             'usage_counter' => $d->usage_counter,
+                            'start_date' => $d->start_date ? $d->start_date->format('Y-m-d') : null,
+                            'end_date' => $d->end_date ? $d->end_date->format('Y-m-d') : null,
                         ],
                     ];
                 })
@@ -1805,6 +1896,35 @@
 
         <!-- Scripts -->
         <script>
+            function showToast(msg, type = 'success') {
+                const toast = document.getElementById('toast');
+                const toastMsg = document.getElementById('toast-message');
+                const toastIcon = document.getElementById('toast-icon');
+                toast.classList.remove('flex');
+                toast.classList.add('hidden');
+                toastMsg.textContent = msg;
+
+
+                // Replace the icon element entirely
+                const newIcon = document.createElement('i');
+                if (type === 'error') {
+                    newIcon.className = 'fa-solid fa-circle-xmark text-red-400 mr-3';
+                } else {
+                    newIcon.className = 'fa-solid fa-check-circle text-green-400 mr-3';
+                }
+                newIcon.id = 'toast-icon';
+                toastIcon.replaceWith(newIcon);
+
+                setTimeout(() => {
+                    toast.classList.remove('hidden');
+                    toast.classList.add('flex');
+                }, 10);
+
+                setTimeout(() => {
+                    toast.classList.remove('flex');
+                    toast.classList.add('hidden');
+                }, 3000);
+            }
             // ——— Data injections from Blade ——————————————————————————————————————————————————
             const salesChartData = @json($salesChartData);
             const recentOrders = @json($recentOrders);
@@ -1859,37 +1979,6 @@
                 // ——— Helpers ———————————————————————————————————————————————————————————————
                 const show = el => el.classList.remove('hidden') && el.classList.add('flex');
                 const hide = el => el.classList.remove('flex') && el.classList.add('hidden');
-
-
-                function showToast(msg, type = 'success') {
-                    const toast = document.getElementById('toast');
-                    const toastMsg = document.getElementById('toast-message');
-                    const toastIcon = document.getElementById('toast-icon');
-                    toast.classList.remove('flex');
-                    toast.classList.add('hidden');
-                    toastMsg.textContent = msg;
-
-
-                    // Replace the icon element entirely
-                    const newIcon = document.createElement('i');
-                    if (type === 'error') {
-                        newIcon.className = 'fa-solid fa-circle-xmark text-red-400 mr-3';
-                    } else {
-                        newIcon.className = 'fa-solid fa-check-circle text-green-400 mr-3';
-                    }
-                    newIcon.id = 'toast-icon';
-                    toastIcon.replaceWith(newIcon);
-
-                    setTimeout(() => {
-                        toast.classList.remove('hidden');
-                        toast.classList.add('flex');
-                    }, 10);
-
-                    setTimeout(() => {
-                        toast.classList.remove('flex');
-                        toast.classList.add('hidden');
-                    }, 3000);
-                }
 
                 // ——— Flower Modal (Add & Edit) ———————————————————————————————————————————————
                 const flowerModal = document.getElementById('flower-modal');
@@ -1991,6 +2080,8 @@
                     const discountMinPurchase = document.getElementById('discount-minpurchase');
                     const discountUsageLimit = document.getElementById('discount-usagelimit');
                     const discountUsageCounter = document.getElementById('discount-usagecounter');
+                    const discountStartDate = document.getElementById('discount-start-date');
+                    const discountEndDate = document.getElementById('discount-end-date');
 
                     // 1) ADD NEW DISCOUNT
                     document.querySelector('.add-discount-btn')?.addEventListener('click', () => {
@@ -2018,6 +2109,8 @@
                             discountMaxValue.value = data.max_value;
                             discountUsageLimit.value = data.usage_limit;
                             discountUsageCounter.value = data.usage_counter;
+                            discountStartDate.value = data.start_date;
+                            discountEndDate.value = data.end_date;
                             show(discountModal);
                         });
                     });
@@ -2035,6 +2128,20 @@
                 const productModal = document.getElementById('product-modal');
                 if (productModal) {
                     const productForm = document.getElementById('product-form');
+                    productForm.addEventListener('submit', function(e) {
+                        const checkboxes = productForm.querySelectorAll(
+                            'input[type="checkbox"][name^="flowers"]');
+                        const atLeastOneChecked = Array.from(checkboxes).some(cb => cb.checked);
+
+                        const flowerList = document.getElementById('flower-list');
+                        flowerList.classList.remove('ring-2', 'ring-red-500', 'rounded-md'); // cleanup first
+
+                        if (!atLeastOneChecked) {
+                            e.preventDefault();
+                            flowerList.classList.add('ring-2', 'ring-red-500', 'rounded-md');
+                            showToast('Please select at least one flower for the recipe.', 'error');
+                        }
+                    });
                     const productMethod = document.getElementById('product-form-method');
                     const productTitle = document.getElementById('product-modal-title');
                     const productSubmit = document.getElementById('product-form-submit');
@@ -2255,9 +2362,9 @@
                                         'px-2 py-1 text-xs rounded-full text-white ' +
                                         ({
                                             'Payment Pending': 'badge-pending',
-                                            'On Progress': 'badge-processing',
-                                            'Ready to Deliver': 'badge-processing',
-                                            'Delivery': 'badge-processing',
+                                            'On Progress': 'badge-onprogress',
+                                            'Ready to Deliver': 'badge-readytodeliver',
+                                            'Delivery': 'badge-delivery',
                                             'Completed': 'badge-success',
                                             'Cancelled': 'badge-cancelled'
                                         } [json.new_status] || 'badge-pending');
@@ -2286,14 +2393,6 @@
                         });
                 });
 
-                // ——— Close ALL Modals on [X] or backdrop ——————————————————————————————————
-                document.querySelectorAll('.close-modal').forEach(b => {
-                    b.addEventListener('click', () => hide(b.closest('.modal')));
-                });
-                document.querySelectorAll('.modal').forEach(m => {
-                    m.addEventListener('click', e => e.target === m && hide(m));
-                });
-
                 // ——— Toast on ANY other modal form submit —————————————————————————————————
                 document.querySelectorAll(
                         '.modal form:not(#flower-form):not(#packaging-form):not(#discount-form):not(#product-form)')
@@ -2312,16 +2411,17 @@
                             const type = btn.classList.contains('delete-flower-btn') ? 'flower' :
                                 btn.classList.contains('delete-packaging-btn') ? 'packaging' :
                                 btn.classList.contains('delete-discount-btn') ? 'discount' : 'product';
-                            if (!confirm(`Delete this ${type}?`)) return;
+
                             showToast(
                                 `${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully!`);
                         });
                     });
 
-                // ——— Page Navigation & Hash on Load ——————————————————————————————————————
+                // ——— Page Navigation & Hash on Load ————————————————————————————————
                 const navLinks = document.querySelectorAll('.nav-link');
                 const pages = document.querySelectorAll('.page');
                 const pageTitle = document.getElementById('page-title');
+
                 navLinks.forEach(link => {
                     link.addEventListener('click', e => {
                         e.preventDefault();
@@ -2332,11 +2432,22 @@
                         pageTitle.textContent = link.querySelector('.sidebar-link-text').textContent;
                     });
                 });
+
+                // read both fragment and tab param
                 const hash = window.location.hash.slice(1);
-                if (hash) document.querySelector(`.nav-link[data-page="${hash}"]`)?.click();
-                // Ensure Stock Logs page is shown after pagination reload
                 const urlParams = new URLSearchParams(window.location.search);
-                if (
+                const tab = urlParams.get('tab');
+
+                // 1) if there’s a #fragment, open that tab
+                if (hash) {
+                    document.querySelector(`.nav-link[data-page="${hash}"]`)?.click();
+                }
+                // 2) else if there’s a tab=orders (from your hidden input), open orders
+                else if (tab) {
+                    document.querySelector(`.nav-link[data-page="${tab}"]`)?.click();
+                }
+                // 3) else if it’s one of the stocklogs paginations, open stocklogs
+                else if (
                     urlParams.has('fo_page') ||
                     urlParams.has('fi_page') ||
                     urlParams.has('po_page') ||
@@ -2344,6 +2455,12 @@
                 ) {
                     document.querySelector('.nav-link[data-page="stocklogs"]')?.click();
                 }
+
+                // 4) optional: clean the URL so you don’t carry stale params
+                const cleanPath = window.location.pathname;
+                const cleanHash = hash ? `#${hash}` : '';
+                window.history.replaceState(null, '', cleanPath + cleanHash);
+
                 // ——— Sales Chart —————————————————————————————————————————————————————
                 (function initSalesChart() {
                     const ctx = document.getElementById('salesChart').getContext('2d');
@@ -2525,14 +2642,34 @@
                         wrap.title = `Issue: ${failed} — ${timestamp}`;
                     }
                 } catch (e) {
-                    dot.className = 'inline-block w-3 h-3 rounded-full bg-status-warn mr-2';
-                    wrap.title = `Health check failed: ${e.message}`;
+                    console.warn('Health check failed', e);
                 }
             }
-
             // Initial check + interval
             checkHealth();
             setInterval(checkHealth, 30_000); // every 30s
         </script>
+
+        @if ($errors->any())
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    showToast(@json($errors->first()), 'error');
+                });
+            </script>
+        @endif
+        @if (session('success'))
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    showToast(@json(session('success')), 'success');
+                });
+            </script>
+        @endif
+        @if (session('error'))
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    showToast(@json(session('error')), 'error');
+                });
+            </script>
+        @endif
 
 </body>

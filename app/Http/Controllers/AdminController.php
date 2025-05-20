@@ -16,6 +16,7 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class AdminController extends Controller
 {
@@ -179,16 +180,25 @@ class AdminController extends Controller
         //__Flowers Subpage__
         $flowers = Flower::all();
 
+
         //__Orders Subpage__
-        // for the full Orders sub-page (15 per page)
-        $orders = Order::with([
+        // Build the query
+        $ordersQuery = Order::with([
             'user',
             'delivery',
             'discount',
             'orderProducts.product',
-        ])
+        ]);
+
+        // Apply search and filter helpers
+        $ordersQuery = $this->searchOrders($ordersQuery, request('order_search'));
+        $ordersQuery = $this->filterOrders($ordersQuery, request('order_status'));
+
+        // Paginate and transform
+        $orders = $ordersQuery
             ->orderBy('created_at', 'desc')
             ->paginate(15)
+            ->withQueryString()
             ->through(function ($order) {
                 // calculate subtotal
                 $subtotal = $order->orderProducts->sum('price');
@@ -246,8 +256,6 @@ class AdminController extends Controller
         $stockLogsFI = StockTransaction::where('type', 'FI')->latest()->paginate(10, ['*'], 'fi_page');
         $stockLogsPO = StockTransaction::where('type', 'PO')->latest()->paginate(10, ['*'], 'po_page');
         $stockLogsPI = StockTransaction::where('type', 'PI')->latest()->paginate(10, ['*'], 'pi_page');
-
-
 
         return view('admin.index', [
             // sales data
@@ -453,11 +461,17 @@ class AdminController extends Controller
     // Store Flower
     public function storeFlower(Request $request)
     {
-        $validInput = $request->validate([
-            'name'     => 'required|string|max:255',
-            'quantity' => 'nullable|numeric',
-            'price'    => 'required|numeric|min:0',
-        ]);
+        try {
+            $validInput = $request->validate([
+                'name'     => 'required|string|max:100',
+                'quantity' => 'required|numeric|min:1',
+                'price'    => 'required|numeric|min:0',
+            ]);
+        } catch (ValidationException $e) {
+            return redirect()->route('admin.index')->withFragment('#flowers')
+                ->withErrors($e->validator);
+        }
+
         $validInput['price'] = $request->price / $request->quantity;
 
         Flower::create($validInput);
@@ -468,11 +482,16 @@ class AdminController extends Controller
     // Update Flower
     public function updateFlower(Request $request, Flower $flower)
     {
-        $validInput = $request->validate([
-            'name'     => 'required|string|max:255',
-            'quantity' => 'nullable|numeric',
-            'price'    => 'required|numeric|min:0',
-        ]);
+        try {
+            $validInput = $request->validate([
+                'name'     => 'required|string|max:100',
+                'quantity' => 'required|numeric|min:1',
+                'price'    => 'required|numeric|min:0',
+            ]);
+        } catch (ValidationException $e) {
+            return redirect()->route('admin.index')->withFragment('#flowers')
+                ->withErrors($e->validator);
+        }
 
         $flower->update($validInput);
 
@@ -535,10 +554,16 @@ class AdminController extends Controller
     // Store Packagings
     public function storePackaging(Request $request)
     {
-        $validInput = $request->validate([
-            'name'     => 'required|string|max:255',
-            'price'    => 'required|numeric|min:0',
-        ]);
+        try {
+            $validInput = $request->validate([
+                'name'     => 'required|string|max:100',
+                'price'    => 'required|numeric|min:0',
+            ]);
+        } catch (ValidationException $e) {
+            // Redirect to discounts page with errors and old input
+            return redirect()->route('admin.index')->withFragment('#packagings')
+                ->withErrors($e->validator);
+        }
         Packaging::create($validInput);
 
         return redirect()->back()
@@ -547,11 +572,16 @@ class AdminController extends Controller
     // Update Packagings
     public function updatePackaging(Request $request, Packaging $packaging)
     {
-        $validInput = $request->validate([
-            'name'     => 'required|string|max:255',
-            'quantity' => 'nullable|numeric',
-            'price'    => 'required|numeric|min:0',
-        ]);
+        try {
+            $validInput = $request->validate([
+                'name'     => 'required|string|max:100',
+                'price'    => 'required|numeric|min:0',
+            ]);
+        } catch (ValidationException $e) {
+            // Redirect to discounts page with errors and old input
+            return redirect()->route('admin.index')->withFragment('#packagings')
+                ->withErrors($e->validator);
+        }
 
         $packaging->update($validInput);
 
@@ -577,43 +607,69 @@ class AdminController extends Controller
     // Store Discounts
     public function storeDiscount(Request $request)
     {
-        $validInput = $request->validate([
-            'code'           => 'required|string|max:20|unique:discounts,code',
-            'percent'        => 'required|integer|between:0,100',
-            'max_value'      => 'required|integer|min:0',
-            'min_purchase'   => 'required|integer|min:0',
-            'usage_limit'    => 'required|integer|min:0',
-            'usage_counter'  => 'required|integer|min:0',
-        ]);
-        Discount::create($validInput);
+        try {
+            $validInput = $request->validate([
+                'code'           => 'required|string|max:20|unique:discounts,code',
+                'percent'        => 'required|integer|between:0,100',
+                'max_value'      => 'required|integer|min:0',
+                'min_purchase'   => 'required|integer|min:0',
+                'usage_limit'    => 'required|integer|min:0',
+                'usage_counter'  => 'required|integer|min:0',
+                'start_date'     => 'nullable|date',
+                'end_date'       => 'nullable|date|after_or_equal:start_date',
+            ]);
+        } catch (ValidationException $e) {
+            // Redirect to discounts page with errors and old input
+            return redirect()->route('admin.index')->withFragment('#discounts')
+                ->withErrors($e->validator);
+        }
 
-        return redirect()->back()
-            ->with('success', 'Discount created.')->withFragment('discounts');
+        try {
+            Discount::create($validInput);
+            return redirect()->route('admin.index', request()->query())
+                ->with('success', 'Discount created.')->withFragment('discounts');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to create Discount: ' . $e->getMessage())->withFragment('#discounts');
+        }
     }
     // Update Discounts
     public function updateDiscount(Request $request, Discount $discount)
     {
-        $validInput = $request->validate([
-            'code'           => 'required|string|max:20|unique:discounts,code,' . $discount->id,
-            'percent'        => 'required|integer|between:0,100',
-            'max_value'      => 'required|integer|min:0',
-            'min_purchase'   => 'required|integer|min:0',
-            'usage_limit'    => 'required|integer|min:0',
-            'usage_counter'  => 'required|integer|min:0',
-        ]);
+        try {
+            $validInput = $request->validate([
+                'percent'        => 'required|integer|between:0,100',
+                'max_value'      => 'required|integer|min:0',
+                'min_purchase'   => 'required|integer|min:0',
+                'usage_limit'    => 'required|integer|min:0',
+                'usage_counter'  => 'required|integer|min:0',
+                'start_date'     => 'nullable|date',
+                'end_date'       => 'nullable|date|after_or_equal:start_date',
+            ]);
+        } catch (ValidationException $e) {
+            // Redirect to discounts page with errors and old input
+            return redirect()->route('admin.index')->withFragment('#discounts')
+                ->withErrors($e->validator);
+        }
 
-        $discount->update($validInput);
-
-        return redirect()->back()
-            ->with('success', 'Discount updated.')->withFragment('discounts');
+        try {
+            $discount->update($validInput);
+            return redirect()->back()
+                ->with('success', 'Discount updated.')->withFragment('discounts');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to update Discount: ' . $e->getMessage())->withFragment('#discounts');
+        }
     }
     // Delete Packaging
     public function destroyDiscount(Discount $discount)
     {
-        $discount->delete();
-
-        return redirect()->back()
-            ->with('success', 'Discount deleted successfully.')->withFragment('discounts');
+        try {
+            $discount->delete();
+            return redirect()->back()
+                ->with('success', 'Discount deleted successfully.')->withFragment('discounts');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Failed to delete discount: ' . $e->getMessage())->withFragment('discounts');
+        }
     }
 
     //Suggestions Helper Function
@@ -650,16 +706,21 @@ class AdminController extends Controller
     //Store Product
     public function storeProduct(Request $request)
     {
-        $validInput = $request->validate([
-            'name'        => 'required|string|max:255',
-            'description' => 'nullable|string|max:1000',
-            'price'       => 'required|numeric|min:0',
-            'photo'       => 'mimes:jpg,bmp,png,jpeg',
-            'packaging_id' => 'required|numeric',
-            'flowers'    => 'array',                 // this will be an array of flower_id => "1"
-            'quantities' => 'array',                 // matching flower_id => quantity
+        try {
+            $validInput = $request->validate([
+                'name'        => 'required|string|max:100',
+                'description' => 'nullable|string|max:1000',
+                'price'       => 'required|numeric|min:0',
+                'photo'       => 'mimes:jpg,bmp,png,jpeg',
+                'packaging_id' => 'required|numeric',
+                'flowers'    => 'array',                 // this will be an array of flower_id => "1"
+                'quantities' => 'array',                 // matching flower_id => quantity
 
-        ]);
+            ]);
+        } catch (ValidationException $e) {
+            return redirect()->route('admin.index')->withFragment('#products')
+                ->withErrors($e->validator);
+        }
 
         //save photo, get url
         if ($file = $request->file('photo')) {
@@ -688,16 +749,21 @@ class AdminController extends Controller
     //Update Product
     public function updateProduct(Request $request, Product $product)
     {
-        $validInput = $request->validate([
-            'name'        => 'required|string|max:255',
-            'description' => 'nullable|string|max:1000',
-            'price'       => 'required|numeric|min:0',
-            'photo'       => 'nullable|mimes:jpg,bmp,png,jpeg',
-            'packaging_id' => 'required|integer',
-            'flowers'    => 'array',                 // this will be an array of flower_id => "1"
-            'quantities' => 'array',                 // matching flower_id => quantity
+        try {
+            $validInput = $request->validate([
+                'name'        => 'required|string|max:100',
+                'description' => 'nullable|string|max:1000',
+                'price'       => 'required|numeric|min:0',
+                'photo'       => 'nullable|mimes:jpg,bmp,png,jpeg',
+                'packaging_id' => 'required|integer',
+                'flowers'    => 'array',                 // this will be an array of flower_id => "1"
+                'quantities' => 'array',                 // matching flower_id => quantity
 
-        ]);
+            ]);
+        } catch (ValidationException $e) {
+            return redirect()->route('admin.index')->withFragment('#products')
+                ->withErrors($e->validator);
+        }
         //save photo, get url
         if ($file = $request->file('photo')) {
             $file_path = public_path('images');
@@ -732,5 +798,21 @@ class AdminController extends Controller
     {
         $product->delete();
         return redirect()->back()->with('success', 'Product deleted successfully.')->withFragment('products');
+    }
+
+    protected function searchOrders($query, $search)
+    {
+        if ($search) {
+            $query->where('id', $search);
+        }
+        return $query;
+    }
+
+    protected function filterOrders($query, $status)
+    {
+        if ($status) {
+            $query->where('progress', $status);
+        }
+        return $query;
     }
 }

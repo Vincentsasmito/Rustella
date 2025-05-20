@@ -109,6 +109,43 @@
     .status-cancelled:before {
         background-color: #EF4444;
     }
+
+    /* Admin badge styles */
+    .badge-pending {
+        background-color: #F59E0B;
+    }
+
+    .badge-onprogress {
+        background-color: #3B82F6;
+    }
+
+    .badge-readytodeliver {
+        background-color: #3B82F6;
+    }
+
+    .badge-delivery {
+        background-color: #3B82F6;
+    }
+
+    .badge-success {
+        background-color: #10B981;
+    }
+
+    .badge-cancelled {
+        background-color: #EF4444;
+    }
+
+    .badge-pending,
+    .badge-onprogress,
+    .badge-readytodeliver,
+    .badge-delivery,
+    .badge-success,
+    .badge-cancelled {
+        width: 130px;
+        /* Adjust as needed */
+        text-align: center;
+        display: inline-block;
+    }
 </style>
 </head>
 
@@ -116,22 +153,69 @@
     <!-- Navigation -->
     <nav class="bg-white shadow-md fixed w-full z-10">
         <div class="container mx-auto px-4 md:px-8">
-            <div class="flex justify-between items-center py-4">
+            <div class="flex items-center justify-between py-4">
+
+                <!-- 1) Logo / Site Name on the left -->
                 <div class="flex items-center space-x-2">
                     <img src="{{ asset('/WebsiteStockImage/Rustella.png') }}" alt="Rustella Logo" class="h-8 w-auto">
-                    <a href="home" class="font-playfair text-2xl font-bold text-mocha-dark">Rustella<span
-                            class="text-mocha-burgundy">Floristry</span></a>
+                    <a href="home" class="font-playfair text-2xl font-bold text-mocha-dark">
+                        <span class="inline-block hover:scale-105 transition-transform duration-300">R</span>
+                        <span class="inline-block hover:scale-105 transition-transform duration-300">u</span>
+                        <span class="inline-block hover:scale-105 transition-transform duration-300">s</span>
+                        <span class="inline-block hover:scale-105 transition-transform duration-300">t</span>
+                        <span class="inline-block hover:scale-105 transition-transform duration-300">e</span>
+                        <span class="inline-block hover:scale-105 transition-transform duration-300">l</span>
+                        <span class="inline-block hover:scale-105 transition-transform duration-300">l</span>
+                        <span class="inline-block hover:scale-105 transition-transform duration-300">a</span>
+                        <span
+                            class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">F</span>
+                        <span
+                            class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">l</span>
+                        <span
+                            class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">o</span>
+                        <span
+                            class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">r</span>
+                        <span
+                            class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">i</span>
+                        <span
+                            class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">s</span>
+                        <span
+                            class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">t</span>
+                        <span
+                            class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">r</span>
+                        <span
+                            class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">y</span>
+                    </a>
                 </div>
 
-                <!-- Desktop Menu -->
-                <div class="hidden md:flex space-x-8">
+                <!-- 2) Nav items centered -->
+                <div class="hidden md:flex flex-1 justify-center space-x-8">
                     <a href="home" class="text-mocha-dark hover:text-mocha-burgundy font-medium">Home</a>
                     <a href="home#bestsellers" class="text-mocha-dark hover:text-mocha-burgundy font-medium">Best
                         Sellers</a>
                     <a href="home#catalog" class="text-mocha-dark hover:text-mocha-burgundy font-medium">Catalog</a>
-                    <a href="home#about" class="text-mocha-dark hover:text-mocha-burgundy font-medium">About
-                        Us</a>
+                    <a href="home#about" class="text-mocha-dark hover:text-mocha-burgundy font-medium">About Us</a>
                     <a href="home#contact" class="text-mocha-dark hover:text-mocha-burgundy font-medium">Suggestion</a>
+                </div>
+
+                <!-- 3) Icons on the right -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="profile" class="text-mocha-burgundy hover:text-mocha-dark transition-colors duration-300">
+                        <i class="fas fa-user text-xl"></i>
+                    </a>
+                    <a href="{{ route('cart.index') }}"
+                        class="text-mocha-dark hover:text-mocha-burgundy transition-colors duration-300 relative">
+                        <i class="fas fa-shopping-cart text-xl"></i>
+                        <span id="cart-badge"
+                            class="bg-mocha-burgundy text-white rounded-full px-2 py-1 text-xs absolute -top-2 -right-2">
+                            {{ $cartCount }}
+                        </span>
+                    </a>
+                    @auth
+                        <span class="text-mocha-medium font-medium">
+                            Welcome back,&nbsp;{{ Auth::user()->name }}!
+                        </span>
+                    @endauth
                 </div>
 
                 <!-- Mobile Menu Button -->
@@ -140,11 +224,23 @@
                         <i class="fas fa-bars text-xl"></i>
                     </button>
                 </div>
+            </div>
 
-                <!-- Cart Icon -->
-                <div class="hidden md:flex items-center space-x-6">
-                    <a href="#" class="text-mocha-burgundy hover:text-mocha-dark">
-                        <i class="fas fa-user text-xl"></i>
+            <!-- Mobile Menu -->
+            <div id="mobile-menu" class="hidden md:hidden bg-white">
+                <div class="container mx-auto px-4 py-2 space-y-3">
+                    <a href="home" class="block text-mocha-dark hover:text-mocha-burgundy font-medium py-2">Home</a>
+                    <a href="home#bestsellers"
+                        class="block text-mocha-dark hover:text-mocha-burgundy font-medium py-2">Best
+                        Sellers</a>
+                    <a href="home#catalog"
+                        class="block text-mocha-dark hover:text-mocha-burgundy font-medium py-2">Catalog</a>
+                    <a href="home#about" class="block text-mocha-dark hover:text-mocha-burgundy font-medium py-2">About
+                        Us</a>
+                    <a href="home#contact"
+                        class="block text-mocha-dark hover:text-mocha-burgundy font-medium py-2">Suggestion</a>
+                    <a href="#" class="block text-mocha-burgundy hover:text-mocha-dark font-medium py-2">
+                        <i class="fas fa-user mr-2"></i> My Profile
                     </a>
                     <a href="{{ route('cart.index') }}"
                         class="text-mocha-dark hover:text-mocha-burgundy transition-colors duration-300 relative">
@@ -157,35 +253,21 @@
                 </div>
             </div>
         </div>
-
-        <!-- Mobile Menu -->
-        <div id="mobile-menu" class="hidden md:hidden bg-white">
-            <div class="container mx-auto px-4 py-2 space-y-3">
-                <a href="home" class="block text-mocha-dark hover:text-mocha-burgundy font-medium py-2">Home</a>
-                <a href="home#bestsellers" class="block text-mocha-dark hover:text-mocha-burgundy font-medium py-2">Best
-                    Sellers</a>
-                <a href="home#catalog"
-                    class="block text-mocha-dark hover:text-mocha-burgundy font-medium py-2">Catalog</a>
-                <a href="home#about" class="block text-mocha-dark hover:text-mocha-burgundy font-medium py-2">About
-                    Us</a>
-                <a href="home#contact"
-                    class="block text-mocha-dark hover:text-mocha-burgundy font-medium py-2">Suggestion</a>
-                <a href="#" class="block text-mocha-burgundy hover:text-mocha-dark font-medium py-2">
-                    <i class="fas fa-user mr-2"></i> My Profile
-                </a>
-                <a href="{{ route('cart.index') }}"
-                    class="text-mocha-dark hover:text-mocha-burgundy transition-colors duration-300 relative">
-                    <i class="fas fa-shopping-cart text-xl"></i>
-                    <span id="cart-badge"
-                        class="bg-mocha-burgundy text-white rounded-full px-2 py-1 text-xs absolute -top-2 -right-2">
-                        {{ $cartCount }}
-                    </span>
-                </a>
-            </div>
-        </div>
     </nav>
 
     <!-- Main Content -->
+    @if (session('success'))
+        <div id="toast"
+            class="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2
+           bg-green-600 text-white px-6 py-3 rounded shadow-lg z-50 animate-fade-in text-lg font-semibold text-center">
+            {{ session('success') }}
+        </div>
+        <script>
+            setTimeout(() => {
+                document.getElementById('toast')?.remove();
+            }, 3000);
+        </script>
+    @endif
     <main class="pt-24 pb-16">
         <div class="container mx-auto px-4 md:px-8">
             <!-- Profile Header -->
@@ -260,7 +342,8 @@
             <div class="border-b border-mocha-light mb-8">
                 <div class="flex flex-wrap">
                     <button id="tab-orders" class="tab-active py-3 px-6 font-medium text-lg">Order History</button>
-                    <button id="tab-reviews" class="py-3 px-6 font-medium text-lg text-mocha-medium">My Reviews</button>
+                    <button id="tab-reviews" class="py-3 px-6 font-medium text-lg text-mocha-medium">My
+                        Reviews</button>
                 </div>
             </div>
 
@@ -307,15 +390,15 @@
                     <div class="divide-y divide-mocha-light">
                         @forelse($orders as $order)
                             @php
-                                $map = [
-                                    'Payment Pending' => 'status-pending',
-                                    'On Progress' => 'status-on-progress',
-                                    'Ready to Deliver' => 'status-ready-to-deliver',
-                                    'Delivery' => 'status-delivery',
-                                    'Completed' => 'status-completed',
-                                    'Cancelled' => 'status-cancelled',
+                                $badgeMap = [
+                                    'Payment Pending' => 'badge-pending',
+                                    'On Progress' => 'badge-onprogress',
+                                    'Ready to Deliver' => 'badge-readytodeliver',
+                                    'Delivery' => 'badge-delivery',
+                                    'Completed' => 'badge-success',
+                                    'Cancelled' => 'badge-cancelled',
                                 ];
-                                $cls = $map[$order->progress] ?? 'status-pending';
+                                $badgeClass = $badgeMap[$order->progress] ?? 'badge-pending';
                             @endphp
 
                             <div class="p-6 hover:bg-mocha-cream/10 transition">
@@ -330,7 +413,7 @@
 
                                     <!-- 2) Status Badge -->
                                     <div class="w-full lg:w-1/4 flex justify-start lg:justify-center">
-                                        <span class="order-status {{ $cls }} font-medium">
+                                        <span class="px-2 py-1 text-xs rounded-full text-white {{ $badgeClass }}">
                                             {{ $order->progress }}
                                         </span>
                                     </div>
@@ -671,7 +754,7 @@
 
                             <!-- Notes -->
                             <div class="mb-6">
-                                <h4 class="text-sm font-medium mb-3">Order Notes</h4>
+                                <h4 class="text-sm font-medium mb-3">Notes for Recipient</h4>
                                 <div class="bg-mocha-cream/20 p-4 rounded-lg h-32 overflow-y-auto">
                                     <p class="text-sm" id="modal-notes"></p>
                                 </div>

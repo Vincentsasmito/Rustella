@@ -501,6 +501,51 @@
         document.getElementById("back-to-cart")?.addEventListener("click", () => showSection("cart"));
         document.getElementById("proceed-to-payment")?.addEventListener("click", (e) => {
             e.preventDefault(); // Hindari reload
+
+            // ── VALIDASI DETAIL FORM ───────────────────────────────────
+            const detailSec = document.getElementById("details-section");
+            let valid = true;
+            detailSec.querySelectorAll('input[required], select[required]').forEach(field => {
+                if (!field.value.trim()) {
+                    valid = false;
+                    field.classList.add("border-red-500");
+                } else {
+                    field.classList.remove("border-red-500");
+                }
+            });
+            if (!valid) {
+                showToast("Please fill out all required fields before proceeding.", "error");
+                return;
+            }
+            // 2) DELIVERY DATE & TIME RULES
+            const dtInput = document.getElementById("delivery_time");
+            const dtValue = dtInput.value;
+            if (!dtValue) {
+                showToast("Please choose a delivery date & time.", "error");
+                dtInput.classList.add("border-red-500");
+                return;
+            }
+            const dt = new Date(dtValue);
+            const now = new Date();
+            // Tomorrow as next calendar day at 00:00
+            const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+
+            // Must be at least tomorrow
+            if (dt < tomorrow) {
+                showToast("Delivery date must be at least one day ahead.", "error");
+                dtInput.classList.add("border-red-500");
+                return;
+            }
+
+            // Must be between 09:00 and 17:00 (17:00 allowed, >17:00 disallowed)
+            const h = dt.getHours(),
+                m = dt.getMinutes();
+            if (h < 9 || h > 17 || (h === 17 && m > 0)) {
+                showToast("Delivery time must be between 09:00 and 17:00.", "error");
+                dtInput.classList.add("border-red-500");
+                return;
+            }
+            dtInput.classList.remove("border-red-500");
             // 1) parse existing total (subtotal–discount)
             const rawTotal = document.getElementById("order-total").textContent
                 .replace(/[^\d]/g, '');
@@ -585,8 +630,8 @@
             });
 
             // summary
-            document.getElementById('order-subtotal').textContent = 'Rp.' + subtotal.toLocaleString('id-ID');
-            document.getElementById('order-total').textContent = 'Rp.' + (subtotal).toLocaleString('id-ID');
+            document.getElementById('order-subtotal').textContent = 'Rp. ' + subtotal.toLocaleString('id-ID');
+            document.getElementById('order-total').textContent = 'Rp. ' + (subtotal).toLocaleString('id-ID');
         }
 
         // 3) Remove‐item button
@@ -649,6 +694,13 @@
     </script>
 
     <script>
+        function resetDiscountUI(subtotal) {
+            document.getElementById('discount-id').value = '';
+            document.getElementById('discount-row').classList.add('hidden');
+            document.getElementById('discount-amount').textContent = '';
+            document.getElementById('order-total').textContent =
+                `Rp. ${subtotal.toLocaleString('id-ID')}`;
+        }
         document.getElementById('apply-discount').addEventListener('click', async () => {
             const code = document.getElementById('discount-code').value.trim();
             const subtotal = parseInt(
@@ -656,7 +708,10 @@
                 .replace(/[^\d]/g, '')
             );
 
-            if (!code) return showToast('Please enter a discount code.');
+            if (!code){
+                resetDiscountUI(subtotal);
+                return showToast('Please enter a discount code.');
+            } 
 
             try {
                 const res = await fetch('/cart/discount', {
@@ -673,7 +728,7 @@
 
                 const json = await res.json();
                 if (!res.ok) {
-                    throw new Error(json?.error?.message || 'Invalid discount.');
+                    throw new Error(json?.message || json?.error?.message || 'Invalid discount.');
                 }
 
                 // ←— inject discount_id into hidden input
@@ -690,6 +745,7 @@
 
                 showToast(json.message); // show success
             } catch (err) {
+                resetDiscountUI(subtotal);
                 showToast(err.message || 'Discount code is invalid.');
             }
         });

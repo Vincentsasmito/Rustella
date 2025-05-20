@@ -22,6 +22,14 @@ class Discount extends Model
         'min_purchase',
         'usage_limit',
         'usage_counter',
+        'start_date',
+        'end_date',
+    ];
+
+    // Cast these fields to Carbon instances automatically
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date'   => 'date',
     ];
 
     //Relation: Discount has many orders.

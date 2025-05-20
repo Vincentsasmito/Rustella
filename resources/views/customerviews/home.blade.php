@@ -43,7 +43,6 @@
         href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-    </script>
     <!-- AOS Animation Library -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
     <!-- GSAP for more advanced animations -->
@@ -317,7 +316,7 @@
                         <img src="{{ asset('/WebsiteStockImage/Rustella.png') }}" alt="Rustella Logo"
                             class="h-8 w-auto">
                     </div>
-                    <a href="#" class="font-playfair text-2xl font-bold text-mocha-dark">
+                    <a href="home" class="font-playfair text-2xl font-bold text-mocha-dark">
                         <span class="inline-block hover:scale-105 transition-transform duration-300">R</span>
                         <span class="inline-block hover:scale-105 transition-transform duration-300">u</span>
                         <span class="inline-block hover:scale-105 transition-transform duration-300">s</span>
@@ -371,11 +370,18 @@
                     </button>
                 </div>
 
-                <!-- Cart Icon -->
+                <!-- Cart & Profile Icons -->
                 <div class="hidden md:flex items-center space-x-6">
+                    @auth
+                        <span class="text-mocha-medium font-medium">
+                            Welcome back,&nbsp;{{ Auth::user()->name }}!
+                        </span>
+                    @endauth
+
                     <a href="profile" class="text-mocha-burgundy hover:text-mocha-dark transition-colors duration-300">
                         <i class="fas fa-user text-xl"></i>
                     </a>
+
                     <a href="{{ route('cart.index') }}"
                         class="text-mocha-dark hover:text-mocha-burgundy transition-colors duration-300 relative">
                         <i class="fas fa-shopping-cart text-xl"></i>
@@ -437,11 +443,6 @@
                         <a href="#catalog"
                             class="bg-mocha-burgundy text-white py-3 px-6 rounded-md text-center hover:bg-opacity-90 transition">
                             Explore Catalog
-                        </a>
-                        <a href="https://wa.me/6282210672099?text=Hai%20Rustella%2C%20saya%20ingin%20mengajukan%20Custom%20Order"
-                            target="_blank" rel="noopener noreferrer"
-                            class="border border-mocha-medium text-mocha-dark py-3 px-6 rounded-md text-center hover:bg-mocha-light/30 transition">
-                            Custom Order
                         </a>
                     </div>
                 </div>
@@ -520,12 +521,26 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 @foreach ($top3product as $product)
+                    @php
+                        $reviewsJson = json_encode(
+                            $product->limitedReviews->map(
+                                fn($r) => [
+                                    'rating' => $r->rating,
+                                    'message' => $r->message,
+                                    'created_at' => $r->created_at->toDateTimeString(),
+                                    'user' => ['name' => $r->user->name],
+                                ],
+                            ),
+                            JSON_HEX_APOS | JSON_HEX_QUOT,
+                        );
+                    @endphp
                     <div class="card-clickable bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition cursor-pointer"
                         data-aos="fade-up" data-aos-delay="100" data-id="{{ $product->id }}"
                         data-name="{{ $product->name }}" data-img="{{ asset('images/' . $product->image_url) }}"
                         data-desc="{{ $product->description }}"
                         data-price="Rp {{ number_format($product->price, 0, ',', '.') }}"
-                        data-pack="{{ $product->packaging->name }}" data-recipe='@json($product->flowerProducts->map(fn($fp) => ['name' => $fp->flower->name, 'qty' => $fp->quantity]))'>
+                        data-pack="{{ $product->packaging->name }}" data-recipe='@json($product->flowerProducts->map(fn($fp) => ['name' => $fp->flower->name, 'qty' => $fp->quantity]))'
+                        data-reviews="{{ $reviewsJson }}">
                         <span class="bestseller-badge">
                             <i class="fas fa-star mr-1"></i> Best Seller
                         </span>
@@ -608,13 +623,27 @@
             <div id="catalog-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 @foreach ($groupedProducts as $category => $items)
                     @foreach ($items as $product)
+                        @php
+                            // prepare the reviews JSON once
+                            $reviewsJson = json_encode(
+                                $product->limitedReviews->map(
+                                    fn($r) => [
+                                        'rating' => $r->rating,
+                                        'message' => $r->message,
+                                        'created_at' => $r->created_at->toDateTimeString(),
+                                        'user' => ['name' => $r->user->name],
+                                    ],
+                                ),
+                                JSON_HEX_APOS | JSON_HEX_QUOT,
+                            );
+                        @endphp
                         <div class="product-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition cursor-pointer"
                             data-id     ="{{ $product->id }}" data-name   ="{{ $product->name }}"
                             data-img    ="{{ asset('images/' . $product->image_url) }}"
                             data-desc   ="{{ $product->description }}"
                             data-price  ="Rp {{ number_format($product->price, 0, ',', '.') }}"
                             data-pack   ="{{ $product->packaging->name }}"
-                            data-recipe ='@json($product->flowerProducts->map(fn($fp) => ['name' => $fp->flower->name, 'qty' => $fp->quantity]))'>
+                            data-recipe ='@json($product->flowerProducts->map(fn($fp) => ['name' => $fp->flower->name, 'qty' => $fp->quantity]))' data-reviews="{{ $reviewsJson }}">
                             <div class="aspect-[1/1] overflow-hidden">
                                 <img src="{{ asset('images/' . $product->image_url) }}" alt="{{ $product->name }}"
                                     class="w-full h-full object-cover" />
@@ -706,8 +735,8 @@
     <section class="py-16 bg-mocha-light/10" data-aos="fade-up">
         <div class="container mx-auto px-4 md:px-8">
             <div class="text-center mb-10">
-                <h2 class="font-playfair text-3xl font-bold text-mocha-dark">Trusted by</h2>
-                <p class="text-mocha-medium mt-2">Perusahaan-perusahaan yang telah bekerjasama dengan kami</p>
+                <h2 class="font-playfair text-3xl font-bold text-mocha-dark">Professional Clients</h2>
+                <p class="text-mocha-medium mt-2">Companies we've worked with</p>
                 <div class="w-24 h-1 bg-mocha-burgundy mx-auto mt-4"></div>
             </div>
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8 items-center">
@@ -727,35 +756,117 @@
     <section class="py-16 bg-mocha-cream">
         <div class="container mx-auto px-4 md:px-8">
             <div class="text-center mb-12">
-                <h2 class="font-playfair text-3xl md:text-4xl font-bold text-mocha-dark">What Our Customers Say</h2>
+                <h2 class="font-playfair text-3xl md:text-4xl font-bold text-mocha-dark">
+                    What Our Customers Say
+                </h2>
                 <p class="text-mocha-medium mt-2">Trusted by flower lovers across the city</p>
             </div>
 
-            <div class="flex flex-wrap justify-center">
-                <div class="w-full md:w-1/3 px-4 mb-8">
-                    <div class="bg-white p-6 rounded-lg shadow-md h-full">
-                        <div class="text-mocha-burgundy mb-3">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                        </div>
-                        <p class="italic mb-4">"Review Customers"</p>
-                        <div class="flex items-center">
-                            <div class="w-10 h-10 bg-mocha-medium rounded-full flex items-center justify-center mr-3">
-                                <span class="text-white font-semibold">S</span>
+            @php
+                $count = $testimonials->count();
+                $cardW = 425; // width of each card in px
+                $gapPx = 24; // gap between cards in px (1.5rem)
+                $visibleCount = 3; // how many cards are visible at once
+                $visibleW = $visibleCount * $cardW + ($visibleCount - 1) * $gapPx;
+                $totalW = $count * $cardW + max(0, $count - 1) * $gapPx;
+                // for seamless loop, scroll exactly one set’s width
+                $scrollAmount = max(0, $totalW);
+                $duration = max(10, $count * 3); // adjust speed as needed
+            @endphp
+
+            @if ($count > $visibleCount)
+                <div class="mx-auto overflow-hidden" style="width: {{ $visibleW }}px;">
+                    <div class="flex"
+                        style="
+                        gap: 1.5rem;
+                        animation: scrollTestimonials {{ $duration }}s linear infinite;
+                        --scroll-amount: {{ $scrollAmount }}px;
+                    ">
+                        {{-- first pass --}}
+                        @foreach ($testimonials as $t)
+                            <div class="min-w-[350px] bg-white p-6 rounded-lg shadow-md flex-shrink-0">
+                                <div class="text-mocha-burgundy mb-3">
+                                    @for ($i = 0; $i < $t->rating; $i++)
+                                        <i class="fas fa-star"></i>
+                                    @endfor
+                                </div>
+                                <p class="italic mb-4">"{{ $t->message }}"</p>
+                                <div class="flex items-center">
+                                    <div
+                                        class="w-10 h-10 bg-mocha-medium rounded-full flex items-center justify-center mr-3">
+                                        <span
+                                            class="text-white font-semibold">{{ strtoupper(substr($t->user->name, 0, 1)) }}</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold">{{ $t->user->name }}</h4>
+                                        <p class="text-sm text-mocha-medium">Loyal Customer</p>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <h4 class="font-semibold">Seseorang</h4>
-                                <p class="text-sm text-mocha-medium">Loyal Customer</p>
+                        @endforeach
+
+                        {{-- duplicate pass for seamless loop --}}
+                        @foreach ($testimonials as $t)
+                            <div class="min-w-[350px] bg-white p-6 rounded-lg shadow-md flex-shrink-0">
+                                <div class="text-mocha-burgundy mb-3">
+                                    @for ($i = 0; $i < $t->rating; $i++)
+                                        <i class="fas fa-star"></i>
+                                    @endfor
+                                </div>
+                                <p class="italic mb-4">"{{ $t->message }}"</p>
+                                <div class="flex items-center">
+                                    <div
+                                        class="w-10 h-10 bg-mocha-medium rounded-full flex items-center justify-center mr-3">
+                                        <span
+                                            class="text-white font-semibold">{{ strtoupper(substr($t->user->name, 0, 1)) }}</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold">{{ $t->user->name }}</h4>
+                                        <p class="text-sm text-mocha-medium">Loyal Customer</p>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        @endforeach
                     </div>
                 </div>
 
+                <style>
+                    @keyframes scrollTestimonials {
+                        from {
+                            transform: translateX(0);
+                        }
 
-            </div>
+                        to {
+                            transform: translateX(calc(-1 * var(--scroll-amount)));
+                        }
+                    }
+                </style>
+            @else
+                {{-- fewer than 4 → static 3-column grid of dummies --}}
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    @for ($i = 0; $i < 3; $i++)
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <div class="text-mocha-burgundy mb-3">
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <p class="italic mb-4">"We absolutely love Rustella’s service!"</p>
+                            <div class="flex items-center">
+                                <div
+                                    class="w-10 h-10 bg-mocha-medium rounded-full flex items-center justify-center mr-3">
+                                    <span class="text-white font-semibold">A</span>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold">Alice</h4>
+                                    <p class="text-sm text-mocha-medium">Happy Customer</p>
+                                </div>
+                            </div>
+                        </div>
+                    @endfor
+                </div>
+            @endif
+
         </div>
     </section>
 
@@ -833,8 +944,9 @@
     </footer>
 
     <!-- Product Detail Modal -->
-    <div id="product-detail-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
-        <div class="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 overflow-hidden">
+    <div id="product-detail-modal"
+        class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 overflow-y-auto">
+        <div class="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
             <!-- header -->
             <div class="flex justify-between items-center px-6 py-4 border-b">
                 <h3 id="modal-name" class="text-xl font-semibold"></h3>
@@ -843,9 +955,12 @@
 
             <!-- body -->
             <div class="px-6 py-4 space-y-4">
-                <div class="w-full aspect-[3/2] overflow-hidden rounded">
-                    <img id="modal-image" src="" alt="" class="object-cover w-full h-full" />
+                <!-- 1:1 image container -->
+                <div class="w-full aspect-square overflow-hidden rounded image-zoom-container">
+                    <img id="modal-image" src="" alt=""
+                        class="object-cover w-full h-full cursor-grab" />
                 </div>
+
                 <p id="modal-desc" class="text-mocha-medium"></p>
 
                 <ul class="space-y-2">
@@ -856,197 +971,233 @@
                         <ul id="modal-recipe" class="list-disc list-inside text-mocha-dark"></ul>
                     </li>
                 </ul>
-            </div>
 
-            <!-- footer -->
-            <div class="px-6 py-4 border-t text-right">
-                <button id="modal-close-footer"
-                    class="px-4 py-2 bg-mocha-burgundy text-white rounded hover:bg-opacity-90">
-                    Close
-                </button>
+                <div class="space-y-2">
+                    <strong>Reviews:</strong>
+                    <div id="modal-reviews" class="mt-2 space-y-4 text-sm text-mocha-medium">
+                        {{-- filled in by JS --}}
+                    </div>
+                </div>
+
+                <!-- footer -->
+                <div class="px-6 py-4 border-t text-right">
+                    <button id="modal-close-footer"
+                        class="px-4 py-2 bg-mocha-burgundy text-white rounded hover:bg-opacity-90">
+                        Close
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
-
-    <!-- Script -->
-    <!-- AOS Initialization -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
-    <script>
-        AOS.init();
-    </script>
-    <!-- Loading Screen Fade Out -->
-    <script>
-        window.addEventListener('load', () => {
-            const overlay = document.getElementById('loadingOverlay');
-            overlay.style.opacity = '0';
-            setTimeout(() => overlay.style.display = 'none', 500);
-        });
-    </script>
-    <script>
-        // Mobile Menu Toggle
-        document.getElementById('menu-toggle').addEventListener('click', function() {
-            const mobileMenu = document.getElementById('mobile-menu');
-            mobileMenu.classList.toggle('hidden');
-            mobileMenu.classList.toggle('-translate-y-full');
-        });
 
 
-        // Toast Notification
-        function showToast(message) {
-            const toast = document.createElement('div');
-            toast.className =
-                'fixed bottom-4 right-4 bg-mocha-dark text-white py-2 px-4 rounded-md shadow-lg transition-opacity duration-300 opacity-0';
-            toast.textContent = message;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.classList.replace('opacity-0', 'opacity-100'), 100);
-            setTimeout(() => {
-                toast.classList.replace('opacity-100', 'opacity-0');
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
+        <!-- Script -->
+        <!-- Panzoom -->
+        <script src="https://unpkg.com/@panzoom/panzoom/dist/panzoom.min.js"></script>
+        <script>
+            // 1) declare at top‐level
+            let panzoom;
 
-        // Smooth Scroll
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function(e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    window.scrollTo({
-                        top: target.offsetTop - 80,
-                        behavior: 'smooth'
-                    });
-                    if (!mobileMenu.classList.contains('hidden')) mobileMenu.classList.add('hidden');
-                }
-            });
-        });
-
-        // Category Filtering
-        const categoryTabs = document.querySelectorAll('.category-tab');
-        const productCards = document.querySelectorAll('.product-card');
-
-        categoryTabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                categoryTabs.forEach(t => t.classList.remove('active', 'bg-mocha-burgundy', 'text-white'));
-                tab.classList.add('active', 'bg-mocha-burgundy', 'text-white');
-                const category = tab.getAttribute('data-category');
-                productCards.forEach(card => {
-                    card.style.display = category === 'all' || card.getAttribute(
-                        'data-category') === category ? 'block' : 'none';
+            document.addEventListener('DOMContentLoaded', () => {
+                const imgEl = document.getElementById('modal-image');
+                // 2) assign into our outer variable
+                panzoom = Panzoom(imgEl, {
+                    maxScale: 3,
+                    step: 0.3,
+                    contain: 'outside'
                 });
+                imgEl.parentElement.addEventListener('wheel', panzoom.zoomWithWheel);
+                imgEl.addEventListener('panzoomstart', () => imgEl.style.cursor = 'grabbing');
+                imgEl.addEventListener('panzoomend', () => imgEl.style.cursor = 'grab');
             });
-        });
+        </script>
+        <!-- AOS Initialization -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+        <script>
+            AOS.init();
+        </script>
+        <!-- Loading Screen Fade Out -->
+        <script>
+            window.addEventListener('load', () => {
+                const overlay = document.getElementById('loadingOverlay');
+                overlay.style.opacity = '0';
+                setTimeout(() => overlay.style.display = 'none', 500);
+            });
+        </script>
+        <script>
+            // Mobile Menu Toggle
+            document.getElementById('menu-toggle').addEventListener('click', function() {
+                const mobileMenu = document.getElementById('mobile-menu');
+                mobileMenu.classList.toggle('hidden');
+                mobileMenu.classList.toggle('-translate-y-full');
+            });
 
-        // Add to Cart
-        const addToCartButtons = document.querySelectorAll('.add-to-cart');
-        const cartCount = document.querySelectorAll('.bg-mocha-burgundy.text-white.rounded-full');
-        let itemsInCart = 0;
 
-        function updateCartUI() {
-            cartCount.forEach(count => count.textContent = itemsInCart);
-        }
-
-        document.addEventListener('click', async function(e) {
-            const btn = e.target.closest('.add-to-cart');
-            if (!btn) return;
-            e.preventDefault();
-
-            const url = btn.dataset.url;
-            if (!url) return console.error('No data-url on button');
-
-            try {
-                const res = await fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        qty: 1
-                    }),
-                });
-
-                // parse JSON regardless of OK or not
-                const payload = await res.json();
-
-                if (!res.ok) {
-                    // server should return { error: "Not enough stock…" }
-                    showToast(payload.error || 'Could not add to cart.');
-                    return;
-                }
-
-                // success path
-                document.getElementById('cart-badge').textContent = payload.count;
-
-                // quick feedback
-                const prev = btn.textContent;
-                btn.textContent = 'Added!';
-                setTimeout(() => btn.textContent = prev, 1200);
-
-            } catch (err) {
-                console.error('Add to cart failed:', err);
-                showToast('Network error—please try again.');
+            // Toast Notification
+            function showToast(message) {
+                const toast = document.createElement('div');
+                toast.className =
+                    'fixed bottom-4 right-4 bg-mocha-dark text-white py-2 px-4 rounded-md shadow-lg transition-opacity duration-300 opacity-0';
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.classList.replace('opacity-0', 'opacity-100'), 100);
+                setTimeout(() => {
+                    toast.classList.replace('opacity-100', 'opacity-0');
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
             }
-        });
-        // Image Hover Effect
-        document.querySelectorAll('.product-card img').forEach(img => {
-            img.addEventListener('mouseenter', () => img.classList.add('scale-105', 'transition-transform',
-                'duration-300'));
-            img.addEventListener('mouseleave', () => img.classList.remove('scale-105'));
-        });
 
-        // Header Scroll Effect
-        const nav = document.querySelector('nav');
-        window.addEventListener('scroll', () => {
-            nav.classList.toggle('shadow-lg', window.scrollY > 100);
-            nav.classList.toggle('bg-white/95', window.scrollY > 100);
-            nav.classList.toggle('backdrop-blur-sm', window.scrollY > 100);
-        });
+            // Smooth Scroll
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        window.scrollTo({
+                            top: target.offsetTop - 80,
+                            behavior: 'smooth'
+                        });
+                        if (!mobileMenu.classList.contains('hidden')) mobileMenu.classList.add('hidden');
+                    }
+                });
+            });
 
-        // Load More with Grouped Catalog Logic
-        // Load More with Grouped Catalog Logic
-        // 1) Pull in the raw grouped data from Blade
-        const rawGrouped = @json($groupedProducts);
+            // Category Filtering
+            const categoryTabs = document.querySelectorAll('.category-tab');
+            const productCards = document.querySelectorAll('.product-card');
 
-        // 2) Build a flat 'all' list so all is treated like any other category
-        const categories = Object.keys(rawGrouped);
-        const flatList = categories.flatMap(cat => rawGrouped[cat] || []);
-        const groupedCatalog = {
-            ...rawGrouped,
-            all: flatList
-        };
+            categoryTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    categoryTabs.forEach(t => t.classList.remove('active', 'bg-mocha-burgundy', 'text-white'));
+                    tab.classList.add('active', 'bg-mocha-burgundy', 'text-white');
+                    const category = tab.getAttribute('data-category');
+                    productCards.forEach(card => {
+                        card.style.display = category === 'all' || card.getAttribute(
+                            'data-category') === category ? 'block' : 'none';
+                    });
+                });
+            });
 
-        // 3) Hook up DOM + state
-        const catalogDiv = document.getElementById('catalog-grid');
-        const btn = document.getElementById('load-more');
-        let currentCat = 'all';
-        let expanded = false;
+            // Add to Cart
+            const addToCartButtons = document.querySelectorAll('.add-to-cart');
+            const cartCount = document.querySelectorAll('.bg-mocha-burgundy.text-white.rounded-full');
+            let itemsInCart = 0;
 
-        // 4) Card factory (unchanged)
-        function makeCard(p, cat) {
-            const d = document.createElement('div')
-            d.className =
-                'product-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition cursor-pointer'
+            function updateCartUI() {
+                cartCount.forEach(count => count.textContent = itemsInCart);
+            }
 
-            // carry through your filtering category
-            d.dataset.category = cat
+            document.addEventListener('click', async function(e) {
+                const btn = e.target.closest('.add-to-cart');
+                if (!btn) return;
+                e.preventDefault();
 
-            // now copy the same dataset you used in your blade templates:
-            d.dataset.id = p.id
-            d.dataset.name = p.name
-            d.dataset.img = `/images/${p.image_url}`
-            d.dataset.desc = p.description
-            d.dataset.price = `Rp ${Number(p.price).toLocaleString('id-ID')}`
-            d.dataset.pack = p.packaging.name
-            d.dataset.recipe = JSON.stringify(
-                (p.flower_products || []).map(fp => ({
-                    name: fp.flower.name,
-                    qty: fp.quantity
-                }))
-            )
+                const url = btn.dataset.url;
+                if (!url) return console.error('No data-url on button');
 
-            // then build the innerHTML exactly as before
-            d.innerHTML = `
+                try {
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            qty: 1
+                        }),
+                    });
+
+                    // parse JSON regardless of OK or not
+                    const payload = await res.json();
+
+                    if (!res.ok) {
+                        // server should return { error: "Not enough stock…" }
+                        showToast(payload.error || 'Could not add to cart.');
+                        return;
+                    }
+
+                    // success path
+                    document.getElementById('cart-badge').textContent = payload.count;
+
+                    // quick feedback
+                    const prev = btn.textContent;
+                    btn.textContent = 'Added!';
+                    setTimeout(() => btn.textContent = prev, 1200);
+
+                } catch (err) {
+                    console.error('Add to cart failed:', err);
+                    showToast('Network error—please try again.');
+                }
+            });
+            // Image Hover Effect
+            document.querySelectorAll('.product-card img').forEach(img => {
+                img.addEventListener('mouseenter', () => img.classList.add('scale-105', 'transition-transform',
+                    'duration-300'));
+                img.addEventListener('mouseleave', () => img.classList.remove('scale-105'));
+            });
+
+            // Header Scroll Effect
+            const nav = document.querySelector('nav');
+            window.addEventListener('scroll', () => {
+                nav.classList.toggle('shadow-lg', window.scrollY > 100);
+                nav.classList.toggle('bg-white/95', window.scrollY > 100);
+                nav.classList.toggle('backdrop-blur-sm', window.scrollY > 100);
+            });
+
+            // Load More with Grouped Catalog Logic
+            // 1) Pull in the raw grouped data from Blade
+            const rawGrouped = @json($groupedProducts);
+
+            // 2) Build a flat 'all' list so all is treated like any other category
+            const categories = Object.keys(rawGrouped);
+            const flatList = categories.flatMap(cat => rawGrouped[cat] || []);
+            const groupedCatalog = {
+                ...rawGrouped,
+                all: flatList
+            };
+
+            // 3) Hook up DOM + state
+            const catalogDiv = document.getElementById('catalog-grid');
+            const btn = document.getElementById('load-more');
+            let currentCat = 'all';
+            let expanded = false;
+
+            // 4) Card factory (unchanged)
+            function makeCard(p, cat) {
+                const d = document.createElement('div')
+                d.className =
+                    'product-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition cursor-pointer'
+
+                // carry through your filtering category
+                d.dataset.category = cat
+
+                // now copy the same dataset you used in your blade templates:
+                d.dataset.id = p.id
+                d.dataset.name = p.name
+                d.dataset.img = `/images/${p.image_url}`
+                d.dataset.desc = p.description
+                d.dataset.price = `Rp ${Number(p.price).toLocaleString('id-ID')}`
+                d.dataset.pack = p.packaging.name
+                d.dataset.recipe = JSON.stringify(
+                    (p.flower_products || []).map(fp => ({
+                        name: fp.flower.name,
+                        qty: fp.quantity
+                    }))
+                )
+                // ADD THIS LINE:
+                d.dataset.reviews = JSON.stringify(
+                    (p.limited_reviews || []).map(r => ({
+                        rating: r.rating,
+                        message: r.message,
+                        created_at: r.created_at,
+                        user: {
+                            name: r.user.name
+                        }
+                    }))
+                );
+
+                // then build the innerHTML exactly as before
+                d.innerHTML = `
     <div class="aspect-[1/1] overflow-hidden">
       <img src="/images/${p.image_url}"
            alt="${p.name}"
@@ -1068,114 +1219,143 @@
       </div>
     </div>`
 
-            return d
-        }
-
-        // 5) Render first `count` items for any category (including 'all')
-        function render(cat, count) {
-            catalogDiv.innerHTML = '';
-            const list = groupedCatalog[cat] || [];
-            for (let i = 0; i < Math.min(count, list.length); i++) {
-                catalogDiv.append(makeCard(list[i], cat));
+                return d
             }
-        }
 
-        // 6) Show/hide and label the button based on total items
-        function updateButton() {
-            const total = (groupedCatalog[currentCat] || []).length;
-            if (total <= 4) {
-                btn.style.display = 'none';
-            } else {
-                btn.style.display = '';
-                btn.textContent = expanded ? 'Show Less' : 'Load More';
+            // 5) Render first `count` items for any category (including 'all')
+            function render(cat, count) {
+                catalogDiv.innerHTML = '';
+                const list = groupedCatalog[cat] || [];
+                for (let i = 0; i < Math.min(count, list.length); i++) {
+                    catalogDiv.append(makeCard(list[i], cat));
+                }
             }
-        }
 
-        // 7) Category‐tab clicks
-        document.querySelectorAll('.category-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                // highlight
-                document.querySelectorAll('.category-tab').forEach(t => {
-                    t.classList.remove('active', 'bg-mocha-burgundy', 'text-white');
-                    t.classList.add('bg-mocha-gray', 'text-mocha-dark');
+            // 6) Show/hide and label the button based on total items
+            function updateButton() {
+                const total = (groupedCatalog[currentCat] || []).length;
+                if (total <= 4) {
+                    btn.style.display = 'none';
+                } else {
+                    btn.style.display = '';
+                    btn.textContent = expanded ? 'Show Less' : 'Load More';
+                }
+            }
+
+            // 7) Category‐tab clicks
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // highlight
+                    document.querySelectorAll('.category-tab').forEach(t => {
+                        t.classList.remove('active', 'bg-mocha-burgundy', 'text-white');
+                        t.classList.add('bg-mocha-gray', 'text-mocha-dark');
+                    });
+                    tab.classList.add('active', 'bg-mocha-burgundy', 'text-white');
+                    tab.classList.remove('bg-mocha-gray', 'text-mocha-dark');
+
+                    // state + initial render
+                    currentCat = tab.dataset.category;
+                    expanded = false;
+                    render(currentCat, 4);
+                    updateButton();
                 });
-                tab.classList.add('active', 'bg-mocha-burgundy', 'text-white');
-                tab.classList.remove('bg-mocha-gray', 'text-mocha-dark');
+            });
 
-                // state + initial render
-                currentCat = tab.dataset.category;
-                expanded = false;
-                render(currentCat, 4);
+            // 8) Load More / Show Less clicks
+            btn.addEventListener('click', () => {
+                const total = (groupedCatalog[currentCat] || []).length;
+                if (!expanded) {
+                    render(currentCat, total); // show all
+                    expanded = true;
+                } else {
+                    render(currentCat, 4); // back to first 4
+                    expanded = false;
+                }
                 updateButton();
             });
-        });
 
-        // 8) Load More / Show Less clicks
-        btn.addEventListener('click', () => {
-            const total = (groupedCatalog[currentCat] || []).length;
-            if (!expanded) {
-                render(currentCat, total); // show all
-                expanded = true;
-            } else {
-                render(currentCat, 4); // back to first 4
-                expanded = false;
-            }
-            updateButton();
-        });
+            // 9) Initialize “all” on page load
+            document.querySelector('.category-tab[data-category="all"]').click();
+        </script>
+        <script>
+            const modal = document.getElementById('product-detail-modal');
+            const imgEl = document.getElementById('modal-image');
+            const setText = (id, txt) => document.getElementById(id).textContent = txt;
+            const setHTML = (id, html) => document.getElementById(id).innerHTML = html;
 
-        // 9) Initialize “all” on page load
-        document.querySelector('.category-tab[data-category="all"]').click();
-    </script>
-    <script>
-        const modal = document.getElementById('product-detail-modal');
-        const imgEl = document.getElementById('modal-image');
-        const setText = (id, txt) => document.getElementById(id).textContent = txt;
-        const setHTML = (id, html) => document.getElementById(id).innerHTML = html;
+            document.addEventListener('click', e => {
 
-        document.addEventListener('click', e => {
 
-            // 1) if they clicked “Add to Cart” (or anything inside it), bail out
-            if (e.target.closest('.add-to-cart')) {
-                return
-            }
+                // 1) if they clicked “Add to Cart” (or anything inside it), bail out
+                if (e.target.closest('.add-to-cart')) {
+                    return
+                }
 
-            // 2) otherwise, look for a card click
-            const card = e.target.closest('.product-card, .card-clickable')
-            if (!card) return
+                // 2) otherwise, look for a card click
+                const card = e.target.closest('.product-card, .card-clickable')
+                if (!card) return
 
-            // …populate & open your modal as before…
-            const {
-                name,
-                img,
-                desc,
-                price,
-                pack,
-                recipe
-            } = card.dataset
-            const recList = JSON.parse(recipe || '[]')
+                // …populate & open your modal as before…
+                const {
+                    name,
+                    img,
+                    desc,
+                    price,
+                    pack,
+                    recipe
+                } = card.dataset
+                const recList = JSON.parse(recipe || '[]')
 
-            setText('modal-name', name)
-            imgEl.src = img
-            imgEl.alt = name
-            setText('modal-desc', desc)
-            setText('modal-price', price)
-            setText('modal-packaging', pack)
-            setHTML('modal-recipe',
-                recList.map(fp => `<li>${fp.name} × ${fp.qty}</li>`).join('')
-            )
+                setText('modal-name', name)
+                imgEl.src = img
+                imgEl.alt = name
+                setText('modal-desc', desc)
+                setText('modal-price', price)
+                setText('modal-packaging', pack)
+                setHTML('modal-recipe',
+                    recList.map(fp => `<li>${fp.name} × ${fp.qty}</li>`).join('')
+                )
 
-            modal.classList.remove('hidden')
-            modal.classList.add('flex')
-        })
+                // 4) grab the pre-loaded reviews JSON instead of filtering a global array
+                const prodId = card.dataset.id;
+                console.log("reviews payload:", card.dataset.reviews);
+                const reviews = JSON.parse(card.dataset.reviews || '[]');
+                console.log(reviews);
 
-        // close buttons & backdrop
-        document.querySelectorAll('#modal-close, #modal-close-footer').forEach(btn =>
-            btn.addEventListener('click', () => modal.classList.add('hidden'))
-        );
-        modal.addEventListener('click', e => {
-            if (e.target === modal) modal.classList.add('hidden');
-        });
-    </script>
+                // 5) build the HTML
+                let reviewsHTML;
+                if (reviews.length) {
+                    reviewsHTML = reviews.map(r => `
+      <div class="p-4 bg-mocha-cream rounded-lg">
+        <div class="text-mocha-burgundy mb-1">
+          ${'<i class="fas fa-star"></i>'.repeat(r.rating)}
+        </div>
+        <p class="italic mb-1">"${r.message}"</p>
+        <div class="text-xs text-mocha-dark">— ${r.user.name}</div>
+      </div>
+    `).join('');
+                } else {
+                    reviewsHTML = `<p class="italic text-mocha-dark">No reviews yet :(</p>`;
+                }
+
+                // 6) inject into the modal
+                document.getElementById('modal-reviews').innerHTML = reviewsHTML;
+                panzoom.reset({
+                    animate: false
+                });
+
+                modal.classList.remove('hidden')
+                modal.classList.add('flex')
+            })
+
+            // close buttons & backdrop
+            document.querySelectorAll('#modal-close, #modal-close-footer').forEach(btn =>
+                btn.addEventListener('click', () => modal.classList.add('hidden'))
+            );
+            modal.addEventListener('click', e => {
+                if (e.target === modal) modal.classList.add('hidden');
+            });
+        </script>
 </body>
 
 </html>

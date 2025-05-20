@@ -6,7 +6,9 @@ use App\Models\Suggestions;
 use Illuminate\Http\Request;
 use App\Models\OrderProduct;
 use App\Models\Product;
+use App\Models\Suggestion;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
@@ -26,6 +28,7 @@ class HomeController extends Controller
                     $q->where('progress', '!=', 'Cancelled');
                 });
             },
+            'limitedReviews'
         ])
             ->where('in_stock', true)
             ->whereDoesntHave('flowerProducts.flower', function (Builder $q) {
@@ -50,6 +53,16 @@ class HomeController extends Controller
         // Group up product by category (packaging type)
         $groupedProducts = $products->groupBy(fn($product) => strtolower($product->packaging->name));
 
-        return view('customerviews.home', compact('products', 'top3product', 'quantities', 'groupedProducts'));
+        //get user site-reviews
+        $testimonials = Suggestion::where('type', 'site')
+            ->where('rating', '>=', 4)
+            ->whereRaw('LENGTH(message) <= ?', [75])
+            ->orderByDesc('rating')
+            ->orderByDesc('created_at')
+            ->limit(10)
+            ->get();
+
+
+        return view('customerviews.home', compact('products', 'top3product', 'quantities', 'groupedProducts', 'testimonials'));
     }
 }
