@@ -27,7 +27,11 @@ Auth::routes(['verify' => true]);
 // PUBLIC ROUTES (no auth required)
 // ────────────────────────────────────────────────────────────────
 //HOME PAGE
+Route::post('/suggestions', [HomeController::class, 'storeSuggestion'])
+     ->name('site.suggestions');
 Route::get('home', [HomeController::class, 'index'])->name('home');
+
+
 
 Route::get('/', fn() => view('welcome'));
 Route::get('homepage', fn() => view('customerviews.homepage'))
@@ -97,12 +101,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
           '/orders/{order}/upload-payment',
           [UserProfileController::class, 'updatePayment']
      )->name('orders.uploadPayment');
+     Route::post(
+          '/profile/store-reviews',
+          [UserProfileController::class, 'storeReviews']
+     )->name('profile.storeReviews');
 
      // User transactions, suggestions, discounts, product management…
      Route::get('orders/usertransactions', [OrderController::class, 'getTransactions'])
           ->name('orders.getTransactions');
-     Route::resource('suggestions', SuggestionController::class)
-          ->only(['index', 'create', 'store', 'destroy']);
      Route::prefix('discounts')->name('discounts.')->group(fn() => [
           Route::get('create', [DiscountController::class, 'create'])->name('create'),
           Route::get('index', [DiscountController::class, 'index'])->name('index'),

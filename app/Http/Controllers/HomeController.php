@@ -54,7 +54,7 @@ class HomeController extends Controller
         $groupedProducts = $products->groupBy(fn($product) => strtolower($product->packaging->name));
 
         //get user site-reviews
-        $testimonials = Suggestion::where('type', 'site')
+        $testimonials = Suggestion::where('type', 'product')
             ->where('rating', '>=', 4)
             ->whereRaw('LENGTH(message) <= ?', [75])
             ->orderByDesc('rating')
@@ -64,5 +64,35 @@ class HomeController extends Controller
 
 
         return view('customerviews.home', compact('products', 'top3product', 'quantities', 'groupedProducts', 'testimonials'));
+    }
+
+    public function storeSuggestion(Request $request)
+    {
+        // 1) Have they already left feedback this session?
+        if ($request->session()->has('site_suggestion_sent')) {
+            return redirect()->back()->with('error', 'You’ve already given feedback. Thanks!');
+        }
+
+        $validated = $request->validate([
+            'message' => 'required|string|max:255',
+            'rating'  => 'required|integer|between:1,5',
+        ]);
+
+        // If user is logged in, assign their ID; otherwise null
+        $userId = auth()->check() ? auth()->id() : null;
+
+        // Merge in the extra fields
+        $data = array_merge($validated, [
+            'user_id' => $userId,
+            'type'    => 'site',
+        ]);
+
+        // Create the suggestion
+        Suggestion::create($data);
+
+        // 4) Mark the session so they can’t send again
+        $request->session()->put('site_suggestion_sent', true);
+
+        return redirect()->back()->with('success', 'Suggestion submitted successfully!');
     }
 }

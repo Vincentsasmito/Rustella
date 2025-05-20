@@ -503,8 +503,8 @@
                     <div class="inline-block p-4 rounded-full bg-mocha-light mb-4 pulse">
                         <i class="fas fa-paint-brush text-2xl text-mocha-burgundy"></i>
                     </div>
-                    <h3 class="text-xl font-semibold mb-2">Custom Designs</h3>
-                    <p class="text-mocha-medium">Create your personalized arrangement with our expert florists.</p>
+                    <h3 class="text-xl font-semibold mb-2">Intricate Designs</h3>
+                    <p class="text-mocha-medium">Create your memorable arrangements with our expert florists.</p>
                 </div>
             </div>
         </div>
@@ -757,7 +757,7 @@
         <div class="container mx-auto px-4 md:px-8">
             <div class="text-center mb-12">
                 <h2 class="font-playfair text-3xl md:text-4xl font-bold text-mocha-dark">
-                    What Our Customers Say
+                    What People Say About Rustella
                 </h2>
                 <p class="text-mocha-medium mt-2">Trusted by flower lovers across the city</p>
             </div>
@@ -871,15 +871,81 @@
     </section>
 
 
-    <!-- Subscribe Section -->
-    <section class="py-16 bg-mocha-burgundy text-white">
+    <section id="contact" class="py-16 bg-mocha-cream">
         <div class="container mx-auto px-4 md:px-8">
-            <div class="max-w-3xl mx-auto text-center">
-                <h2 class="font-playfair text-3xl md:text-4xl font-bold mb-4">Join Our Flower Community</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
 
+                <!-- FAQ Accordion -->
+                <div class="space-y-4">
+                    <h2 class="font-playfair text-3xl font-bold text-mocha-dark mb-6">FAQ & Tips</h2>
+                    <!-- Repeat this block 7×, changing the question/text -->
+                    <details class="bg-white rounded-lg shadow p-4">
+                        <summary class="cursor-pointer font-semibold text-mocha-burgundy">
+                            How do I track my order?
+                        </summary>
+                        <p class="mt-2 text-mocha-medium text-sm">
+                            Once your order ships, you’ll receive an email with a tracking link—just click and follow
+                            along!
+                        </p>
+                    </details>
+                    <details class="bg-white rounded-lg shadow p-4">
+                        <summary class="cursor-pointer font-semibold text-mocha-burgundy">
+                            Can I customize my bouquet?
+                        </summary>
+                        <p class="mt-2 text-mocha-medium text-sm">
+                            Absolutely! At checkout you can add special instructions, or send us a note and we'll get in
+                            touch.
+                        </p>
+                    </details>
+                    <!-- …add 5 more… -->
+                </div>
+
+                <!-- Feedback Form -->
+                <div class="bg-white rounded-lg shadow-lg p-8">
+                    <h2 class="font-playfair text-3xl font-bold text-mocha-dark mb-4">
+                        Love It? Hate It? Let Us Know!
+                    </h2>
+                    <div id="suggestion-container">
+                        <form id="site-suggestion-form" action="{{ route('site.suggestions') }}" method="POST">
+                            @csrf
+
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium mb-1">Your Rating</label>
+                                <input type="hidden" name="rating" id="rating" value="{{ old('rating') }}">
+                                <div id="star-rating" class="flex space-x-1 text-2xl cursor-pointer">
+                                    <span class="star text-mocha-gray hover:text-amber-500" data-value="1">★</span>
+                                    <span class="star text-mocha-gray hover:text-amber-500" data-value="2">★</span>
+                                    <span class="star text-mocha-gray hover:text-amber-500" data-value="3">★</span>
+                                    <span class="star text-mocha-gray hover:text-amber-500" data-value="4">★</span>
+                                    <span class="star text-mocha-gray hover:text-amber-500" data-value="5">★</span>
+                                </div>
+                                @error('rating')
+                                    <p class="mt-1 text-red-500 text-sm">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="message" class="block text-sm font-medium mb-1">What do you think about
+                                    our
+                                    site?</label>
+                                <textarea id="message" name="message" rows="4"
+                                    class="w-full border border-mocha-light rounded p-2 focus:outline-none" placeholder="Your suggestions…">{{ old('message') }}</textarea>
+                                @error('message')
+                                    <p class="mt-1 text-red-500 text-sm">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <button type="submit"
+                                class="w-full bg-mocha-burgundy text-white py-2 rounded hover:bg-opacity-90 transition">
+                                Send Feedback
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
+
 
 
 
@@ -1354,6 +1420,85 @@
             );
             modal.addEventListener('click', e => {
                 if (e.target === modal) modal.classList.add('hidden');
+            });
+        </script>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                // 0) pick up our Blade->JS flag:
+                window.siteSuggestionSent = @json(session('site_suggestion_sent', false));
+
+                const form = document.getElementById('site-suggestion-form');
+                const stars = document.querySelectorAll('#star-rating .star');
+                const ratingInput = document.getElementById('rating');
+                const submitBtn = form.querySelector('button[type="submit"]');
+
+                function replaceWithThankYou() {
+                    form.innerHTML =
+                        '<p class="text-center text-lg font-medium text-mocha-dark">Thank you for your feedback!</p>';
+                }
+
+                // A) If server says they've already sent, hide immediately
+                if (window.siteSuggestionSent || sessionStorage.getItem('siteSuggestionSent')) {
+                    replaceWithThankYou();
+                    return;
+                }
+
+                // 1) Star-rating widget
+                stars.forEach(star => {
+                    star.addEventListener('click', () => {
+                        const v = Number(star.dataset.value);
+                        ratingInput.value = v;
+                        stars.forEach(s => {
+                            s.classList.toggle('text-amber-500', Number(s.dataset.value) <= v);
+                            s.classList.toggle('text-mocha-gray', Number(s.dataset.value) > v);
+                        });
+                    });
+                });
+
+                // 2) restore old on validation error
+                const old = Number(ratingInput.value);
+                if (old) stars.forEach(s =>
+                    s.classList.toggle('text-amber-500', Number(s.dataset.value) <= old)
+                );
+
+                // 3) AJAX submit
+                form.addEventListener('submit', async e => {
+                    e.preventDefault();
+                    submitBtn.textContent = 'Sending…';
+                    submitBtn.disabled = true;
+
+                    const payload = {
+                        rating: ratingInput.value,
+                        message: form.message.value.trim()
+                    };
+
+                    try {
+                        const res = await fetch(form.action, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                                    .content
+                            },
+                            body: JSON.stringify(payload)
+                        });
+                        if (!res.ok) throw new Error(await res.text());
+
+                        showToast('Thank you for your feedback!');
+                        // mark as sent:
+                        sessionStorage.setItem('siteSuggestionSent', '1');
+                        replaceWithThankYou();
+
+                    } catch (err) {
+                        console.error(err);
+                        showToast('Oops, something went wrong.', 'error');
+                        submitBtn.textContent = 'Send Feedback';
+                        submitBtn.disabled = false;
+                    }
+                });
+
+
             });
         </script>
 </body>

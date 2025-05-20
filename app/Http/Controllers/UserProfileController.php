@@ -7,6 +7,7 @@ use App\Models\Suggestion;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -21,7 +22,7 @@ class UserProfileController extends Controller
         $suggestionCount = Suggestion::where('user_id', $user->id)->count();
 
         // build & paginate
-        $q = Order::with(['orderProducts.product', 'discount', 'delivery'])
+        $q = Order::with(['orderProducts.product', 'discount', 'delivery', 'user'])
             ->where('user_id', $user->id)
             ->orderBy('created_at', 'desc');
 
@@ -53,19 +54,34 @@ class UserProfileController extends Controller
             $order->delivery_fee    = $deliveryFee;
             $order->grand_total     = $grandTotal;
 
-            // Build items array for JS
-            $order->items_json = $order->orderProducts->map(function ($op) {
+            // fetch all product‐type suggestions for this order, keyed by product_id
+            $suggestionsByProduct = Suggestion::where('order_id', $order->id)
+                ->where('type', 'product')
+                ->get()
+                ->keyBy('product_id');
+
+            // (3) build items_json merging in any review
+            $order->items_json = $order->orderProducts->map(function ($op) use ($suggestionsByProduct) {
+                $s = $suggestionsByProduct->get($op->product_id);
+
                 return [
-                    'name'       => $op->product->name,
-                    'unit_price' => $op->price / $op->quantity,
-                    'quantity'   => $op->quantity,
-                    'total'      => $op->price,
-                    'image'      => asset('images/' . $op->product->image_url),
+                    'productId' => $op->product_id,
+                    'name'      => $op->product->name,
+                    'image'     => asset('images/' . $op->product->image_url),
+                    'unitPrice' => $op->price / $op->quantity,
+                    'quantity'  => $op->quantity,
+                    'total'     => $op->price,
+                    'review'    => $s ? [
+                        'rating'   => $s->rating,
+                        'message'  => $s->message,
+                        'date'     => $s->created_at->format('F j, Y'),
+                    ] : null,
                 ];
             })->values()->toArray();
 
             return $order;
         });
+
 
         // Build a pure PHP array for JS consumption
         $ordersForJs = $orders->getCollection()->map(function ($order) {
@@ -94,14 +110,16 @@ class UserProfileController extends Controller
                 // 3) items: unitPrice = price/quantity
                 'items'         => collect($order->items_json)->map(function ($it) {
                     return [
+                        'productId' => $it['productId'],
                         'image'     => $it['image'],
                         'name'      => $it['name'],
                         'unitPrice' => $it['total'] / $it['quantity'],
                         'quantity'  => $it['quantity'],
                         'total'     => $it['total'],
+                        'review'    => $it['review'] ?? null,
                     ];
                 })->toArray(),
-
+                'hasReview'  => collect($order->items_json)->every(fn($it) => $it['review'] !== null),
                 'subtotal'      => $order->subtotal,
                 'discount'      => $order->discount_amount,
                 'deliveryFee'   => $order->delivery_fee,
@@ -109,26 +127,15 @@ class UserProfileController extends Controller
             ];
         })->toArray();
 
-        // Reviews (unchanged)
-        $reviews = Suggestion::with('product')
-            ->where('user_id', $user->id)
-            ->where('type', 'product')
-            ->orderByDesc('created_at')
-            ->get();
-
         return view('customerviews.userprofile', compact(
             'user',
             'orders',
             'orderCount',
             'cartCount',
             'suggestionCount',
-            'reviews',
             'ordersForJs'
         ));
     }
-
-
-
 
     public function updateProfile(Request $request)
     {
@@ -196,5 +203,77 @@ class UserProfileController extends Controller
         $order->save();
 
         return back()->with('status', 'Payment screenshot uploaded successfully.');
+    }
+
+    public function getReview(Order $order)
+    {
+        // 1) Load the order’s items (order_products) + the product itself
+        $items = $order->orderProducts()->with('product')->get();
+
+        // 2) Load all product‐type suggestions on that order, keyed by product_id
+        $suggestions = Suggestion::with('user')
+            ->where('order_id', $order->id)
+            ->where('type', 'product')
+            ->get()
+            ->keyBy('product_id');
+
+        // 3) Combine into one collection: each item + its review (if it exists)
+        $reviewRows = $items->map(function ($item) use ($suggestions) {
+            $s = $suggestions->get($item->product_id);
+
+            return [
+                'product'    => $item->product,                      // id, name, image, etc.
+                'quantity'   => $item->quantity,
+                'unit_price' => $item->price,
+                'total'      => $item->price * $item->quantity,
+                'review'     => $s ? [
+                    'id'         => $s->id,
+                    'rating'     => $s->rating,
+                    'message'    => $s->message,
+                    'created_at' => $s->created_at,
+                    'reviewer'   => $s->user->only('id', 'name'),
+                ] : null,
+            ];
+        });
+    }
+
+    public function storeReviews(Request $request)
+    {
+        
+        // 1) Validate the arrays
+        $validated = $request->validate([
+            'order_id'      => 'required|exists:orders,id',
+            'product_id'    => 'required|array',
+            'product_id.*'  => 'required|exists:products,id',
+            'rating'        => 'required|array',
+            'rating.*'      => 'required|integer|min:1|max:5',
+            'message'       => 'required|array',
+            'message.*'     => 'required|string|max:2000',
+        ]);
+
+        $userId  = Auth::id();
+        $orderId = $validated['order_id'];
+
+        // 2) Save all reviews in a single transaction
+        $created = DB::transaction(function () use ($validated, $userId, $orderId) {
+            $rows = [];
+            foreach ($validated['product_id'] as $i => $productId) {
+                $rows[] = Suggestion::create([
+                    'user_id'    => $userId,
+                    'order_id'   => $orderId,
+                    'product_id' => $productId,
+                    'type'       => 'product',
+                    'rating'     => $validated['rating'][$i],
+                    'message'    => $validated['message'][$i],
+                ]);
+            }
+            return $rows;
+        });
+
+        // 3) Return all created suggestions
+        return response()->json([
+            'success'     => true,
+            'suggestions' => $created,
+        ], 201);
     }
 }

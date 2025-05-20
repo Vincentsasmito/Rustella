@@ -767,6 +767,9 @@
                                             <option value="Delivery"
                                                 {{ request('order_status') == 'Delivery' ? 'selected' : '' }}>Delivery
                                             </option>
+                                            <option value="Completed"
+                                                {{ request('order_status') == 'Completed' ? 'selected' : '' }}>Completed
+                                            </option>
                                             <option value="Cancelled"
                                                 {{ request('order_status') == 'Cancelled' ? 'selected' : '' }}>
                                                 Cancelled</option>
@@ -2373,8 +2376,13 @@
                             document.getElementById('modal-current-status').textContent = json.new_status;
                             document.getElementById('modal-status-select').value = json.new_status;
 
-                            const o = recentOrders.find(x => x.id == orderId);
+                            // 3) Update both in-memory arrays
+                            let o = recentOrders.find(x => x.id == orderId);
                             if (o) o.progress = json.new_status;
+                            let a = allOrders.find(x => x.id == orderId);
+                            if (a) a.progress = json.new_status;
+
+                        
 
                             showToast(`Status updated to “${json.new_status}”`);
                             setTimeout(() => {

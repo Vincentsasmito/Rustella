@@ -10,7 +10,7 @@ class Suggestion extends Model
     //declares table to be used
     protected $table = 'suggestions';
     //self-explanatory
-    protected $fillable = ['message', 'user_id', 'product_id', 'rating'];
+    protected $fillable = ['message', 'user_id', 'product_id', 'rating', 'order_id', 'type'];
 
     public function user(): BelongsTo
     {

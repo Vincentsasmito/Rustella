@@ -342,8 +342,6 @@
             <div class="border-b border-mocha-light mb-8">
                 <div class="flex flex-wrap">
                     <button id="tab-orders" class="tab-active py-3 px-6 font-medium text-lg">Order History</button>
-                    <button id="tab-reviews" class="py-3 px-6 font-medium text-lg text-mocha-medium">My
-                        Reviews</button>
                 </div>
             </div>
 
@@ -448,6 +446,7 @@
                                         @endif
                                     </div>
                                 </div>
+
                                 {{-- Line Items (will wrap to new rows automatically) --}}
                                 <div class="flex flex-wrap gap-6 mb-4">
                                     @foreach ($order->orderProducts as $op)
@@ -514,63 +513,7 @@
                 </div>
             </div>
 
-            <!-- Reviews Tab Content -->
-            <div id="content-reviews" class="tab-content hidden">
-                <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                    <div class="p-6 border-b border-mocha-light">
-                        <h2 class="font-playfair text-xl font-semibold text-mocha-dark mb-2">My Reviews</h2>
-                        <p class="text-mocha-medium">View your product reviews</p>
-                    </div>
 
-                    <div class="divide-y divide-mocha-light">
-                        @forelse($reviews as $review)
-                            <div class="p-6 hover:bg-mocha-cream/10 transition">
-                                <div class="flex flex-col md:flex-row md:items-start justify-between mb-4">
-                                    <div class="flex items-start mb-4 md:mb-0">
-                                        <div class="w-16 h-16 rounded-md overflow-hidden mr-4">
-                                            <img src="{{ 'images/' . $review->product->image_url ?? '/api/placeholder/100/100' }}"
-                                                alt="{{ $review->product->name }}"
-                                                class="w-full h-full object-cover">
-                                        </div>
-                                        <div>
-                                            <h3 class="font-medium mb-1">{{ $review->product->name }}</h3>
-                                            <div class="flex text-amber-500 mb-1">
-                                                @for ($i = 1; $i <= 5; $i++)
-                                                    @if ($i <= $review->rating)
-                                                        <i class="fas fa-star"></i>
-                                                    @else
-                                                        <i class="far fa-star"></i>
-                                                    @endif
-                                                @endfor
-                                            </div>
-                                            <p class="text-sm text-mocha-medium">
-                                                Reviewed on: {{ $review->created_at->format('F j, Y') }}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="bg-mocha-cream/30 p-4 rounded-md">
-                                    <p class="text-mocha-dark mb-3">{{ $review->message }}</p>
-
-                                    @if (!empty($review->images) && $review->images->count())
-                                        <div class="flex flex-wrap gap-2 mt-3">
-                                            @foreach ($review->images as $image)
-                                                <div class="w-16 h-16 rounded-md overflow-hidden">
-                                                    <img src="{{ $image->url }}" alt="Review image"
-                                                        class="w-full h-full object-cover">
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
-                        @empty
-                            <p class="p-6 text-mocha-medium">You haven’t written any reviews yet.</p>
-                        @endforelse
-                    </div>
-                </div>
-            </div>
             <div id="editProfileModal" class="fixed inset-0 bg-black/50 flex items-center justify-center hidden">
                 <div class="bg-white rounded-lg w-full max-w-lg p-6 relative">
                     <!-- Close button -->
@@ -763,13 +706,13 @@
                     </div>
                 </div>
             </div>
+
     </main>
     <!-- JavaScript for Tabs -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // — 1) NAV TABS & MOBILE MENU —
             const tabOrders = document.getElementById('tab-orders');
-            const tabReviews = document.getElementById('tab-reviews');
             const contentOrders = document.getElementById('content-orders');
             const contentReviews = document.getElementById('content-reviews');
             const menuToggle = document.getElementById('menu-toggle');
@@ -777,16 +720,11 @@
 
             tabOrders?.addEventListener('click', () => {
                 tabOrders.classList.add('tab-active');
-                tabReviews.classList.remove('tab-active');
+                if (typeof tabReviews !== 'undefined') tabReviews.classList.remove('tab-active');
                 contentOrders.classList.remove('hidden');
-                contentReviews.classList.add('hidden');
+                if (contentReviews) contentReviews.classList.add('hidden');
             });
-            tabReviews?.addEventListener('click', () => {
-                tabReviews.classList.add('tab-active');
-                tabOrders.classList.remove('tab-active');
-                contentReviews.classList.remove('hidden');
-                contentOrders.classList.add('hidden');
-            });
+
             menuToggle?.addEventListener('click', () => {
                 mobileMenu.classList.toggle('hidden');
             });
@@ -846,14 +784,28 @@
 
             // — 4) ORDER DETAIL MODAL —
             const allOrders = @json($ordersForJs);
-            console.log(allOrders);
             const detailBtns = document.querySelectorAll('.details-btn');
             const odModal = document.getElementById('order-detail-modal');
 
-            document.querySelectorAll('.details-btn').forEach(btn => {
+            // 1) Initialize button text & style
+            detailBtns.forEach(btn => {
+                const id = parseInt(btn.dataset.orderId, 10);
+                const order = allOrders.find(o => o.id === id);
+                if (!order) return;
+
+                if (order.status === 'Completed' && !order.hasReview) {
+                    btn.textContent = 'Add a Review';
+                    btn.classList.replace('bg-mocha-light/50', 'bg-mocha-burgundy');
+                    btn.classList.replace('text-mocha-dark', 'text-white');
+                }
+            });
+
+            detailBtns.forEach(btn => {
                 btn.addEventListener('click', () => {
+                    odModal.querySelectorAll('.review-form-container').forEach(el => el.remove());
                     const id = parseInt(btn.dataset.orderId, 10);
                     const order = allOrders.find(o => o.id === id);
+
                     if (!order) return console.error('Order not found', id);
 
                     const fmt = n => `Rp ${Number(n).toLocaleString('id-ID')}`;
@@ -874,21 +826,123 @@
 
                     const tbody = document.getElementById('modal-order-items');
                     tbody.innerHTML = '';
+
+                    // 1) Render every product row
                     order.items.forEach(it => {
                         const tr = document.createElement('tr');
+                        tr.className = 'border-b border-mocha-light/20';
                         tr.innerHTML = `
-         <td class="w-1/5 px-4 py-2 text-left">
-       <div class="flex justify-start">
-      <img src="${it.image}" class="w-12 h-12 rounded"/>
-    </div>
+    <td class="w-1/5 px-4 py-2 text-left">
+      <div class="flex justify-start">
+        <img src="${it.image}" class="w-12 h-12 rounded"/>
+      </div>
     </td>
     <td class="w-1/5 px-4 py-2 text-left">${it.name}</td>
     <td class="w-1/5 px-4 py-2 text-right">${fmt(it.unitPrice)}</td>
     <td class="w-1/5 px-4 py-2 text-center">${it.quantity}</td>
     <td class="w-1/5 px-4 py-2 text-right">${fmt(it.total)}</td>
-      `;
+  `;
                         tbody.appendChild(tr);
+
+                        // 2) If reviews exist, show inline
+                        if (order.status === 'Completed' && order.hasReview) {
+                            const r = it.review;
+                            const revTr = document.createElement('tr');
+                            revTr.className = 'border-b border-mocha-light/20';
+                            revTr.innerHTML = `
+      <td colspan="5" class="px-4 py-2 bg-mocha-cream/20">
+        <p class="text-sm mb-1">
+          <span class="font-medium">Rating:</span>
+          <span class="font-semibold">${r.rating}</span>/5
+          <span class="text-xs text-mocha-medium ml-2">${r.date}</span>
+        </p>
+        <p class="text-sm">${r.message}</p>
+      </td>
+    `;
+                            tbody.appendChild(revTr);
+                        }
                     });
+
+                    // 3) If completed and no reviews at all, inject ONE form
+                    if (order.status === 'Completed' && !order.hasReview) {
+                        // Remove any existing review forms
+                        document.querySelectorAll('.review-form-container').forEach(el => el
+                            .remove());
+
+                        const wrapper = document.createElement('div');
+                        wrapper.className =
+                            'review-form-container p-4 bg-mocha-cream/20 rounded-lg mb-6';
+
+                        // Build the form HTML
+                        let html =
+                            `<h4 class="text-sm font-medium mb-3">Leave Reviews for Each Item</h4>`;
+                        html += `<form id="order-review-form">`;
+                        html += `<input type="hidden" name="order_id" value="${order.id}">`;
+
+                        order.items.forEach(it => {
+                            html += `
+      <div class="mb-4 border-b pb-4">
+        <p class="font-medium mb-2">${it.name}</p>
+        <input type="hidden" name="product_id[]" value="${it.productId}">
+        <label class="block text-sm mb-1">Rating:</label>
+        <select name="rating[]" class="form-input mb-2">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5" selected>5</option>
+        </select>
+        <label class="block text-sm mb-1">Comment:</label>
+        <textarea name="message[]" rows="2" class="form-input w-full"
+                  placeholder="Write your review…"></textarea>
+      </div>`;
+                        });
+
+                        html += `
+    <button type="submit"
+            class="px-4 py-2 bg-mocha-burgundy text-white rounded-lg">
+      Submit All Reviews
+    </button>
+  </form>`;
+
+                        wrapper.innerHTML = html;
+
+                        // Insert the form below the items table
+                        const tableWrapper = document.querySelector(
+                            '#order-detail-modal .overflow-x-auto.mb-6');
+                        tableWrapper.after(wrapper);
+
+                        // 4) Handle the unified form submit
+                        wrapper.querySelector('#order-review-form').addEventListener('submit',
+                            async e => {
+                                e.preventDefault();
+                                const fd = new FormData(e.target);
+                                const payload = {
+                                    order_id: fd.get('order_id'),
+                                    product_id: fd.getAll('product_id[]'),
+                                    rating: fd.getAll('rating[]').map(r => Number(r)),
+                                    message: fd.getAll('message[]'),
+                                };
+
+                                const res = await fetch('/profile/store-reviews', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': document.querySelector(
+                                            'meta[name="csrf-token"]').content
+                                    },
+                                    body: JSON.stringify(payload)
+                                });
+
+                                if (!res.ok) {
+                                    const err = await res.text();
+                                    return alert('Failed to save reviews: ' + err);
+                                }
+
+                                showToast('Reviews saved!');
+                                location.reload();
+                            });
+                    }
 
                     set('modal-subtotal', fmt(order.subtotal));
                     const discRow = document.getElementById('modal-discount-row');
