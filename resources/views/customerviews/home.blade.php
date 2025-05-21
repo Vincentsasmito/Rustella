@@ -295,6 +295,53 @@
             }
         }
     </style>
+
+    <style>
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.3s ease-in-out;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+
 </head>
 
 <body>
@@ -1465,6 +1512,16 @@
                 // 3) AJAX submit
                 form.addEventListener('submit', async e => {
                     e.preventDefault();
+
+                    const rating = ratingInput.value.trim();
+                    const message = form.message.value.trim();
+
+                    // 🚫 Prevent empty submissions:
+                    if (!rating || !message) {
+                        showToast('Please select a star rating and write a comment.', 'error');
+                        return;
+                    }
+
                     submitBtn.textContent = 'Sending…';
                     submitBtn.disabled = true;
 

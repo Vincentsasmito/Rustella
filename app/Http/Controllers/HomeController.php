@@ -73,6 +73,7 @@ class HomeController extends Controller
             return redirect()->back()->with('error', 'You’ve already given feedback. Thanks!');
         }
 
+
         $validated = $request->validate([
             'message' => 'required|string|max:255',
             'rating'  => 'required|integer|between:1,5',
@@ -87,8 +88,14 @@ class HomeController extends Controller
             'type'    => 'site',
         ]);
 
-        // Create the suggestion
-        Suggestion::create($data);
+        try {
+            Suggestion::create($data);
+        } catch (\Exception $e) {
+            // If something goes wrong here, we do NOT set the session flag
+            return redirect()->back()
+                ->withErrors(['message' => 'Could not save feedback. Please try again.']);
+        }
+
 
         // 4) Mark the session so they can’t send again
         $request->session()->put('site_suggestion_sent', true);
