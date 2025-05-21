@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Foundation\Auth\RegistersUsers;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
@@ -53,6 +56,21 @@ class RegisterController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
+    }
+
+    protected function registered(Request $request, $user)
+    {
+        // 1) fire the notification
+        event(new Registered($user));
+
+        // 2) let the default verification-notice route show
+        //    (it needs you to still be 'auth')
+        $response = redirect()->route('verification.notice');
+
+        // 3) *after* we've queued up that redirect, log them out
+        Auth::logout();
+
+        return $response;
     }
 
     /**

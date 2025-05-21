@@ -16,6 +16,7 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Validation\ValidationException;
 
 class AdminController extends Controller
@@ -814,5 +815,34 @@ class AdminController extends Controller
             $query->where('progress', $status);
         }
         return $query;
+    }
+
+    /**
+     * System health-check endpoint.
+     */
+    public function health()
+    {
+        try {
+            $dbOk    = DB::connection()->getPdo() !== null;
+            $queueOk = Queue::size('default') !== null;
+            $mailOk  = true; 
+
+            $healthy = $dbOk && $queueOk && $mailOk;
+        } catch (\Exception $e) {
+            $healthy = false;
+            $dbOk    = $dbOk ?? false;
+            $queueOk = $queueOk ?? false;
+            $mailOk  = $mailOk ?? false;
+        }
+
+        return response()->json([
+            'healthy'   => $healthy,
+            'checks'    => [
+                'database' => $dbOk,
+                'queue'    => $queueOk,
+                'mailer'   => $mailOk,
+            ],
+            'timestamp' => now()->toIso8601String(),
+        ]);
     }
 }

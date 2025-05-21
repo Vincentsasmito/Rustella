@@ -29,7 +29,7 @@ class LoginController extends Controller
 
     /**
      * After the user is “authenticated” (i.e. credentials correct),
-     * Laravel calls this.  We’ll intercept unverified users here.
+     * Laravel calls this.  Intercept unverified users here.
      */
     protected function authenticated(Request $request, $user)
     {
@@ -41,6 +41,12 @@ class LoginController extends Controller
                 ->route('verification.notice')
                 ->with('warning', 'You must verify your email before logging in.');
         }
+
+        if($user->role == 'Staff') {
+            return redirect()->route('admin.index');
+        }
+
+        return redirect('/home');
     }
 
     /**

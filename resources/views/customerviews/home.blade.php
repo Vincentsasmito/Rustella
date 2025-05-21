@@ -62,6 +62,12 @@
             font-family: 'Playfair Display', serif;
         }
 
+        /* navbar styles */
+        .nav-link {
+            @apply text-mocha-dark hover:text-mocha-burgundy font-medium relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-mocha-burgundy after:transition-all after:duration-300 hover:after:w-full;
+        }
+
+
         .bestseller-badge {
             position: absolute;
             top: 10px;
@@ -344,7 +350,7 @@
 
 </head>
 
-<body>
+<body class="overflow-x-hidden">
     <!-- Loading Screen -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="text-center">
@@ -354,118 +360,125 @@
         </div>
     </div>
 
-    <!-- Navigation -->
-    <nav class="bg-white shadow-md fixed w-full z-10">
-        <div class="container mx-auto px-4 md:px-8">
-            <div class="flex justify-between items-center py-4">
-                <div class="flex items-center space-x-2">
-                    <div class="text-mocha-burgundy">
-                        <img src="{{ asset('/WebsiteStockImage/Rustella.png') }}" alt="Rustella Logo"
-                            class="h-8 w-auto">
-                    </div>
-                    <a href="home" class="font-playfair text-2xl font-bold text-mocha-dark">
-                        <span class="inline-block hover:scale-105 transition-transform duration-300">R</span>
-                        <span class="inline-block hover:scale-105 transition-transform duration-300">u</span>
-                        <span class="inline-block hover:scale-105 transition-transform duration-300">s</span>
-                        <span class="inline-block hover:scale-105 transition-transform duration-300">t</span>
-                        <span class="inline-block hover:scale-105 transition-transform duration-300">e</span>
-                        <span class="inline-block hover:scale-105 transition-transform duration-300">l</span>
-                        <span class="inline-block hover:scale-105 transition-transform duration-300">l</span>
-                        <span class="inline-block hover:scale-105 transition-transform duration-300">a</span>
-                        <span
-                            class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">F</span>
-                        <span
-                            class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">l</span>
-                        <span
-                            class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">o</span>
-                        <span
-                            class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">r</span>
-                        <span
-                            class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">i</span>
-                        <span
-                            class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">s</span>
-                        <span
-                            class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">t</span>
-                        <span
-                            class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">r</span>
-                        <span
-                            class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">y</span>
-                    </a>
-                </div>
+    <nav class="bg-white shadow-md fixed w-full z-10 overflow-x-hidden">
+        <div class="container mx-auto px-4 md:px-8 flex items-center justify-between py-4">
+            <!-- Logo area -->
+            <div class="flex items-center space-x-2">
+                <!-- Fancy per-letter logo (hidden below md) -->
+                <a href="#home" class="hidden md:flex font-playfair text-2xl font-bold text-mocha-dark flex-wrap">
+                    <!-- Logo image -->
+                    <img src="{{ asset('WebsiteStockImage/rustellalogoplain.png') }}" alt="Rustella Floristry"
+                        class="h-8 w-auto" />
+                    <span class="inline-block hover:scale-105 transition-transform duration-300">R</span>
+                    <span class="inline-block hover:scale-105 transition-transform duration-300">u</span>
+                    <span class="inline-block hover:scale-105 transition-transform duration-300">s</span>
+                    <span class="inline-block hover:scale-105 transition-transform duration-300">t</span>
+                    <span class="inline-block hover:scale-105 transition-transform duration-300">e</span>
+                    <span class="inline-block hover:scale-105 transition-transform duration-300">l</span>
+                    <span class="inline-block hover:scale-105 transition-transform duration-300">l</span>
+                    <span class="inline-block hover:scale-105 transition-transform duration-300">a</span>
+                    <span
+                        class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">F</span>
+                    <span
+                        class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">l</span>
+                    <span
+                        class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">o</span>
+                    <span
+                        class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">r</span>
+                    <span
+                        class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">i</span>
+                    <span
+                        class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">s</span>
+                    <span
+                        class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">t</span>
+                    <span
+                        class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">r</span>
+                    <span
+                        class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">y</span>
+                </a>
+                <!-- Simple logo (shown below md) -->
+                <a href="#home"
+                    class="inline-flex md:hidden items-center space-x-2 font-playfair text-2xl font-bold text-mocha-dark whitespace-nowrap">
+                    <img src="{{ asset('WebsiteStockImage/rustellalogoplain.png') }}" alt="Rustella Logo"
+                        class="h-8 w-auto" />
+                    <span>
+                        Rustella <span class="text-mocha-burgundy">Floristry</span>
+                    </span>
+                </a>
+            </div>
 
-                <!-- Desktop Menu -->
-                <div class="hidden md:flex space-x-8">
-                    <a href="#"
-                        class="text-mocha-dark hover:text-mocha-burgundy font-medium relative after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-mocha-burgundy after:transition-all after:duration-300 hover:after:w-full">Home</a>
-                    <a href="#bestsellers"
-                        class="text-mocha-dark hover:text-mocha-burgundy font-medium relative after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-mocha-burgundy after:transition-all after:duration-300 hover:after:w-full">Best
-                        Sellers</a>
-                    <a href="#catalog"
-                        class="text-mocha-dark hover:text-mocha-burgundy font-medium relative after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-mocha-burgundy after:transition-all after:duration-300 hover:after:w-full">Catalog</a>
-                    <a href="#about"
-                        class="text-mocha-dark hover:text-mocha-burgundy font-medium relative after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-mocha-burgundy after:transition-all after:duration-300 hover:after:w-full">About
-                        Us</a>
-                    <a href="#contact"
-                        class="text-mocha-dark hover:text-mocha-burgundy font-medium relative after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-mocha-burgundy after:transition-all after:duration-300 hover:after:w-full">Suggestion</a>
+            <!-- Desktop menu links -->
+            <div class="hidden md:flex space-x-8">
+                <a href="#home"
+                    class="text-mocha-dark hover:text-mocha-burgundy font-medium relative after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-mocha-burgundy after:transition-all after:duration-300 hover:after:w-full">
+                    Home
+                </a>
+                <a href="#bestsellers"
+                    class="text-mocha-dark hover:text-mocha-burgundy font-medium relative after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-mocha-burgundy after:transition-all after:duration-300 hover:after:w-full">
+                    Best Sellers
+                </a>
+                <a href="#catalog"
+                    class="text-mocha-dark hover:text-mocha-burgundy font-medium relative after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-mocha-burgundy after:transition-all after:duration-300 hover:after:w-full">
+                    Catalog
+                </a>
+                <a href="#about"
+                    class="text-mocha-dark hover:text-mocha-burgundy font-medium relative after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-mocha-burgundy after:transition-all after:duration-300 hover:after:w-full">
+                    About Us
+                </a>
+                <a href="#contact"
+                    class="text-mocha-dark hover:text-mocha-burgundy font-medium relative after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-mocha-burgundy after:transition-all after:duration-300 hover:after:w-full">
+                    Suggestion
+                </a>
+            </div>
 
-                </div>
+            <!-- Mobile menu toggle -->
+            <div class="md:hidden">
+                <button id="menu-toggle" class="text-mocha-dark focus:outline-none">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
 
-                <!-- Mobile Menu Button -->
-                <div class="md:hidden">
-                    <button id="menu-toggle" class="text-mocha-dark focus:outline-none">
-                        <i class="fas fa-bars text-xl"></i>
-                    </button>
-                </div>
-
-                <!-- Cart & Profile Icons -->
-                <div class="hidden md:flex items-center space-x-6">
-                    @auth
-                        <span class="text-mocha-medium font-medium">
-                            Welcome back,&nbsp;{{ Auth::user()->name }}!
-                        </span>
-                    @endauth
-
-                    <a href="profile" class="text-mocha-burgundy hover:text-mocha-dark transition-colors duration-300">
-                        <i class="fas fa-user text-xl"></i>
-                    </a>
-
-                    <a href="{{ route('cart.index') }}"
-                        class="text-mocha-dark hover:text-mocha-burgundy transition-colors duration-300 relative">
-                        <i class="fas fa-shopping-cart text-xl"></i>
-                        <span id="cart-badge"
-                            class="bg-mocha-burgundy text-white rounded-full px-2 py-1 text-xs absolute -top-2 -right-2 transition-transform duration-300">
-                            {{ $initialCount }}
-                        </span>
-                    </a>
-                </div>
+            <!-- Cart & Profile Icons (desktop only) -->
+            <div class="hidden md:flex items-center space-x-6">
+                @auth
+                    <span class="text-mocha-medium font-medium">Welcome back,&nbsp;{{ Auth::user()->name }}!</span>
+                @endauth
+                <a href="profile" class="text-mocha-burgundy hover:text-mocha-dark transition-colors duration-300">
+                    <i class="fas fa-user text-xl"></i>
+                </a>
+                <a href="{{ route('cart.index') }}"
+                    class="text-mocha-dark hover:text-mocha-burgundy relative transition-colors duration-300">
+                    <i class="fas fa-shopping-cart text-xl"></i>
+                    <span id="cart-badge"
+                        class="bg-mocha-burgundy text-white rounded-full px-2 py-1 text-xs absolute -top-2 -right-2">
+                        {{ $initialCount }}
+                    </span>
+                </a>
             </div>
         </div>
 
-        <!-- Mobile Menu -->
-        <div id="mobile-menu"
-            class="hidden md:hidden bg-white transform -translate-y-full transition-transform duration-300 ease-in-out">
-            <div class="container mx-auto px-4 py-2 space-y-3">
-                <a href="#" class="block text-mocha-dark hover:text-mocha-burgundy font-medium py-2">Home</a>
-                <a href="#bestsellers" class="block text-mocha-dark hover:text-mocha-burgundy font-medium py-2">Best
+        <!-- Mobile menu links (start hidden) -->
+        <div id="mobile-menu" class="hidden bg-white md:hidden">
+            <div class="px-4 py-2 space-y-3">
+                <a href="#home" class="block text-mocha-dark hover:text-mocha-burgundy font-medium">Home</a>
+                <a href="#bestsellers" class="block text-mocha-dark hover:text-mocha-burgundy font-medium">Best
                     Sellers</a>
-                <a href="#catalog" class="block text-mocha-dark hover:text-mocha-burgundy font-medium py-2">Catalog</a>
-                <a href="#about" class="block text-mocha-dark hover:text-mocha-burgundy font-medium py-2">About Us</a>
-                <a href="#contact"
-                    class="block text-mocha-dark hover:text-mocha-burgundy font-medium py-2">Suggestion</a>
-                <a href="Profieluser.html" class="block text-mocha-dark hover:text-mocha-burgundy font-medium py-2">
+                <a href="#catalog" class="block text-mocha-dark hover:text-mocha-burgundy font-medium">Catalog</a>
+                <a href="#about" class="block text-mocha-dark hover:text-mocha-burgundy font-medium">About Us</a>
+                <a href="#contact" class="block text-mocha-dark hover:text-mocha-burgundy font-medium">Suggestion</a>
+                <a href="profile" class="block text-mocha-dark hover:text-mocha-burgundy font-medium">
                     <i class="fas fa-user mr-2"></i> My Profile
                 </a>
-                <a href="{{ route('cart.index') }}"
-                    class="block text-mocha-dark hover:text-mocha-burgundy font-medium py-2">
+                <a href="{{ route('cart.index') }}" class="block text-mocha-dark hover:text-mocha-burgundy font-medium">
                     <i class="fas fa-shopping-cart mr-2"></i> Cart
-                    <span class="bg-mocha-burgundy text-white rounded-full px-2 py-1 text-xs">3</span>
+                    <span id="cart-badge2" class="bg-mocha-burgundy text-white rounded-full px-2 py-1 text-xs">{{ $initialCount }}</span>
                 </a>
             </div>
         </div>
     </nav>
 
     <!-- Hero Section -->
-    <section class="pt-24 pb-16 md:pt-32 md:pb-24 bg-mocha-light/20 relative overflow-hidden">
+    <section id="home" class="pt-24 pb-16 md:pt-32 md:pb-24 bg-mocha-light/20 relative overflow-hidden">
         <!-- Animated background petals -->
         <div id="petals-container" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
 
@@ -822,13 +835,9 @@
             @endphp
 
             @if ($count > $visibleCount)
-                <div class="mx-auto overflow-hidden" style="width: {{ $visibleW }}px;">
-                    <div class="flex"
-                        style="
-                        gap: 1.5rem;
-                        animation: scrollTestimonials {{ $duration }}s linear infinite;
-                        --scroll-amount: {{ $scrollAmount }}px;
-                    ">
+                <div class="w-full overflow-hidden">
+                    <div class="flex gap-6 animate-scrollTestimonials"
+                        style="--scroll-amount: {{ $scrollAmount }}px; --duration: {{ $duration }}s;">
                         {{-- first pass --}}
                         @foreach ($testimonials as $t)
                             <div class="min-w-[350px] bg-white p-6 rounded-lg shadow-md flex-shrink-0">
@@ -886,6 +895,10 @@
                         to {
                             transform: translateX(calc(-1 * var(--scroll-amount)));
                         }
+                    }
+
+                    .animate-scrollTestimonials {
+                        animation: scrollTestimonials var(--duration) linear infinite;
                     }
                 </style>
             @else
@@ -1111,6 +1124,29 @@
             let panzoom;
 
             document.addEventListener('DOMContentLoaded', () => {
+                // ── MOBILE MENU TOGGLE ─────────────────────
+                const menuToggle = document.getElementById('menu-toggle');
+                const mobileMenu = document.getElementById('mobile-menu');
+
+                menuToggle.addEventListener('click', () => {
+                    mobileMenu.classList.toggle('hidden');
+                });
+
+                // Smooth Scroll
+                document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                    anchor.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const target = document.querySelector(this.getAttribute('href'));
+                        if (target) {
+                            window.scrollTo({
+                                top: target.offsetTop - 80,
+                                behavior: 'smooth'
+                            });
+                            if (!mobileMenu.classList.contains('hidden')) mobileMenu.classList.add(
+                                'hidden');
+                        }
+                    });
+                });
                 const imgEl = document.getElementById('modal-image');
                 // 2) assign into our outer variable
                 panzoom = Panzoom(imgEl, {
@@ -1137,14 +1173,6 @@
             });
         </script>
         <script>
-            // Mobile Menu Toggle
-            document.getElementById('menu-toggle').addEventListener('click', function() {
-                const mobileMenu = document.getElementById('mobile-menu');
-                mobileMenu.classList.toggle('hidden');
-                mobileMenu.classList.toggle('-translate-y-full');
-            });
-
-
             // Toast Notification
             function showToast(message) {
                 const toast = document.createElement('div');
@@ -1158,21 +1186,6 @@
                     setTimeout(() => toast.remove(), 300);
                 }, 3000);
             }
-
-            // Smooth Scroll
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const target = document.querySelector(this.getAttribute('href'));
-                    if (target) {
-                        window.scrollTo({
-                            top: target.offsetTop - 80,
-                            behavior: 'smooth'
-                        });
-                        if (!mobileMenu.classList.contains('hidden')) mobileMenu.classList.add('hidden');
-                    }
-                });
-            });
 
             // Category Filtering
             const categoryTabs = document.querySelectorAll('.category-tab');
@@ -1231,7 +1244,8 @@
 
                     // success path
                     document.getElementById('cart-badge').textContent = payload.count;
-
+                    document.getElementById('cart-badge2').textContent = payload.count;
+                    
                     // quick feedback
                     const prev = btn.textContent;
                     btn.textContent = 'Added!';

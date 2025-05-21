@@ -16,6 +16,8 @@ return new class extends Migration
             $table->unsignedInteger('min_purchase');
             $table->unsignedInteger('usage_limit')->default(1);
             $table->unsignedInteger('usage_counter')->default(0);
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
         });
     }
 

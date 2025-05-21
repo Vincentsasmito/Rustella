@@ -86,20 +86,138 @@
         .cart-item:hover .remove-item {
             opacity: 1;
         }
+
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+
+            /* Cart Layout */
+            .cart-item {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
+            }
+
+            .cart-item>div {
+                width: 100%;
+            }
+
+            /* Product Info */
+            .cart-item .flex-1 {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .cart-item .w-20 {
+                width: 120px;
+                height: 120px;
+                margin: 0 auto;
+            }
+
+            /* Quantity Controls */
+            .cart-item .flex-shrink-0 {
+                justify-content: center;
+            }
+
+            /* Remove Button */
+            .remove-item {
+                opacity: 1;
+                position: absolute;
+                top: 0.5rem;
+                right: 0.5rem;
+            }
+
+            /* Order Summary */
+            .lg\:w-1\/3 {
+                position: static;
+                width: 100%;
+                margin-top: 1rem;
+            }
+
+            /* Checkout Form */
+            .max-w-4xl {
+                padding: 1rem;
+            }
+
+            input[type="text"],
+            input[type="email"],
+            input[type="tel"],
+            input[type="datetime-local"],
+            select,
+            textarea {
+                font-size: 16px;
+                /* Prevents iOS zoom */
+            }
+
+            /* Payment Section */
+            .max-w-xl {
+                padding: 1rem;
+            }
+
+            table {
+                width: 100%;
+            }
+
+            /* Navigation */
+            .mobile-menu {
+                padding: 1rem;
+            }
+        }
+
+        /* Small phones */
+        @media (max-width: 390px) {
+            .cart-item .w-20 {
+                width: 100px;
+                height: 100px;
+            }
+
+            .cart-item h3 {
+                font-size: 0.9rem;
+            }
+
+            .qty-btn {
+                width: 24px;
+                height: 24px;
+            }
+
+            .item-qty {
+                width: 32px;
+            }
+
+            .font-playfair {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Touch Device Optimizations */
+        @media (hover: none) {
+            .qty-btn {
+                min-width: 44px;
+                /* Minimum touch target size */
+                min-height: 44px;
+            }
+
+            .remove-item {
+                opacity: 1;
+                padding: 0.5rem;
+            }
+
+            input[type="file"] {
+                padding: 1rem;
+            }
+        }
     </style>
 </head>
 
 <body>
-    <!-- Navigation -->
     <nav class="bg-white shadow-md fixed w-full z-10">
         <div class="container mx-auto px-4 md:px-8">
-            <div class="flex justify-between items-center py-4">
+            <div class="flex items-center justify-between py-4">
+                <!-- 1) Logo -->
                 <div class="flex items-center space-x-2">
-                    <div class="text-mocha-burgundy">
-                        <img src="{{ asset('/WebsiteStockImage/Rustella.png') }}" alt="Rustella Logo"
-                            class="h-8 w-auto">
-                    </div>
-                    <a href="#" class="font-playfair text-2xl font-bold text-mocha-dark">
+                    <a href="home" class="hidden md:flex font-playfair text-2xl font-bold text-mocha-dark flex-wrap">
+                        <img src="{{ asset('WebsiteStockImage/rustellalogoplain.png') }}" alt="Rustella Floristry"
+                            class="h-8 w-auto" />
+                        <!-- per-letter spans… -->
                         <span class="inline-block hover:scale-105 transition-transform duration-300">R</span>
                         <span class="inline-block hover:scale-105 transition-transform duration-300">u</span>
                         <span class="inline-block hover:scale-105 transition-transform duration-300">s</span>
@@ -127,44 +245,75 @@
                         <span
                             class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">y</span>
                     </a>
+                    <!-- Simple logo (shown below md) -->
+                    <a href="#home"
+                        class="inline-flex md:hidden items-center space-x-2 font-playfair text-2xl font-bold text-mocha-dark whitespace-nowrap">
+                        <img src="{{ asset('WebsiteStockImage/rustellalogoplain.png') }}" alt="Rustella Logo"
+                            class="h-8 w-auto" />
+                        <span>
+                            Rustella <span class="text-mocha-burgundy">Floristry</span>
+                        </span>
+                    </a>
                 </div>
 
-                <!-- Desktop Menu -->
+
+
+                <!-- 2) Desktop menu -->
                 <div class="hidden md:flex space-x-8">
-                    <a href="home"
-                        class="text-mocha-dark hover:text-mocha-burgundy font-medium relative after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-mocha-burgundy after:transition-all after:duration-300 hover:after:w-full">Home</a>
-                    <a href="home#bestsellers"
-                        class="text-mocha-dark hover:text-mocha-burgundy font-medium relative after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-mocha-burgundy after:transition-all after:duration-300 hover:after:w-full">Best
-                        Sellers</a>
-                    <a href="home#catalog"
-                        class="text-mocha-dark hover:text-mocha-burgundy font-medium relative after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-mocha-burgundy after:transition-all after:duration-300 hover:after:w-full">Catalog</a>
-                    <a href="home#about"
-                        class="text-mocha-dark hover:text-mocha-burgundy font-medium relative after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-mocha-burgundy after:transition-all after:duration-300 hover:after:w-full">About
-                        Us</a>
-                    <a href="home#contact"
-                        class="text-mocha-dark hover:text-mocha-burgundy font-medium relative after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-mocha-burgundy after:transition-all after:duration-300 hover:after:w-full">Suggestion</a>
-
+                    <a href="home" class="nav-link">Home</a>
+                    <a href="home#bestsellers" class="nav-link">Best Sellers</a>
+                    <a href="home#catalog" class="nav-link">Catalog</a>
+                    <a href="home#about" class="nav-link">About Us</a>
+                    <a href="home#contact" class="nav-link">Suggestion</a>
                 </div>
-                <!-- Mobile Menu -->
-                <div id="mobile-menu" class="hidden md:hidden bg-white px-4 py-2">
-                    <a href="HomeNew.html" class="block py-2 text-mocha-dark hover:text-mocha-burgundy">Home</a>
-                    <a href="HomeNew.html" class="block py-2 text-mocha-dark hover:text-mocha-burgundy">Best Sellers</a>
-                    <a href="HomeNew.html#catalog"
-                        class="block py-2 text-mocha-dark hover:text-mocha-burgundy">Catalog</a>
-                    <a href="HomeNew.html#about" class="block py-2 text-mocha-dark hover:text-mocha-burgundy">About
-                        Us</a>
-                    <a href="HomeNew.html#contact"
-                        class="block py-2 text-mocha-dark hover:text-mocha-burgundy">Contact</a>
-                    <a href="Profieluser.html" class="block py-2 text-mocha-dark hover:text-mocha-burgundy">
-                        <i class="fas fa-user mr-2"></i> Profile
+
+                <!-- 3) Icons + greeting (desktop only) -->
+                <div class="hidden md:flex items-center space-x-6">
+                    @auth
+                        <span class="text-mocha-medium">Welcome back, {{ Auth::user()->name }}!</span>
+                    @endauth
+                    <a href="profile" class="text-mocha-burgundy hover:text-mocha-dark">
+                        <i class="fas fa-user text-xl"></i>
                     </a>
-                    <a href="#" class="block py-2 text-mocha-burgundy font-bold">
+                    <a href="{{ route('cart.index') }}" class="relative text-mocha-dark hover:text-mocha-burgundy">
+                        <i class="fas fa-shopping-cart text-xl"></i>
+                        <span id="cart-count1"
+                            class="bg-mocha-burgundy text-white rounded-full px-2 py-1 text-xs absolute -top-2 -right-2">
+                            {{ $cartCount }}
+                        </span>
+                    </a>
+                </div>
+
+                <!-- 4) Mobile hamburger button -->
+                <div class="md:hidden">
+                    <button id="menu-toggle" class="text-mocha-dark focus:outline-none">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 5) Mobile menu (hidden by default) -->
+            <div id="mobile-menu" class="hidden md:hidden bg-white">
+                <div class="container mx-auto px-4 py-2 space-y-3">
+                    <a href="home" class="block text-mocha-dark hover:text-mocha-burgundy">Home</a>
+                    <a href="home#bestsellers" class="block text-mocha-dark hover:text-mocha-burgundy">Best Sellers</a>
+                    <a href="home#catalog" class="block text-mocha-dark hover:text-mocha-burgundy">Catalog</a>
+                    <a href="home#about" class="block text-mocha-dark hover:text-mocha-burgundy">About Us</a>
+                    <a href="home#contact" class="block text-mocha-dark hover:text-mocha-burgundy">Suggestion</a>
+                    <a href="profile" class="block text-mocha-dark hover:text-mocha-burgundy">
+                        <i class="fas fa-user mr-2"></i> My Profile
+                    </a>
+                    <a href="{{ route('cart.index') }}"
+                        class="block text-mocha-dark hover:text-mocha-burgundy relative">
                         <i class="fas fa-shopping-cart mr-2"></i> Cart
-                        <span class="bg-mocha-burgundy text-white rounded-full px-2 py-1 text-xs cart-count">3</span>
+                        <span id="cart-count2"
+                            class="bg-mocha-burgundy text-white rounded-full px-2 py-1 text-xs absolute -top-2 -right-2">
+                            {{ $cartCount }}
+                        </span>
                     </a>
-
-
                 </div>
+            </div>
+        </div>
     </nav>
 
 
@@ -192,15 +341,17 @@
                                         $p = $item['product'];
                                         $qty = $item['quantity'];
                                     @endphp
-                                    <div class="cart-item flex items-center py-4 border-b border-mocha-light"
+
+                                    <div class="cart-item relative flex flex-col md:flex-row items-center gap-4 py-4 border-b border-mocha-light"
                                         data-id="{{ $p->id }}" data-price="{{ $p->price }}">
                                         <!-- Thumbnail + Name -->
-                                        <div class="flex items-center space-x-4 flex-1">
-                                            <div class="w-20 h-20 bg-mocha-light/30 rounded-lg overflow-hidden">
+                                        <div class="flex flex-col md:flex-row items-center gap-4 flex-1">
+                                            <div
+                                                class="w-[120px] md:w-20 h-[120px] md:h-20 bg-mocha-light/30 rounded-lg overflow-hidden flex-shrink-0">
                                                 <img src="{{ asset('images/' . $p->image_url) }}"
                                                     alt="{{ $p->name }}" class="w-full h-full object-cover" />
                                             </div>
-                                            <div>
+                                            <div class="text-center md:text-left">
                                                 <h3 class="font-playfair font-semibold">{{ $p->name }}</h3>
                                                 <p class="text-sm text-mocha-medium">
                                                     {{ Str::limit($p->description, 50) }}
@@ -208,19 +359,18 @@
                                             </div>
                                         </div>
 
-                                        <!-- Qty & Price & Remove -->
-                                        <div class="flex items-center space-x-6">
-                                            <div class="flex-shrink-0 flex items-center space-x-1">
-                                                <button type="button"
-                                                    class="qty-btn h-8 w-8 flex items-center justify-center">−
-                                                </button>
+                                        <!-- Qty & Price: fixed-width wrappers -->
+                                        <div class="flex items-center gap-4 flex-shrink-0">
+                                            <!-- Qty container: fixed width -->
+                                            <div class="flex items-center gap-2 w-32 justify-center">
+                                                <button type="button" class="qty-btn">−</button>
                                                 <input type="text" value="{{ $qty }}" readonly
-                                                    class="item-qty w-10 h-8 text-center bg-transparent border border-mocha-light rounded" />
-                                                <button type="button"
-                                                    class="qty-btn h-8 w-8 flex items-center justify-center">+
-                                                </button>
+                                                    class="item-qty w-12 h-10 text-center bg-transparent border border-mocha-light rounded" />
+                                                <button type="button" class="qty-btn">+</button>
                                             </div>
-                                            <div class="flex-shrink-0 text-right w-24 line-total">
+
+                                            <!-- Price container: fixed width -->
+                                            <div class="line-total w-32 text-center">
                                                 <p class="font-semibold">
                                                     Rp.{{ number_format($p->price * $qty, 0, ',', '.') }}
                                                 </p>
@@ -230,6 +380,10 @@
                                                     </p>
                                                 @endif
                                             </div>
+                                        </div>
+
+                                        <!-- Remove Button: fixed-width wrapper, center-aligned -->
+                                        <div class="flex-shrink-0 w-12 flex justify-center mt-2 md:mt-0">
                                             <button type="button"
                                                 class="remove-item text-mocha-medium hover:text-mocha-burgundy">
                                                 <i class="fas fa-times"></i>
@@ -299,8 +453,8 @@
                     Customer & Delivery Details
                 </h2>
 
-                <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="max-w-4xl mx-auto bg-white p-4 md:p-6 rounded-lg shadow-md">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label for="sender_email" class="block text-sm font-medium mb-1">Your Email *</label>
                             <input type="email" name="sender_email" id="sender_email"
@@ -355,13 +509,13 @@
                         </div>
                     </div>
 
-                    <div class="flex justify-between mt-6">
+                    <div class="flex flex-col md:flex-row justify-between gap-4 mt-6">
                         <button type="button" id="back-to-cart"
-                            class="px-4 py-2 border border-mocha-medium rounded">
+                            class="w-full md:w-auto px-4 py-2 border border-mocha-medium rounded">
                             Back to Cart
                         </button>
                         <button type="button" id="proceed-to-payment"
-                            class="px-4 py-2 bg-mocha-burgundy text-white rounded">
+                            class="w-full md:w-auto px-4 py-2 bg-mocha-burgundy text-white rounded">
                             Proceed to Payment
                         </button>
                     </div>
@@ -372,15 +526,15 @@
 
         </section>
         <!-- ===== PAYMENT SECTION ===== -->
-        <section id="payment-section" class="checkout-section container mx-auto px-4 md:px-8 py-16">
-            <div class="max-w-xl mx-auto bg-white p-8 rounded-lg shadow-md text-center">
-                <h2 class="font-playfair text-2xl font-bold mb-6">Transfer Payment</h2>
-                <img src="https://via.placeholder.com/150x50?text=Bank+Logo" alt="Bank Logo" class="mx-auto mb-4">
-                <p class="text-mocha-medium text-lg mb-2">Bank Mandiri</p>
-                <p class="text-xl font-semibold tracking-widest mb-6">1234567890</p>
+        <section id="payment-section" class="checkout-section container mx-auto px-4 md:px-8 py-8 md:py-16">
+            <div class="max-w-xl mx-auto bg-white p-4 md:p-8 rounded-lg shadow-md text-center">
+                <h2 class="font-playfair text-xl md:text-2xl font-bold mb-4 md:mb-6">Transfer Payment</h2>
+                <img src="WebsiteStockImage/bca.png" alt="Bank Logo" class="mx-auto mb-4">
+                <p class="text-mocha-medium text-lg mb-2">Bank BCA</p>
+                <p class="text-xl font-semibold tracking-widest mb-6">0374271683</p>
 
                 <!-- breakdown table -->
-                <table class="w-full text-left mb-8">
+                <table class="w-full text-left mb-6 md:mb-8 text-sm md:text-base">
                     <tbody>
                         <tr>
                             <td class="py-1">Subtotal</td>
@@ -398,16 +552,18 @@
                 </table>
 
                 <button id="continue-to-confirmation" type="button"
-                    class="mt-6 bg-mocha-burgundy text-white px-6 py-3 rounded-md hover:bg-opacity-90 transition">
+                    class="w-full md:w-auto mt-4 md:mt-6 bg-mocha-burgundy text-white px-4 md:px-6 py-2 md:py-3 rounded-md hover:bg-opacity-90 transition">
                     Saya Sudah Transfer
                 </button>
             </div>
         </section>
 
-        <section id="confirmation-section" class="checkout-section container mx-auto px-4 md:px-8 py-16">
-            <div class="max-w-xl mx-auto bg-white p-8 rounded-lg shadow-md text-center">
-                <h2 class="font-playfair text-2xl font-bold mb-4">Upload Bukti Pembayaran</h2>
-                <p class="text-mocha-medium mb-6">Silakan unggah bukti transfer Anda untuk memproses pesanan.</p>
+        <section id="confirmation-section" class="checkout-section container mx-auto px-4 md:px-8 py-8 md:py-16">
+            <div class="max-w-xl mx-auto bg-white p-4 md:p-8 rounded-lg shadow-md text-center">
+                <h2 class="font-playfair text-xl md:text-2xl font-bold mb-3 md:mb-4">Upload Bukti Pembayaran</h2>
+                <p class="text-mocha-medium text-sm md:text-base mb-4 md:mb-6">
+                    Silakan unggah bukti transfer Anda untuk memproses pesanan.
+                </p>
                 <input type="file" id="photo" name="photo" accept="image/*,.pdf"
                     class="block w-full text-sm text-mocha-dark file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-mocha-cream file:text-mocha-dark hover:file:bg-mocha-light mb-4"
                     required>
@@ -416,8 +572,9 @@
                     <img id="preview-image" class="mx-auto max-h-60 border rounded shadow-md" alt="Preview">
                 </div>
                 <button type="submit"
-                    class="bg-mocha-burgundy text-white px-6 py-2 rounded-md hover:bg-opacity-90 transition">Kirim
-                    Bukti Pembayaran</button>
+                    class="w-full md:w-auto bg-mocha-burgundy text-white px-4 md:px-6 py-2 rounded-md hover:bg-opacity-90 transition">
+                    Kirim Bukti Pembayaran
+                </button>
             </div>
         </section>
         </main>
@@ -572,6 +729,15 @@
         });
     </script>
     <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuToggle = document.getElementById('menu-toggle');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            menuToggle.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+        });
+
         //transfer button
         document.getElementById("continue-to-confirmation")?.addEventListener("click", () => {
             showSection("confirmation");
@@ -616,7 +782,8 @@
             document.querySelectorAll('#cart-items .item-qty').forEach(input => {
                 badgeCount += Math.max(0, parseInt(input.value, 10) || 0);
             });
-            document.querySelectorAll('.cart-count').forEach(el => el.textContent = badgeCount);
+            document.getElementById('cart-count1').textContent = badgeCount;
+            document.getElementById('cart-count2').textContent = badgeCount;
 
             // line totals & subtotal
             let subtotal = 0;
@@ -708,10 +875,10 @@
                 .replace(/[^\d]/g, '')
             );
 
-            if (!code){
+            if (!code) {
                 resetDiscountUI(subtotal);
                 return showToast('Please enter a discount code.');
-            } 
+            }
 
             try {
                 const res = await fetch('/cart/discount', {

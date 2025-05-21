@@ -9,12 +9,12 @@ use Illuminate\Support\Facades\Mail;
 // Controllers
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Auth\VerifyNoticeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\FlowerController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderProductController;
-use App\Http\Controllers\SuggestionController;
 use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\PackagingController;
@@ -22,7 +22,10 @@ use App\Http\Controllers\PackagingController;
 // AUTHENTICATION & PASSWORD RESET
 // ────────────────────────────────────────────────────────────────
 Auth::routes(['verify' => true]);
-
+// Disable the built-in auth-protected one by redefining it:
+Route::get('/email/verify', VerifyNoticeController::class)
+    // no ->middleware('auth') here
+    ->name('verification.notice');
 // ────────────────────────────────────────────────────────────────
 // PUBLIC ROUTES (no auth required)
 // ────────────────────────────────────────────────────────────────
@@ -134,30 +137,8 @@ Route::middleware(['auth', 'verified', 'admin'])
      ->name('admin.')
      ->group(function () {
 
-          Route::get('health', function () {
-               try {
-                    $dbOk    = DB::connection()->getPdo() !== null;
-                    $queueOk = Queue::size('default') !== null;
-                    $mailOk  = true; // or ping your mailer here
-
-                    $healthy = $dbOk && $queueOk && $mailOk;
-               } catch (\Exception $e) {
-                    $healthy = false;
-                    $dbOk    = $dbOk ?? false;
-                    $queueOk = $queueOk ?? false;
-                    $mailOk  = $mailOk ?? false;
-               }
-
-               return response()->json([
-                    'healthy'   => $healthy,
-                    'checks'    => [
-                         'database' => $dbOk,
-                         'queue'    => $queueOk,
-                         'mailer'   => $mailOk,
-                    ],
-                    'timestamp' => now()->toIso8601String(),
-               ]);
-          })->name('health');
+          Route::get('health', [AdminController::class, 'health'])
+               ->name('health');
           // Dashboard
           Route::get('/', [AdminController::class, 'index'])->name('index');
           Route::patch(

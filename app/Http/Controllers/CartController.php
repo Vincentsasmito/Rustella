@@ -31,7 +31,7 @@ class CartController extends Controller
             ->get()
             ->keyBy('id');
 
-        // 3) Build your detailedCart exactly as before
+        // 3) Build detailedCart exactly as before
         $detailedCart = [];
         foreach ($cart as $productId => $quantity) {
             if (isset($products[$productId])) {
@@ -41,6 +41,9 @@ class CartController extends Controller
                 ];
             }
         }
+
+        //Get Cart total items
+        $cartCount = array_sum(array_column($detailedCart, 'quantity'));
 
         // 4) Pull in delivery options
         $deliveries = Delivery::all();
@@ -52,6 +55,7 @@ class CartController extends Controller
             'cart'       => $detailedCart,
             'deliveries' => $deliveries,
             'user'       => $user,
+            'cartCount'  => $cartCount,
         ]);
     }
 

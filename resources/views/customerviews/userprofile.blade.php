@@ -146,6 +146,299 @@
         text-align: center;
         display: inline-block;
     }
+
+    /* Responsive Styles */
+    @media (max-width: 768px) {
+
+        /* Profile Section */
+        .profile-header {
+            padding: 1rem;
+        }
+
+        .w-24 {
+            width: 5rem;
+            height: 5rem;
+        }
+
+        /* Order List */
+        .order-card {
+            padding: 1rem;
+        }
+
+        .flex-wrap {
+            gap: 0.5rem;
+        }
+
+        /* Modal Styles */
+        #order-detail-modal .flex {
+            padding: 0.5rem;
+        }
+
+        #order-detail-modal .max-w-4xl {
+            width: 95%;
+            margin: 1rem auto;
+            max-height: 90vh;
+        }
+
+        #order-detail-modal .p-6 {
+            padding: 1rem;
+        }
+
+        #order-detail-modal .grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        /* Table Responsiveness */
+        .overflow-x-auto {
+            margin: 0 -1rem;
+            padding: 0 1rem;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            font-size: 0.875rem;
+        }
+
+        td,
+        th {
+            padding: 0.5rem;
+        }
+
+        /* Form Elements */
+        input,
+        select,
+        textarea {
+            font-size: 16px !important;
+            padding: 0.75rem !important;
+        }
+
+        .form-input {
+            width: 100%;
+        }
+
+        /* Buttons */
+        button {
+            padding: 0.75rem 1rem;
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Status Badges */
+        [class^="badge-"] {
+            width: auto;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+    }
+
+    /* Small phones */
+    @media (max-width: 390px) {
+
+        /* Profile Header */
+        .profile-header {
+            text-align: center;
+        }
+
+        .w-24 {
+            width: 4rem;
+            height: 4rem;
+            margin: 0 auto;
+        }
+
+        /* Typography */
+        .text-2xl {
+            font-size: 1.25rem;
+        }
+
+        .text-xl {
+            font-size: 1.125rem;
+        }
+
+        /* Modal Content */
+        #order-detail-modal .p-4 {
+            padding: 0.75rem;
+        }
+
+        #order-detail-modal img {
+            width: 2.5rem;
+            height: 2.5rem;
+        }
+
+        /* Table */
+        table {
+            font-size: 0.75rem;
+        }
+
+        td,
+        th {
+            padding: 0.375rem;
+        }
+    }
+
+    /* Touch Device Optimizations */
+    @media (hover: none) {
+
+        button,
+        .close-modal,
+        .details-btn {
+            min-height: 44px;
+        }
+
+        select {
+            height: 44px;
+        }
+
+        input[type="file"] {
+            padding: 1rem;
+        }
+
+        .overflow-x-auto {
+            cursor: grab;
+        }
+    }
+
+    /* Order Detail Modal Specific */
+    #order-detail-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        overflow-y: auto;
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    #order-detail-modal .modal-content {
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        margin: 0.5rem;
+        position: relative;
+        width: 100%;
+        max-width: 56rem;
+        max-height: 98vh;
+        overflow-y: auto;
+    }
+
+    /* Mobile-first Modal Styles */
+    @media (max-width: 768px) {
+        #order-detail-modal .modal-content {
+            margin: 0;
+            border-radius: 0;
+            height: 100vh;
+            max-height: 100vh;
+        }
+
+        #order-detail-modal .overflow-y-auto {
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Header */
+        #order-detail-modal .flex.justify-between {
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+            padding: 1rem;
+            border-bottom: 1px solid #D1C7BD;
+        }
+
+        /* Close Button */
+        #order-detail-modal .close-modal {
+            padding: 0.75rem;
+            font-size: 1.5rem;
+        }
+
+        /* Body Content */
+        #order-detail-modal .p-6 {
+            padding: 1rem;
+        }
+
+        /* Grid Layout */
+        #order-detail-modal .grid.grid-cols-1 {
+            gap: 1rem;
+        }
+
+        /* Info Boxes */
+        #order-detail-modal .bg-mocha-cream\/20 {
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        /* Table Styles */
+        #order-detail-modal table {
+            display: block;
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #order-detail-modal th,
+        #order-detail-modal td {
+            white-space: nowrap;
+            padding: 0.5rem;
+        }
+
+        /* Product Images */
+        #order-detail-modal .w-12 {
+            width: 2.5rem;
+            height: 2.5rem;
+        }
+
+        /* Review Form */
+        #order-detail-modal .review-form-container {
+            padding: 0.75rem;
+            margin: 0.75rem 0;
+        }
+
+        #order-detail-modal textarea {
+            min-height: 60px;
+        }
+
+        #order-detail-modal select,
+        #order-detail-modal textarea {
+            font-size: 16px;
+        }
+    }
+
+    /* Extra Small Devices */
+    @media (max-width: 390px) {
+        #order-detail-modal .text-lg {
+            font-size: 1rem;
+        }
+
+        #order-detail-modal .text-sm {
+            font-size: 0.75rem;
+        }
+
+        #order-detail-modal th,
+        #order-detail-modal td {
+            padding: 0.375rem;
+        }
+
+        #order-detail-modal .w-12 {
+            width: 2rem;
+            height: 2rem;
+        }
+
+        #order-detail-modal button {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+        }
+    }
+
+    /* Touch Device Optimizations */
+    @media (hover: none) {
+
+        #order-detail-modal button,
+        #order-detail-modal .close-modal {
+            min-height: 44px;
+            min-width: 44px;
+        }
+
+        #order-detail-modal select {
+            height: 44px;
+        }
+    }
 </style>
 </head>
 
@@ -157,8 +450,9 @@
 
                 <!-- 1) Logo / Site Name on the left -->
                 <div class="flex items-center space-x-2">
-                    <img src="{{ asset('/WebsiteStockImage/Rustella.png') }}" alt="Rustella Logo" class="h-8 w-auto">
-                    <a href="home" class="font-playfair text-2xl font-bold text-mocha-dark">
+                    <a href="home" class="hidden md:flex font-playfair text-2xl font-bold text-mocha-dark flex-wrap">
+                        <img src="{{ asset('WebsiteStockImage/rustellalogoplain.png') }}" alt="Rustella Logo"
+                            class="h-8 w-auto">
                         <span class="inline-block hover:scale-105 transition-transform duration-300">R</span>
                         <span class="inline-block hover:scale-105 transition-transform duration-300">u</span>
                         <span class="inline-block hover:scale-105 transition-transform duration-300">s</span>
@@ -186,7 +480,18 @@
                         <span
                             class="inline-block text-mocha-burgundy hover:scale-105 transition-transform duration-300">y</span>
                     </a>
+                    <!-- Simple logo (shown below md) -->
+                    <a href="#home"
+                        class="inline-flex md:hidden items-center space-x-2 font-playfair text-2xl font-bold text-mocha-dark whitespace-nowrap">
+                        <img src="{{ asset('WebsiteStockImage/rustellalogoplain.png') }}" alt="Rustella Logo"
+                            class="h-8 w-auto" />
+                        <span>
+                            Rustella <span class="text-mocha-burgundy">Floristry</span>
+                        </span>
+                    </a>
                 </div>
+
+
 
                 <!-- 2) Nav items centered -->
                 <div class="hidden md:flex flex-1 justify-center space-x-8">
@@ -200,6 +505,11 @@
 
                 <!-- 3) Icons on the right -->
                 <div class="hidden md:flex items-center space-x-6">
+                    @auth
+                        <span class="text-mocha-medium font-medium">
+                            Welcome back,&nbsp;{{ Auth::user()->name }}!
+                        </span>
+                    @endauth
                     <a href="profile" class="text-mocha-burgundy hover:text-mocha-dark transition-colors duration-300">
                         <i class="fas fa-user text-xl"></i>
                     </a>
@@ -211,14 +521,9 @@
                             {{ $cartCount }}
                         </span>
                     </a>
-                    @auth
-                        <span class="text-mocha-medium font-medium">
-                            Welcome back,&nbsp;{{ Auth::user()->name }}!
-                        </span>
-                    @endauth
                 </div>
 
-                <!-- Mobile Menu Button -->
+                <!-- Mobile Menu Toggle -->
                 <div class="md:hidden">
                     <button id="menu-toggle" class="text-mocha-dark focus:outline-none">
                         <i class="fas fa-bars text-xl"></i>
@@ -594,11 +899,12 @@
                         class="bg-white rounded-lg shadow-lg w-full max-w-4xl mx-auto
              max-h-[90vh] flex flex-col overflow-hidden">
                         <!-- Header -->
-                        <div class="flex justify-between items-center p-4 border-b">
+                        <div class="flex justify-between items-center p-4 border-b w-full">
                             <h3 class="text-lg font-semibold">
                                 Order <span id="modal-order-id"></span>
                             </h3>
-                            <button class="close-modal text-mocha-dark hover:text-mocha-burgundy">
+                            <button type="button"
+                                class="close-modal ml-auto flex justify-end items-center w-8 h-8 p-0 text-mocha-dark hover:text-mocha-burgundy">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>

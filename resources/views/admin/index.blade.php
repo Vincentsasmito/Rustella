@@ -2628,6 +2628,7 @@
             async function checkHealth() {
                 const dot = document.getElementById('sys-dot');
                 const wrap = document.getElementById('sys-status');
+                 if (!dot || !wrap) return;  // not index.blade.php, so skip ~ ada issue entah kenapa suka nongol @ first login of the day
                 try {
                     const res = await fetch('{{ route('admin.health') }}', {
                         credentials: 'same-origin'

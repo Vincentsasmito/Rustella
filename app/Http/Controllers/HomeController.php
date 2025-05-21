@@ -62,7 +62,6 @@ class HomeController extends Controller
             ->limit(10)
             ->get();
 
-
         return view('customerviews.home', compact('products', 'top3product', 'quantities', 'groupedProducts', 'testimonials'));
     }
 
