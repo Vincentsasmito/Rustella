@@ -427,7 +427,7 @@
                 </a>
                 <a href="#contact"
                     class="text-mocha-dark hover:text-mocha-burgundy font-medium relative after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-0 after:bg-mocha-burgundy after:transition-all after:duration-300 hover:after:w-full">
-                    Suggestion
+                    FAQ & Suggestions
                 </a>
             </div>
 
@@ -465,13 +465,15 @@
                     Sellers</a>
                 <a href="#catalog" class="block text-mocha-dark hover:text-mocha-burgundy font-medium">Catalog</a>
                 <a href="#about" class="block text-mocha-dark hover:text-mocha-burgundy font-medium">About Us</a>
-                <a href="#contact" class="block text-mocha-dark hover:text-mocha-burgundy font-medium">Suggestion</a>
+                <a href="#contact" class="block text-mocha-dark hover:text-mocha-burgundy font-medium">FAQ &
+                    Suggestions</a>
                 <a href="profile" class="block text-mocha-dark hover:text-mocha-burgundy font-medium">
                     <i class="fas fa-user mr-2"></i> My Profile
                 </a>
                 <a href="{{ route('cart.index') }}" class="block text-mocha-dark hover:text-mocha-burgundy font-medium">
                     <i class="fas fa-shopping-cart mr-2"></i> Cart
-                    <span id="cart-badge2" class="bg-mocha-burgundy text-white rounded-full px-2 py-1 text-xs">{{ $initialCount }}</span>
+                    <span id="cart-badge2"
+                        class="bg-mocha-burgundy text-white rounded-full px-2 py-1 text-xs">{{ $initialCount }}</span>
                 </a>
             </div>
         </div>
@@ -593,6 +595,10 @@
                             ),
                             JSON_HEX_APOS | JSON_HEX_QUOT,
                         );
+
+                        // Calculate the average and round it (0–5)
+                        $avgRating = (int) round($product->limitedReviews->avg('rating'));
+                        $reviewCount = $product->limitedReviews->count();
                     @endphp
                     <div class="card-clickable bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition cursor-pointer"
                         data-aos="fade-up" data-aos-delay="100" data-id="{{ $product->id }}"
@@ -633,8 +639,14 @@
                             </div>
 
                             <div class="mt-3 text-amber-500">
-                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i><i class="fas fa-star"></i>
+                                {{-- Dynamic stars --}}
+                                @for ($i = 1; $i <= 5; $i++)
+                                    @if ($i <= $avgRating)
+                                        <i class="fas fa-star"></i>
+                                    @else
+                                        <i class="far fa-star"></i>
+                                    @endif
+                                @endfor
                                 <span class="text-mocha-medium ml-1">
                                     ({{ $quantities[$product->id] ?? 0 }} sold)
                                 </span>
@@ -1020,7 +1032,8 @@
                         <a href="#" class="text-mocha-light hover:text-white transition">
                             <i class="fab fa-facebook-f"></i>
                         </a>
-                        <a href="#" class="text-mocha-light hover:text-white transition">
+                        <a href="https://www.instagram.com/rustellafloristry/"
+                            class="text-mocha-light hover:text-white transition">
                             <i class="fab fa-instagram"></i>
                         </a>
                         <a href="#" class="text-mocha-light hover:text-white transition">
@@ -1045,11 +1058,14 @@
                     <ul class="space-y-2">
                         <li class="flex items-start">
                             <i class="fas fa-map-marker-alt mt-1 mr-2 text-mocha-light"></i>
-                            <span>Karawaci,Tangerang</span>
+                            <span>Karawaci, Tangerang</span>
                         </li>
                         <li class="flex items-start">
-                            <i class="fas fa-phone mt-1 mr-2 text-mocha-light"></i>
-                            <span>+62</span>
+                            <i class="fab fa-whatsapp mt-1 mr-2 text-mocha-light"></i>
+                            <a href="https://wa.me/6282210672099" target="_blank" rel="noopener noreferrer"
+                                class="hover:underline">
+                                +62 822-1067-2099
+                            </a>
                         </li>
                         <li class="flex items-start">
                             <i class="fas fa-envelope mt-1 mr-2 text-mocha-light"></i>
@@ -1245,7 +1261,7 @@
                     // success path
                     document.getElementById('cart-badge').textContent = payload.count;
                     document.getElementById('cart-badge2').textContent = payload.count;
-                    
+
                     // quick feedback
                     const prev = btn.textContent;
                     btn.textContent = 'Added!';

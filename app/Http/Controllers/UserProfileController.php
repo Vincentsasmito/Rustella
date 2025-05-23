@@ -19,7 +19,9 @@ class UserProfileController extends Controller
 
         // badges in header
         $cartCount       = array_sum(session('cart', []));
-        $suggestionCount = Suggestion::where('user_id', $user->id)->count();
+        $suggestionCount = Suggestion::where('user_id', $user->id)
+            ->where('type', 'product')
+            ->count();
 
         // build & paginate
         $q = Order::with(['orderProducts.product', 'discount', 'delivery', 'user'])
@@ -45,7 +47,7 @@ class UserProfileController extends Controller
                     : $rawDisc;
             }
 
-            $deliveryFee = optional($order->delivery)->fee ?? 0;
+            $deliveryFee = $order->delivery_fee ?? 0;
             $grandTotal  = $subtotal - $discountAmount + $deliveryFee;
 
             // Attach for Blade display
@@ -239,7 +241,7 @@ class UserProfileController extends Controller
 
     public function storeReviews(Request $request)
     {
-        
+
         // 1) Validate the arrays
         $validated = $request->validate([
             'order_id'      => 'required|exists:orders,id',

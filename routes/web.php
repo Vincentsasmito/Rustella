@@ -2,58 +2,38 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Queue;
-use Illuminate\Support\Facades\Mail;
+
 
 // Controllers
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Auth\VerifyNoticeController;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\FlowerController;
 use App\Http\Controllers\CartController;
-use App\Http\Controllers\OrderController;
-use App\Http\Controllers\OrderProductController;
-use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\UserProfileController;
-use App\Http\Controllers\PackagingController;
 // ────────────────────────────────────────────────────────────────
 // AUTHENTICATION & PASSWORD RESET
 // ────────────────────────────────────────────────────────────────
+//   ||Login, Register, Password Reset, Email Verification||
 Auth::routes(['verify' => true]);
-// Disable the built-in auth-protected one by redefining it:
+//   ||Disable the built-in auth-protected route by redefining it||
 Route::get('/email/verify', VerifyNoticeController::class)
-    // no ->middleware('auth') here
-    ->name('verification.notice');
+     // no ->middleware('auth') here
+     ->name('verification.notice');
 // ────────────────────────────────────────────────────────────────
 // PUBLIC ROUTES (no auth required)
 // ────────────────────────────────────────────────────────────────
-//HOME PAGE
+//   ||Post Site Suggestions||
 Route::post('/suggestions', [HomeController::class, 'storeSuggestion'])
      ->name('site.suggestions');
+//   ||Home page @ customerviews/home.blade.php||
 Route::get('home', [HomeController::class, 'index'])->name('home');
+//   ||Redirect to home||
+Route::get('/', function () {
+     return redirect()->route('home');
+});
 
 
-
-Route::get('/', fn() => view('welcome'));
-Route::get('homepage', fn() => view('customerviews.homepage'))
-     ->name('homepage');
-
-Route::get('catalogue', [ProductController::class, 'customerCatalogue'])
-     ->name('products.catalogue');
-
-// Public flowers & products
-Route::resource('flowers', FlowerController::class)
-     ->only(['index', 'show']);
-Route::resource('products', ProductController::class)
-     ->only(['index', 'show']);
-
-// Orders & Cart (public)
-Route::resource('orders', OrderController::class)
-     ->only(['index', 'create', 'show', 'store', 'edit', 'destroy']);
-
-// Only match numeric product IDs:
+//   ||Add to cart @ home.blade.php, accessible by all.||
 Route::post('cart/{product}',  [CartController::class, 'add'])
      ->whereNumber('product')
      ->name('cart.add');
@@ -62,144 +42,135 @@ Route::post('cart/{product}',  [CartController::class, 'add'])
 // ────────────────────────────────────────────────────────────────
 // AUTHENTICATED & VERIFIED USERS
 // ────────────────────────────────────────────────────────────────
-
 Route::middleware(['auth', 'verified'])->group(function () {
 
 
-     // 1) Checkout must come first
+     //   ||Checkout Route, POST Request to Create Order, must be first||
      Route::post('cart/checkout', [CartController::class, 'storeOrder'])
           ->name('cart.checkout');
 
-     // 2) Discount must come next
+     //   ||Check Discount Route||
      Route::post('cart/discount', [CartController::class, 'discountIfExist'])
           ->name('cart.discount');
 
-     // 3) Then the wildcard for add/update/remove
+     //   ||Get Cart to display in cart.blade.php||
      Route::get('cart',            [CartController::class, 'index'])->name('cart.index');
 
 
-
+     //   ||Update Cart, remove product from cart||
      Route::patch('cart/{product}',  [CartController::class, 'update'])
           ->whereNumber('product');
-
      Route::delete('cart/{product}',  [CartController::class, 'remove'])
           ->whereNumber('product');
-     // Nested Order → OrderProduct
-     Route::prefix('orders/{order}')
-          ->name('orders.')
-          ->group(function () {
-               Route::post('products',                 [OrderProductController::class, 'store'])->name('products.store');
-               Route::patch('products/{orderProduct}', [OrderProductController::class, 'update'])->name('products.update');
-               Route::delete('products/{orderProduct}', [OrderProductController::class, 'destroy'])->name('products.destroy');
-          });
 
+
+     //   ||Show Profile Page @ customerviews/userprofile.blade.php||
      Route::get('/profile', [UserProfileController::class, 'index'])
           ->name('profile.index');
      Route::put('/profile', [UserProfileController::class, 'updateProfile'])
           ->name('profile.update');
      Route::put('/profile/password', [UserProfileController::class, 'updatePassword'])
           ->name('profile.password.update');
-     // Upload payment screenshot
+     //   ||Upload/Edit payment proof at userprofile.blade.php||
      Route::post(
           '/orders/{order}/upload-payment',
           [UserProfileController::class, 'updatePayment']
      )->name('orders.uploadPayment');
+     //   ||Create a new review for completed order without review||
      Route::post(
           '/profile/store-reviews',
           [UserProfileController::class, 'storeReviews']
      )->name('profile.storeReviews');
-
-     // User transactions, suggestions, discounts, product management…
-     Route::get('orders/usertransactions', [OrderController::class, 'getTransactions'])
-          ->name('orders.getTransactions');
-     Route::prefix('discounts')->name('discounts.')->group(fn() => [
-          Route::get('create', [DiscountController::class, 'create'])->name('create'),
-          Route::get('index', [DiscountController::class, 'index'])->name('index'),
-          // …store, show, edit, update, destroy…
-
-     ]);
-     Route::prefix('products')->name('products.')->group(fn() => [
-          Route::get('create', [ProductController::class, 'create'])->name('create'),
-          // …store, edit, update, destroy…
-     ]);
-
-     // Flower stock (non-admin: just the “stock” form view + action)
-     Route::get('flowers/stock',           [FlowerController::class, 'stock'])->name('flowers.stock');
-     Route::post('flowers/{flower}/stock',  [FlowerController::class, 'stockupdate'])->name('flowers.stockupdate');
 });
 
 // ────────────────────────────────────────────────────────────────
 // ADMIN-ONLY (auth + verified + admin middleware)
 // ────────────────────────────────────────────────────────────────
-
+// Why are the Update routes deprecated? Because I reused the same modal to add/edit, so we convert the modal post/put values using JS.
 Route::middleware(['auth', 'verified', 'admin'])
      ->prefix('admin')
      ->name('admin.')
      ->group(function () {
 
+          //   ||Check System Health @ admin/index.blade.php||
           Route::get('health', [AdminController::class, 'health'])
                ->name('health');
-          // Dashboard
+          // ─── Admin Dashboard Sub/Main-page ─────────────────────────────     
+          //   ||Get admin.index.blade.php||
           Route::get('/', [AdminController::class, 'index'])->name('index');
+          //   ||Update Orders->Order-Details->Order_Progress @ index.blade.php||
           Route::patch(
                'orders/{order}/status',
                [AdminController::class, 'updateOrderStatus']
           )->name('orders.updateStatus');
 
           // ─── Admin Flowers Subpage ─────────────────────────────
-          // List & show the Flowers subpage inside the dashboard
+          //   ||Get flowers data for flowers subpage @admin.index.blade.php|| DEPRECATED -> Data handling done in index function @ AdminController
           Route::get('flowers',                 [AdminController::class, 'flowers'])
                ->name('flowers.index');
-          // Create a new flower
+          //   ||Create a new flower||
           Route::post('flowers',                 [AdminController::class, 'storeFlower'])
                ->name('flowers.store');
-          // Update flower details
+          //   ||Update a flower||
           Route::put('flowers/{flower}',        [AdminController::class, 'updateFlower'])
                ->name('flowers.update');
-          // Add stock to an existing flower
+          //   ||Update a flower's stock||
           Route::post('flowers/{flower}/stock',  [AdminController::class, 'stockUpdateFlower'])
                ->name('flowers.stockupdate');
-          // Delete a flower
+          //   ||Delete a flower||
           Route::delete('flowers/{flower}',        [AdminController::class, 'destroyFlower'])
                ->name('flowers.destroy');
 
-
           // ─── Admin Packagings Subpage ─────────────────────────────
+          //   ||Get packagings data for packagings subpage @admin.index.blade.php|| DEPRECATED -> Data handling done in index function @ AdminController
           Route::get('packagings',            [AdminController::class, 'packagings'])->name('packagings.index');
+          //   ||Create a new packaging||
           Route::post('packagings',            [AdminController::class, 'storePackaging'])->name('packagings.store');
+          //   ||Update a packaging||
           Route::put('packagings/{packaging}', [AdminController::class, 'updatePackaging'])->name('packagings.update');
+          //   ||Delete a packaging||
           Route::delete('packagings/{packaging}', [AdminController::class, 'destroyPackaging'])->name('packagings.destroy');
 
           // ─── Admin Discounts Subpage ───────────────────────────
-          // List & show the Discounts subpage inside the dashboard
+          //   ||Get discounts data for discounts subpage @admin.index.blade.php|| DEPRECATED -> Data handling done in index function @ AdminController
           Route::get('discounts', [AdminController::class, 'discounts'])
                ->name('discounts.index');
-          // Create a new discount
+          //   ||Create a discount||
           Route::post('discounts', [AdminController::class, 'storeDiscount'])
                ->name('discounts.store');
-          // Update discount details
+          //   ||Update a discount||
           Route::put('discounts/{discount}', [AdminController::class, 'updateDiscount'])
                ->name('discounts.update');
-          // Delete a discount
+          //   ||Delete a discount||
           Route::delete('discounts/{discount}', [AdminController::class, 'destroyDiscount'])
                ->name('discounts.destroy');
 
           // ─── Admin Suggestions Subpage ───────────────────────────
+          //   ||Delete a suggestion||
           Route::delete('suggestions/{suggestion}', [AdminController::class, 'destroySuggestion'])
                ->name('suggestions.destroy');
 
           // ─── Admin Products Subpage ───────────────────────────
+          //   ||Get products data for products subpage @admin.index.blade.php|| DEPRECATED -> Data handling done in index function @ AdminController
           Route::get('products/{product}', [AdminController::class, 'showProduct'])
                ->name('products.showJson');
-          // Create new product
+          //   ||Create a new product||
           Route::post('products', [AdminController::class, 'storeProduct'])
                ->name('products.store');
 
-          // Update existing product
+          //   ||Update a product||
           Route::put('products/{product}', [AdminController::class, 'updateProduct'])
                ->name('products.update');
 
-          //Delete product
+          //   ||Delete a product||
           Route::delete('products/{product}', [AdminController::class, 'destroyProduct'])
                ->name('products.destroy');
+
+          //   ||Update a delivery|| 
+         Route::put('deliveries/{delivery}/fee', [AdminController::class, 'updateDeliveryFee'])
+              ->name('deliveries.updateFee');
+
+         //    ||Delete a delivery|| 
+         Route::delete('deliveries/{delivery}', [AdminController::class, 'destroyDelivery'])
+              ->name('deliveries.destroy');
      });

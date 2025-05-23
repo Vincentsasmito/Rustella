@@ -17,7 +17,7 @@ return new class extends Migration
                   ->cascadeOnDelete();
             $table->foreignId('product_id')
                   ->constrained('products')
-                  ->cascadeOnDelete();
+                  ->restrictOnDelete();
             $table->unsignedInteger('quantity');
             $table->unsignedInteger('price');
         });

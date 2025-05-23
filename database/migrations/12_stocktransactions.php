@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('stock_transactions', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('order_id');
+            $table->unsignedBigInteger('order_id')->nullable();
             $table->unsignedBigInteger('flower_id')->nullable();
             $table->string('flower_name')->nullable();
             $table->unsignedBigInteger('packaging_id')->nullable();

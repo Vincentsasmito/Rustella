@@ -18,17 +18,12 @@ return new class extends Migration
             $table->string('recipient_address', 100);
             $table->dateTime('delivery_time');
             $table->string('progress', 100);
-            $table->unsignedInteger('cost');
-            $table->foreignId('deliveries_id');
-            $table->text('payment_url');
-            //constrained->nullOnDelete ensures that:
-            //1. constrained = Current Foreign Key is held, to be modified
-            //2. nullOnDelete = If FK's original row is deleted, the FK will be set to null.
+            $table->unsignedInteger('cost')->nullable();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('discount_id')
-                  ->nullable()
-                  ->constrained('discounts')
-                  ->nullOnDelete();
+            $table->foreignId('discount_id')->nullable()->constrained('discounts')->nullOnDelete();
+            $table->foreignId('deliveries_id')->constrained('deliveries')->restrictOnDelete();
+            $table->string('payment_url', 255)->nullable();
+            $table->integer('delivery_fee')->default(0);
             $table->timestamps();
         });
     }

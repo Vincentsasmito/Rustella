@@ -23,6 +23,7 @@ class AdminMiddleware
             return $next($request);
         }
 
-        abort(403, 'Unauthorized.');
+        return redirect()->route('home')
+            ->with('error', 'You do not have access to that page.');
     }
 }

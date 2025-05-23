@@ -458,38 +458,40 @@
                         <div>
                             <label for="sender_email" class="block text-sm font-medium mb-1">Your Email *</label>
                             <input type="email" name="sender_email" id="sender_email"
-                                value="{{ old('sender_email', $user->email) }}" readonly
+                                value="{{ old('sender_email', $user->email) }}" readonly maxlength="255"
                                 class="w-full border border-mocha-light rounded px-3 py-2 bg-gray-100 cursor-not-allowed" />
                         </div>
                         <div>
                             <label for="sender_phone" class="block text-sm font-medium mb-1">Your Phone *</label>
-                            <input type="tel" name="sender_phone" id="sender_phone" required
+                            <input type="tel" name="sender_phone" id="sender_phone" required maxlength="30"
                                 class="w-full border border-mocha-light rounded px-3 py-2" />
                         </div>
                         <div class="md:col-span-2">
                             <label for="sender_note" class="block text-sm font-medium mb-1">Note for Recipient</label>
-                            <textarea name="sender_note" id="sender_note" class="w-full border border-mocha-light rounded px-3 py-2"></textarea>
+                            <textarea name="sender_note" id="sender_note" maxlength="300"
+                                class="w-full border border-mocha-light rounded px-3 py-2"></textarea>
                         </div>
                         <div>
                             <label for="recipient_name" class="block text-sm font-medium mb-1">Recipient Name
                                 *</label>
-                            <input type="text" name="recipient_name" id="recipient_name" required
+                            <input type="text" name="recipient_name" id="recipient_name" required maxlength="60"
                                 class="w-full border border-mocha-light rounded px-3 py-2" />
                         </div>
                         <div>
                             <label for="recipient_phone" class="block text-sm font-medium mb-1">Recipient Phone
                                 *</label>
                             <input type="tel" name="recipient_phone" id="recipient_phone" required
-                                class="w-full border border-mocha-light rounded px-3 py-2" />
+                                maxlength="30" class="w-full border border-mocha-light rounded px-3 py-2" />
                         </div>
                         <div class="md:col-span-2">
                             <label for="recipient_address" class="block text-sm font-medium mb-1">Delivery Address
                                 *</label>
                             <input type="text" name="recipient_address" id="recipient_address" required
-                                class="w-full border border-mocha-light rounded px-3 py-2" />
+                                maxlength="100" class="w-full border border-mocha-light rounded px-3 py-2" />
                         </div>
                         <div>
-                            <label for="deliveries_id" class="block text-sm font-medium mb-1">City / Subdistrict *
+                            <label for="deliveries_id" class="block text-sm font-medium mb-1">
+                                City / Subdistrict *
                             </label>
                             <select name="deliveries_id" id="deliveries_id" required
                                 class="w-full border border-mocha-light rounded px-3 py-2">
@@ -502,8 +504,9 @@
                             </select>
                         </div>
                         <div>
-                            <label for="delivery_time" class="block text-sm font-medium mb-1">Delivery Date & Time
-                                *</label>
+                            <label for="delivery_time" class="block text-sm font-medium mb-1">
+                                Delivery Date & Time *
+                            </label>
                             <input type="datetime-local" name="delivery_time" id="delivery_time" required
                                 class="w-full border border-mocha-light rounded px-3 py-2" />
                         </div>
@@ -530,7 +533,7 @@
             <div class="max-w-xl mx-auto bg-white p-4 md:p-8 rounded-lg shadow-md text-center">
                 <h2 class="font-playfair text-xl md:text-2xl font-bold mb-4 md:mb-6">Transfer Payment</h2>
                 <img src="WebsiteStockImage/bca.png" alt="Bank Logo" class="mx-auto mb-4">
-                <p class="text-mocha-medium text-lg mb-2">Bank BCA</p>
+                <p class="text-mocha-medium text-lg mb-2">Bank BCA | Vania Evangeline Widarta</p>
                 <p class="text-xl font-semibold tracking-widest mb-6">0374271683</p>
 
                 <!-- breakdown table -->
@@ -553,18 +556,18 @@
 
                 <button id="continue-to-confirmation" type="button"
                     class="w-full md:w-auto mt-4 md:mt-6 bg-mocha-burgundy text-white px-4 md:px-6 py-2 md:py-3 rounded-md hover:bg-opacity-90 transition">
-                    Saya Sudah Transfer
+                    I’ve Transferred Funds
                 </button>
             </div>
         </section>
 
         <section id="confirmation-section" class="checkout-section container mx-auto px-4 md:px-8 py-8 md:py-16">
             <div class="max-w-xl mx-auto bg-white p-4 md:p-8 rounded-lg shadow-md text-center">
-                <h2 class="font-playfair text-xl md:text-2xl font-bold mb-3 md:mb-4">Upload Bukti Pembayaran</h2>
+                <h2 class="font-playfair text-xl md:text-2xl font-bold mb-3 md:mb-4">Upload Payment Receipt</h2>
                 <p class="text-mocha-medium text-sm md:text-base mb-4 md:mb-6">
-                    Silakan unggah bukti transfer Anda untuk memproses pesanan.
+                    Please Upload a clear photo of your payment receipt. Max 3 MB.
                 </p>
-                <input type="file" id="photo" name="photo" accept="image/*,.pdf"
+                <input type="file" id="photo" name="photo" accept="image/*"
                     class="block w-full text-sm text-mocha-dark file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-mocha-cream file:text-mocha-dark hover:file:bg-mocha-light mb-4"
                     required>
                 <div id="preview-container" class="mb-4 hidden">
@@ -573,7 +576,7 @@
                 </div>
                 <button type="submit"
                     class="w-full md:w-auto bg-mocha-burgundy text-white px-4 md:px-6 py-2 rounded-md hover:bg-opacity-90 transition">
-                    Kirim Bukti Pembayaran
+                    Upload Receipt & Create Order
                 </button>
             </div>
         </section>
@@ -601,23 +604,41 @@
         }
     </script>
     <script>
-        document.getElementById('photo').addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            const previewContainer = document.getElementById('preview-container');
-            const previewImage = document.getElementById('preview-image');
+        document
+            .getElementById('photo')
+            .addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                const previewContainer = document.getElementById('preview-container');
+                const previewImage = document.getElementById('preview-image');
 
-            if (file && file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    previewImage.src = e.target.result;
-                    previewContainer.classList.remove('hidden');
-                };
-                reader.readAsDataURL(file);
-            } else {
-                previewImage.src = '';
-                previewContainer.classList.add('hidden');
-            }
-        });
+                if (!file) {
+                    // no file selected
+                    previewContainer.classList.add('hidden');
+                    return;
+                }
+
+                // 1) size check
+                const MAX_SIZE = 3 * 1024 * 1024; // 3MB
+                if (file.size > MAX_SIZE) {
+                    showToast('File must be 3 MB or smaller.', 'error');
+                    event.target.value = ''; // clear input
+                    previewContainer.classList.add('hidden');
+                    return;
+                }
+
+                // 2) preview (only for images)
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        previewImage.src = e.target.result;
+                        previewContainer.classList.remove('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    // non-image (e.g. PDF) — hide any previous preview
+                    previewContainer.classList.add('hidden');
+                }
+            });
     </script>
     <script>
         // Toggle input radio secara manual agar tetap berfungsi saat input disembunyikan
@@ -672,6 +693,21 @@
             });
             if (!valid) {
                 showToast("Please fill out all required fields before proceeding.", "error");
+                return;
+            }
+            // 1b) Validate phone‐only fields
+            ['sender_phone', 'recipient_phone'].forEach(id => {
+                const input = document.getElementById(id);
+                const val = input.value.trim();
+                if (val && !/^\d+$/.test(val)) {
+                    valid = false;
+                    input.classList.add("border-red-500");
+                } else {
+                    input.classList.remove("border-red-500");
+                }
+            });
+            if (!valid) {
+                showToast("Please fill out phone numbers with only digits.", "error");
                 return;
             }
             // 2) DELIVERY DATE & TIME RULES

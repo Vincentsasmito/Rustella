@@ -26,6 +26,7 @@ class Order extends Model
         'user_id',
         'discount_id',
         'payment_url',
+        'delivery_fee',
     ];
 
     //If discount doesn't exist, return - to display.

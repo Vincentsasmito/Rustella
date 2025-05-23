@@ -859,25 +859,49 @@
                     <div id="tabPass" class="hidden">
                         <form action="{{ route('profile.password.update') }}" method="POST">
                             @csrf @method('PUT')
-                            <div class="mb-4">
-                                <label for="current_password" class="block text-sm font-medium text-gray-700">Current
-                                    Password</label>
+
+                            <!-- Current Password -->
+                            <div class="mb-4 relative">
+                                <label for="current_password" class="block text-sm font-medium text-gray-700">
+                                    Current Password
+                                </label>
                                 <input type="password" name="current_password" id="current_password" required
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm pr-10" />
+                                <button type="button"
+                                    class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-gray-700"
+                                    data-toggle="#current_password">
+                                    <i class="far fa-eye"></i>
+                                </button>
                             </div>
-                            <div class="mb-4">
-                                <label for="password" class="block text-sm font-medium text-gray-700">New
-                                    Password</label>
+
+                            <!-- New Password -->
+                            <div class="mb-4 relative">
+                                <label for="password" class="block text-sm font-medium text-gray-700">
+                                    New Password
+                                </label>
                                 <input type="password" name="password" id="password" required
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm pr-10" />
+                                <button type="button"
+                                    class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-gray-700"
+                                    data-toggle="#password">
+                                    <i class="far fa-eye"></i>
+                                </button>
                             </div>
-                            <div class="mb-4">
-                                <label for="password_confirmation"
-                                    class="block text-sm font-medium text-gray-700">Confirm
-                                    Password</label>
+
+                            <!-- Confirm Password -->
+                            <div class="mb-4 relative">
+                                <label for="password_confirmation" class="block text-sm font-medium text-gray-700">
+                                    Confirm Password
+                                </label>
                                 <input type="password" name="password_confirmation" id="password_confirmation"
-                                    required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                                    required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm pr-10" />
+                                <button type="button"
+                                    class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-gray-700"
+                                    data-toggle="#password_confirmation">
+                                    <i class="far fa-eye"></i>
+                                </button>
                             </div>
+
                             <div class="flex justify-end">
                                 <button type="submit"
                                     class="bg-mocha-burgundy text-white px-4 py-2 rounded-md hover:bg-opacity-90">
@@ -1156,10 +1180,10 @@
                             const revTr = document.createElement('tr');
                             revTr.className = 'border-b border-mocha-light/20';
                             revTr.innerHTML = `
-      <td colspan="5" class="px-4 py-2 bg-mocha-cream/20">
-        <p class="text-sm mb-1">
-          <span class="font-medium">Rating:</span>
-          <span class="font-semibold">${r.rating}</span>/5
+     <td colspan="5" class="px-4 py-2 bg-mocha-cream/20 whitespace-normal break-words">
+    <p class="text-sm mb-1">
+      <span class="font-medium">Rating:</span>
+      <span class="font-semibold">${r.rating}</span>/5
           <span class="text-xs text-mocha-medium ml-2">${r.date}</span>
         </p>
         <p class="text-sm">${r.message}</p>
@@ -1191,7 +1215,7 @@
         <p class="font-medium mb-2">${it.name}</p>
         <input type="hidden" name="product_id[]" value="${it.productId}">
         <label class="block text-sm mb-1">Rating:</label>
-        <select name="rating[]" class="form-input mb-2">
+        <select name="rating[]" required class="form-input mb-2">
           <option value="1">1</option>
           <option value="2">2</option>
           <option value="3">3</option>
@@ -1199,7 +1223,7 @@
           <option value="5" selected>5</option>
         </select>
         <label class="block text-sm mb-1">Comment:</label>
-        <textarea name="message[]" rows="2" class="form-input w-full"
+        <textarea name="message[]" rows="2" required class="form-input w-full"
                   placeholder="Write your review…"></textarea>
       </div>`;
                         });
@@ -1262,6 +1286,23 @@
                     set('modal-total', fmt(order.grandTotal));
 
                     document.getElementById('order-detail-modal').classList.remove('hidden');
+                });
+            });
+
+            //Toggle password visibility
+            document.querySelectorAll('button[data-toggle]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const input = document.querySelector(btn.getAttribute('data-toggle'));
+                    if (!input) return;
+
+                    // Flip type
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        btn.firstElementChild.classList.replace('fa-eye', 'fa-eye-slash');
+                    } else {
+                        input.type = 'password';
+                        btn.firstElementChild.classList.replace('fa-eye-slash', 'fa-eye');
+                    }
                 });
             });
 

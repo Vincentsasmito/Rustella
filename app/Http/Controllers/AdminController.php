@@ -16,6 +16,7 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Validation\ValidationException;
 
@@ -170,7 +171,7 @@ class AdminController extends Controller
                 }
 
                 // 3) delivery fee
-                $fee = $order->delivery->fee ?? 0;
+                $fee = $order->delivery_fee ?? 0;
 
                 // 4) attach a 'sales' attribute to each order
                 $order->sales = $subtotal - $discountAmt + $fee;
@@ -214,7 +215,7 @@ class AdminController extends Controller
                 }
 
                 // delivery fee
-                $fee = optional($order->delivery)->fee ?? 0;
+                $fee = $order->delivery_fee ?? 0;
 
                 // attach your custom fields
                 $order->subtotal        = $subtotal;
@@ -257,6 +258,24 @@ class AdminController extends Controller
         $stockLogsFI = StockTransaction::where('type', 'FI')->latest()->paginate(10, ['*'], 'fi_page');
         $stockLogsPO = StockTransaction::where('type', 'PO')->latest()->paginate(10, ['*'], 'po_page');
         $stockLogsPI = StockTransaction::where('type', 'PI')->latest()->paginate(10, ['*'], 'pi_page');
+
+        //Deliveries Subpage
+        $allDeliveries = Delivery::all();
+
+        // Group by the `city` column
+        $deliveriesBySection = $allDeliveries->groupBy('city');
+
+        // data partitioning
+        $sectionOrder = [
+            'Jakarta Pusat',
+            'Jakarta Barat',
+            'Jakarta Selatan',
+            'Jakarta Timur',
+            'Jakarta Utara',
+            'Kabupaten Tangerang',
+            'Kota Tangerang',
+            'Tangerang Selatan',
+        ];
 
         return view('admin.index', [
             // sales data
@@ -318,6 +337,10 @@ class AdminController extends Controller
             'stockLogsFI' => $stockLogsFI,
             'stockLogsPO' => $stockLogsPO,
             'stockLogsPI' => $stockLogsPI,
+
+            //deliverys subpage data
+            'deliveriesBySection' => $deliveriesBySection,
+            'sectionOrder' => $sectionOrder,
         ]);
     }
 
@@ -523,11 +546,23 @@ class AdminController extends Controller
         // 3. Weighted average price
         $newAvgPrice = $newTotalCost / $newQty;
 
-        // 4. Update the model
-        $flower->update([
-            'quantity' => $newQty,
-            'price'    => round($newAvgPrice, 2),
-        ]);
+        DB::transaction(function () use ($flower, $newQty, $newAvgPrice, $addedQty, $addedTotalCost) {
+            // 1. Update the flower
+            $flower->update([
+                'quantity' => $newQty,
+                'price'    => round($newAvgPrice),
+            ]);
+
+            // 2. Log the stock‐in
+            StockTransaction::create([
+                'order_id'     => null,
+                'flower_id'    => $flower->id,
+                'flower_name'  => $flower->name,
+                'type'         => 'FI',             // Flower In
+                'quantity'     => $addedQty,
+                'price'        => round($addedTotalCost / $addedQty),
+            ]);
+        });
 
         // 5. Redirect back
         return redirect()
@@ -797,8 +832,42 @@ class AdminController extends Controller
     //Delete Product
     public function destroyProduct(Product $product)
     {
+        // 1) Build the full path to the image
+        $imagePath = public_path('images/' . $product->image_url);
+
+        // 2) If it exists, delete it
+        if (File::exists($imagePath)) {
+            File::delete($imagePath);
+        }
         $product->delete();
         return redirect()->back()->with('success', 'Product deleted successfully.')->withFragment('products');
+    }
+
+    //Edit Delivery Fee
+    public function updateDeliveryFee(Request $request, Delivery $delivery)
+    {
+        try {
+            $validInput = $request->validate([
+                'fee' => 'required|numeric|min:0',
+            ]);
+        } catch (ValidationException $e) {
+            return redirect()->route('admin.index')->withFragment('deliveries')
+                ->withErrors($e->validator);
+        }
+
+        $delivery->update($validInput);
+
+        return redirect()->back()
+            ->with('success', 'Delivery fee updated.')->withFragment('deliveries');
+    }
+
+    // Delete Delivery
+    public function destroyDelivery(Delivery $delivery)
+    {
+        $delivery->delete();
+
+        return redirect()->back()
+            ->with('success', 'Delivery deleted successfully.')->withFragment('deliveries');
     }
 
     protected function searchOrders($query, $search)
@@ -825,7 +894,7 @@ class AdminController extends Controller
         try {
             $dbOk    = DB::connection()->getPdo() !== null;
             $queueOk = Queue::size('default') !== null;
-            $mailOk  = true; 
+            $mailOk  = true;
 
             $healthy = $dbOk && $queueOk && $mailOk;
         } catch (\Exception $e) {

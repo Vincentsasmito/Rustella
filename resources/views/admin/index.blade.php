@@ -295,6 +295,12 @@
                     <i class="fas fa-warehouse w-5 text-center"></i>
                     <span class="sidebar-link-text">Stock Logs</span>
                 </a>
+                <a href="#deliveries"
+                    class="nav-link flex items-center space-x-3 p-3 rounded-lg hover:bg-mocha-burgundy hover:bg-opacity-30 mb-1"
+                    data-page="deliveries">
+                    <i class="fas fa-warehouse w-5 text-center"></i>
+                    <span class="sidebar-link-text">Deliveries</span>
+                </a>
             </nav>
         </div>
         <div class="absolute bottom-0 w-full p-5">
@@ -768,7 +774,8 @@
                                                 {{ request('order_status') == 'Delivery' ? 'selected' : '' }}>Delivery
                                             </option>
                                             <option value="Completed"
-                                                {{ request('order_status') == 'Completed' ? 'selected' : '' }}>Completed
+                                                {{ request('order_status') == 'Completed' ? 'selected' : '' }}>
+                                                Completed
                                             </option>
                                             <option value="Cancelled"
                                                 {{ request('order_status') == 'Cancelled' ? 'selected' : '' }}>
@@ -1034,6 +1041,10 @@
                                         <th
                                             class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
                                             Flower ID</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
+                                            Price/Qty</th>
+
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1044,6 +1055,8 @@
                                             <td class="px-4 py-3">{{ $log->quantity }}</td>
                                             <td class="px-4 py-3">{{ $log->order_id ?? '-' }}</td>
                                             <td class="px-4 py-3">{{ $log->flower_id ?? '-' }}</td>
+                                            <td class="px-4 py-3">Rp {{ number_format($log->price, 0, ',', '.') }}
+                                            </td>
                                         </tr>
                                     @empty
                                         <tr>
@@ -1083,6 +1096,9 @@
                                         <th
                                             class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
                                             Flower ID</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
+                                            Price/Qty</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1093,6 +1109,8 @@
                                             <td class="px-4 py-3">{{ $log->quantity }}</td>
                                             <td class="px-4 py-3">{{ $log->order_id }}</td>
                                             <td class="px-4 py-3">{{ $log->flower_id ?? '-' }}</td>
+                                            <td class="px-4 py-3">Rp {{ number_format($log->price, 0, ',', '.') }}
+                                            </td>
                                         </tr>
                                     @empty
                                         <tr>
@@ -1132,6 +1150,9 @@
                                         <th
                                             class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
                                             Packaging ID</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
+                                            Price/Qty</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1142,6 +1163,8 @@
                                             <td class="px-4 py-3">{{ $log->quantity }}</td>
                                             <td class="px-4 py-3">{{ $log->order_id ?? '-' }}</td>
                                             <td class="px-4 py-3">{{ $log->packaging_id ?? '-' }}</td>
+                                            <td class="px-4 py-3">Rp {{ number_format($log->price, 0, ',', '.') }}
+                                            </td>
                                         </tr>
                                     @empty
                                         <tr>
@@ -1181,6 +1204,9 @@
                                         <th
                                             class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
                                             Packaging ID</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
+                                            Price/Qty</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1191,6 +1217,8 @@
                                             <td class="px-4 py-3">{{ $log->quantity }}</td>
                                             <td class="px-4 py-3">{{ $log->order_id ?? '-' }}</td>
                                             <td class="px-4 py-3">{{ $log->packaging_id ?? '-' }}</td>
+                                            <td class="px-4 py-3">Rp {{ number_format($log->price, 0, ',', '.') }}
+                                            </td>
                                         </tr>
                                     @empty
                                         <tr>
@@ -1425,6 +1453,80 @@
                             </tbody>
                         </table>
                     </div>
+                </div>
+            </div>
+
+            <!-- Deliveries Page -->
+            <div id="deliveries-page" class="page hidden">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    @foreach ($sectionOrder as $section)
+                        @php
+                            $deliveries = $deliveriesBySection[$section] ?? collect();
+                        @endphp
+
+                        <div class="bg-white rounded-lg shadow">
+                            <div class="p-6 border-b border-mocha-light/20">
+                                <h2 class="text-xl font-semibold">{{ $section }}</h2>
+                            </div>
+
+                            <div class="overflow-x-auto">
+                                @if ($deliveries->isEmpty())
+                                    <p class="p-4 text-sm text-gray-500">No deliveries found for this area.</p>
+                                @else
+                                    <table class="w-full table-hover">
+                                        <thead>
+                                            <tr class="border-b border-mocha-light/30">
+                                                <th
+                                                    class="px-4 py-3 text-left text-xs font-medium text-mocha-medium uppercase">
+                                                    Subdistrict
+                                                </th>
+                                                <th
+                                                    class="px-4 py-3 text-right text-xs font-medium text-mocha-medium uppercase">
+                                                    Fee
+                                                </th>
+                                                <th
+                                                    class="px-4 py-3 text-right text-xs font-medium text-mocha-medium uppercase">
+                                                    Actions
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach ($deliveries as $delivery)
+                                                <tr class="border-b border-mocha-light/20 hover:bg-mocha-light/10">
+                                                    <td class="px-4 py-3">{{ $delivery->subdistrict }}</td>
+                                                    <td class="px-4 py-3 text-right">
+                                                        Rp {{ number_format($delivery->fee, 0, ',', '.') }}
+                                                    </td>
+                                                    <td class="px-4 py-3 text-right space-x-2">
+                                                        <button type="button"
+                                                            class="text-blue-600 hover:text-blue-800 edit-delivery-btn"
+                                                            data-id="{{ $delivery->id }}"
+                                                            data-subdistrict="{{ $delivery->subdistrict }}"
+                                                            data-fee="{{ $delivery->fee }}">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+
+                                                        <!-- Delete Form -->
+                                                        <form
+                                                            action="{{ route('admin.deliveries.destroy', $delivery) }}"
+                                                            method="POST" class="inline"
+                                                            onsubmit="return confirm('Delete this delivery?')">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit"
+                                                                class="text-red-600 hover:text-red-800">
+                                                                <i class="fas fa-trash-alt"></i>
+                                                            </button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
             </div>
 
@@ -1682,6 +1784,14 @@
                                                 id="modal-current-status" class="font-semibold"></span></p>
                                         <p class="text-sm"><span class="font-medium">Location:</span> <span
                                                 id="modal-location"></span></p>
+                                        <!-- New: Payment Proof row, hidden by default -->
+                                        <p id="modal-payment-row" class="text-sm mb-2 hidden">
+                                            <span class="font-medium">Payment Proof:</span>
+                                            <a id="modal-payment-link" class="text-mocha-burgundy hover:underline"
+                                                href="#" target="_blank" rel="noopener noreferrer">
+                                                View Screenshot
+                                            </a>
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -1862,6 +1972,43 @@
                 </div>
             </div>
 
+            {{-- Update Delivery Fee Modal --}}
+            <div id="update-delivery-modal"
+                class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center grid place-items-center justify-center z-50">
+                <div class="bg-white rounded-lg shadow-lg w-full max-w-sm mx-4 p-6 relative">
+                    <!-- Close button -->
+                    <button type="button"
+                        class="close-modal absolute top-2 right-2 text-gray-500 hover:text-gray-700">
+                        &times;
+                    </button>
+
+                    <h3 class="text-lg font-semibold mb-4">
+                        Edit Fee for <span id="update-delivery-subdistrict"></span>
+                    </h3>
+
+                    <form id="edit-delivery-form" method="POST">
+                        @csrf
+                        @method('PUT')
+
+                        <div class="mb-4">
+                            <label for="update-delivery-fee" class="block text-sm font-medium text-gray-700">
+                                Fee
+                            </label>
+                            <input type="number" name="fee" id="update-delivery-fee" min="0"
+                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+                        </div>
+
+                        <div class="flex justify-end space-x-2">
+                            <button type="button" class="px-4 py-2 border rounded-lg close-modal">
+                                Cancel
+                            </button>
+                            <button type="submit" class="px-4 py-2 bg-mocha-burgundy text-white rounded-lg">
+                                Save
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </main>
 
 
@@ -2244,6 +2391,15 @@
                     document.getElementById('modal-customer-email').textContent = o.user.email;
                     document.getElementById('modal-recipient-phone').textContent = o.recipient_phone;
                     document.getElementById('modal-recipient-address').textContent = o.recipient_address;
+                    const payLink = document.getElementById('modal-payment-link');
+                    if (o.payment_url) {
+                        window.PAYMENT_BASE_URL = "{{ asset('payment') }}/";
+                        payLink.href = window.PAYMENT_BASE_URL + o
+                            .payment_url; // actually point the anchor at the image
+                        document.getElementById('modal-payment-row').classList.remove('hidden');
+                    } else {
+                        document.getElementById('modal-payment-row').classList.add('hidden');
+                    }
 
                     // items
                     const tbody = document.getElementById('modal-order-items');
@@ -2268,7 +2424,7 @@
 
                     // totals
                     document.getElementById('modal-subtotal').textContent = fmt(subtotal);
-                    const shippingAmt = o.delivery?.fee || 0;
+                    const shippingAmt = o.delivery_fee || 0;
                     document.getElementById('modal-shipping').textContent = fmt(shippingAmt);
 
                     // discount
@@ -2382,7 +2538,7 @@
                             let a = allOrders.find(x => x.id == orderId);
                             if (a) a.progress = json.new_status;
 
-                        
+
 
                             showToast(`Status updated to “${json.new_status}”`);
                             setTimeout(() => {
@@ -2401,9 +2557,35 @@
                         });
                 });
 
+                // ——— Delivery Fee Modal (Add & Edit) ——————————————————————————————————————
+                const deliveryModal = document.getElementById('update-delivery-modal');
+                if (deliveryModal) {
+                    const deliveryForm = document.getElementById('edit-delivery-form');
+
+                    // EDIT EXISTING DELIVERY
+                    document
+                        .querySelectorAll('.edit-delivery-btn')
+                        .forEach(btn => {
+                            btn.addEventListener('click', () => {
+                                const id = btn.dataset.id;
+                                const subdistrict = btn.dataset.subdistrict;
+                                const fee = btn.dataset.fee;
+
+                                // populate modal
+                                document.getElementById('update-delivery-subdistrict')
+                                    .textContent = subdistrict;
+                                document.getElementById('update-delivery-fee').value = fee;
+                                deliveryForm.action = `/admin/deliveries/${id}/fee`;
+
+                                // show it
+                                show(deliveryModal);
+                            });
+                        });
+                }
+
                 // ——— Toast on ANY other modal form submit —————————————————————————————————
                 document.querySelectorAll(
-                        '.modal form:not(#flower-form):not(#packaging-form):not(#discount-form):not(#product-form)')
+                        '.modal form:not(#flower-form):not(#packaging-form):not(#discount-form):not(#product-form):not(#edit-delivery-form)')
                     .forEach(f => {
                         f.addEventListener('submit', e => {
                             e.preventDefault();
@@ -2412,18 +2594,6 @@
                         });
                     });
 
-                // ——— Delete confirmations —————————————————————————————————————————————————
-                document.querySelectorAll('.delete-flower-btn, .delete-packaging-btn, .delete-discount-btn')
-                    .forEach(btn => {
-                        btn.addEventListener('click', () => {
-                            const type = btn.classList.contains('delete-flower-btn') ? 'flower' :
-                                btn.classList.contains('delete-packaging-btn') ? 'packaging' :
-                                btn.classList.contains('delete-discount-btn') ? 'discount' : 'product';
-
-                            showToast(
-                                `${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully!`);
-                        });
-                    });
 
                 // ——— Page Navigation & Hash on Load ————————————————————————————————
                 const navLinks = document.querySelectorAll('.nav-link');
@@ -2628,7 +2798,8 @@
             async function checkHealth() {
                 const dot = document.getElementById('sys-dot');
                 const wrap = document.getElementById('sys-status');
-                 if (!dot || !wrap) return;  // not index.blade.php, so skip ~ ada issue entah kenapa suka nongol @ first login of the day
+                if (!dot || !wrap)
+                    return; // not index.blade.php, so skip ~ ada issue entah kenapa suka nongol @ first login of the day
                 try {
                     const res = await fetch('{{ route('admin.health') }}', {
                         credentials: 'same-origin'
@@ -2656,7 +2827,7 @@
             }
             // Initial check + interval
             checkHealth();
-            setInterval(checkHealth, 30_000); // every 30s
+            setInterval(checkHealth, 300_000); // every 1hr
         </script>
 
         @if ($errors->any())

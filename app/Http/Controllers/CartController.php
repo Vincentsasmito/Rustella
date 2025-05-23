@@ -14,8 +14,8 @@ use App\Models\Packaging;
 use App\Models\StockTransaction;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class CartController extends Controller
 {
@@ -210,15 +210,17 @@ class CartController extends Controller
         //Get the current date, check if the discount's start date and end date are valid
         $currentDate = now();
         if (
-            $currentDate->lt($discount->start_date)
-            || ($discount->end_date && $currentDate->gt($discount->end_date))
+            // if we have a start_date and we’re before it…
+            ($discount->start_date && $currentDate->lt($discount->start_date))
+            // …or if we have an end_date and we’re after it
+            || ($discount->end_date   && $currentDate->gt($discount->end_date))
         ) {
             return response()->json([
                 'message' => 'Discount code period is not currently valid.'
             ], 422);
         }
 
-        if ($discount->usage_counter >= $discount->max_usage && $discount->max_usage != 0) {
+        if ($discount->max_usage > 0 && $discount->usage_counter >= $discount->max_usage) {
             return response()->json([
                 'message' => 'Sorry, the discount limit has been reached.'
             ], 422);
@@ -249,26 +251,20 @@ class CartController extends Controller
     {
         // 1) Validate
         $validInput = $request->validate([
-            'sender_email'      => 'required|email',
-            'sender_phone'      => 'required|string',
-            'sender_note'       => 'nullable|string',
-            'recipient_name'    => 'required|string',
-            'recipient_phone'   => 'required|string',
-            'recipient_address' => 'required|string',
+            'sender_email'      => 'required|email|max:255',
+            'sender_phone'      => 'required|string|max:30',
+            'sender_note'       => 'nullable|string|max:300',
+            'recipient_name'    => 'required|string|max:60',
+            'recipient_phone'   => 'required|string|max:30',
+            'recipient_address' => 'required|string|max:100',
             'deliveries_id'     => 'required|exists:deliveries,id',
             'delivery_time'     => 'required|date',
             'discount_id'       => 'nullable|exists:discounts,id',
-            'photo'             => 'mimes:jpg,bmp,png,jpeg',
+            'photo'             => 'mimes:jpg,bmp,png,jpeg|max:3072', // 3MB
         ]);
 
 
-        //save photo, get url
-        if ($file = $request->file('photo')) {
-            $file_path = public_path('payment');
-            $file_input = date('YmdHis') . '-' . $file->getClientOriginalName();
-            $file->move($file_path, $file_input);
-            $validInput['payment_url'] = $file_input;
-        }
+
 
         $cart = session('cart', []);
 
@@ -295,12 +291,22 @@ class CartController extends Controller
             }
         }
 
+        $username = Str::slug(Auth::user()->name);
+        //save photo, get url
+        if ($file = $request->file('photo')) {
+            $file_path = public_path('payment');
+            $file_input = date('YmdHis') . '-' . $username . '-' . $file->getClientOriginalName();
+            $file->move($file_path, $file_input);
+            $validInput['payment_url'] = $file_input;
+        }
 
         DB::transaction(function () use ($validInput, $cart) {
             //Create the order
             $validInput['user_id'] = Auth::id();
             $validInput['cost']    = 0;
             $validInput['progress'] = "Payment Pending";
+            $validInput['delivery_fee'] = Delivery::where('id', $validInput['deliveries_id'])
+                ->value('fee') ?? 0;
             $order = Order::create($validInput);
 
             //Increase Discount Counter
